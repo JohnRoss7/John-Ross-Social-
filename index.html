@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,6 +25,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;col
 .logo{background:#dc2626;color:#fff;padding:6px 12px;border-radius:16px;font-weight:700;font-size:13px}
 .slogan{color:#dc2626;font-size:10px;font-style:italic;margin-left:8px;flex:1}
 .lb{background:#333;color:#fff;border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
+.tab-bar{display:flex;border-bottom:1px solid #333}
+.tab{padding:12px 16px;color:#999;border-bottom:2px solid transparent;cursor:pointer;flex:1;text-align:center;font-size:13px}
+.tab.active{color:#fff;border-bottom-color:#dc2626}
 .post{border-bottom:1px solid #333;padding:12px}
 .post-hdr{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
 .av{width:40px;height:40px;border-radius:6px;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center}
@@ -31,6 +35,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;col
 .pn{font-weight:700;font-size:13px}
 .ph{color:#999;font-size:11px}
 .pc{font-size:14px;line-height:1.4;margin:6px 0;word-wrap:break-word}
+.hash{color:#3b82f6;cursor:pointer}
 .act{display:flex;gap:24px;margin-top:6px;color:#999;font-size:14px}
 .ac{display:flex;align-items:center;gap:6px;cursor:pointer}
 .heart{color:#dc2626;font-size:18px}
@@ -92,12 +97,13 @@ const db = firebase.firestore();
 
 let user = null;
 let tab = 'home';
+let feedType = 'foryou';
 let lang = 'en';
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo'},
-el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας'}
+en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo',forYou:'For You',following:'Following',hashtag:'Hashtag'},
+el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',forYou:'Για εσένα',following:'Ακολουθείς',hashtag:'Hashtag'}
 };
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
@@ -113,6 +119,12 @@ function showTab(name){
   tab = name;
   document.querySelectorAll('.ni').forEach(b=>b.classList.toggle('act',b.dataset.tab===name));
   render();
+}
+
+function setFeedType(type){
+  feedType = type;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.feed===type));
+  renderHome(document.getElementById('main'));
 }
 
 auth.onAuthStateChanged(u=>{user = u; render();});
@@ -155,6 +167,7 @@ function postContent(){
     uid:user.uid,
     name:user.displayName||user.email.split('@')[0],
     email:user.email,
+    photo:user.photoURL||'',
     text:ta.value,likes:0,comments:[],
     createdAt:Date.now()
   });
@@ -201,11 +214,19 @@ function toggleFollow(targetUid){
   }).then(()=>render());
 }
 
-function avatarHtml(u){
-  if(u.photo){
-    return `<div class="av" style="background-image:url('${u.photo}');background-size:cover"></div>`;
-  }
-  return `<div class="av">👤</div>`;
+function renderTextWithHashtags(text){
+  return text.replace(/#(\w+)/g, '<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>');
+}
+
+function searchHashtag(tag){
+  showTab('search');
+  setTimeout(()=>{
+    const inp = document.querySelector('#main input');
+    if(inp){
+      inp.value = '#'+tag;
+      inp.dispatchEvent(new Event('input'));
+    }
+  },100);
 }
 
 function render(){
@@ -236,43 +257,67 @@ function renderHome(m){
       <textarea class="inp" id="postText" placeholder="${t('placeholder')}"></textarea>
       <button class="btn" onclick="postContent()" style="margin-top:8px">${t('post')}</button>
     </div>
+    <div class="tab-bar">
+      <div class="tab ${feedType==='foryou'?'active':''}" data-feed="foryou" onclick="setFeedType('foryou')">${t('forYou')}</div>
+      <div class="tab ${feedType==='following'?'active':''}" data-feed="following" onclick="setFeedType('following')">${t('following')}</div>
+    </div>
     <div id="feed">${t('noPosts')}</div>`;
-  db.collection('posts').orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{
-    const f = document.getElementById('feed');
-    if(!f) return;
-    if(snap.empty){f.innerHTML='<div class="ctr">'+t('noPosts')+'</div>';return}
-    f.innerHTML = snap.docs.map(d=>{
-      const p = d.data();
-      const postId = d.id;
-      const isPostAdmin = isAdmin(p.email);
-      const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
-      const canDelete = (user.uid === p.uid) || isAdmin(user.email);
-      const comments = (p.comments||[]).map(c=>`<div class="cm"><div><div class="cu">${c.name}</div><div class="cc">${c.text}</div></div></div>`).join('');
-      return `<div class="post">
-        <div class="post-hdr">
-          ${p.photo?`<div class="av" style="background-image:url('${p.photo}');background-size:cover"></div>`:`<div class="av">👤</div>`}
-          <div style="flex:1;min-width:0">
-            <div class="pn">${p.name||'User'}${adminBadge}</div>
-            <div class="ph">${new Date(p.createdAt).toLocaleString()}</div>
-          </div>
-          ${canDelete ? `<div class="post-actions"><button class="menu-dots" onclick="event.stopPropagation();toggleMenu('${postId}')">⋯</button><div class="post-menu" id="menu_${postId}"><button onclick="deletePost('${postId}')">${t('delete')}</button></div></div>` : ''}
+  loadFeed();
+}
+
+function loadFeed(){
+  const f = document.getElementById('feed');
+  if(!f) return;
+  
+  let query = db.collection('posts').orderBy('createdAt','desc').limit(50);
+  
+  if(feedType==='following'){
+    db.collection('users').doc(user.uid).get().then(doc=>{
+      const following = doc.data().following||[];
+      if(following.length===0){
+        f.innerHTML='<div class="ctr">Δεν ακολουθείς κανέναν ακόμα</div>';
+        return;
+      }
+      query = db.collection('posts').where('uid','in',following.slice(0,10)).orderBy('createdAt','desc').limit(50);
+      query.onSnapshot(snap=>renderPosts(snap, f));
+    });
+  } else {
+    query.onSnapshot(snap=>renderPosts(snap, f));
+  }
+}
+
+function renderPosts(snap, f){
+  if(!f) return;
+  if(snap.empty){f.innerHTML='<div class="ctr">'+t('noPosts')+'</div>';return}
+  f.innerHTML = snap.docs.map(d=>{
+    const p = d.data();
+    const postId = d.id;
+    const isPostAdmin = isAdmin(p.email);
+    const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
+    const canDelete = (user.uid === p.uid) || isAdmin(user.email);
+    const comments = (p.comments||[]).map(c=>`<div class="cm"><div><div class="cu">${c.name}</div><div class="cc">${c.text}</div></div></div>`).join('');
+    const avatar = p.photo ? `<div class="av" style="background-image:url('${p.photo}');background-size:cover"></div>` : `<div class="av">👤</div>`;
+    return `<div class="post">
+      <div class="post-hdr">
+        ${avatar}
+        <div style="flex:1;min-width:0">
+          <div class="pn">${p.name||'User'}${adminBadge}</div>
+          <div class="ph">${new Date(p.createdAt).toLocaleString()}</div>
         </div>
-        <div class="pc">${p.text}</div>
-        <div class="act">
-          <span class="ac" onclick="likePost('${postId}')">❤️ <span class="heart">${p.likes||0}</span></span>
-          <span class="ac">💬 ${(p.comments||[]).length}</span>
-        </div>
-        ${comments}
-        <div style="display:flex;gap:6px;margin-top:8px">
-          <input class="inp" id="c_${postId}" placeholder="${t('comment')}" style="margin:0">
-          <button class="btn" onclick="addComment('${postId}')" style="padding:8px 14px">↩</button>
-        </div>
-      </div>`;
-    }).join('');
-  });
-  document.addEventListener('click', function() {
-    document.querySelectorAll('.post-menu.show').forEach(m => m.classList.remove('show'));
-  });
+        ${canDelete ? `<div class="post-actions"><button class="menu-dots" onclick="event.stopPropagation();toggleMenu('${postId}')">⋯</button><div class="post-menu" id="menu_${postId}"><button onclick="deletePost('${postId}')">${t('delete')}</button></div></div>` : ''}
+      </div>
+      <div class="pc">${renderTextWithHashtags(p.text)}</div>
+      <div class="act">
+        <span class="ac" onclick="likePost('${postId}')">❤️ <span class="heart">${p.likes||0}</span></span>
+        <span class="ac">💬 ${(p.comments||[]).length}</span>
+      </div>
+      ${comments}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input class="inp" id="c_${postId}" placeholder="${t('comment')}" style="margin:0">
+        <button class="btn" onclick="addComment('${postId}')" style="padding:8px 14px">↩</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderSearch(m){
@@ -282,12 +327,23 @@ function renderSearch(m){
 function searchUsers(q){
   const out = document.getElementById('searchRes');
   if(!q){out.innerHTML='';return}
+  if(q.startsWith('#')){
+    const tag = q.substring(1).toLowerCase();
+    db.collection('posts').where('text','>=','#'+tag).where('text','<','#'+tag+'\uf8ff').limit(20).get().then(snap=>{
+      out.innerHTML = snap.docs.map(d=>{
+        const p = d.data();
+        return `<div class="post"><div class="pc">${renderTextWithHashtags(p.text)}</div><div class="ph">${p.name} • ${new Date(p.createdAt).toLocaleString()}</div></div>`;
+      }).join('') || '<div class="ctr">Κανένα αποτέλεσμα</div>';
+    });
+    return;
+  }
   db.collection('users').where('name','>=',q).where('name','<=',q+'\uf8ff').limit(20).get().then(snap=>{
     out.innerHTML = snap.docs.map(d=>{
       const u = d.data();
       const isPostAdmin = isAdmin(u.email);
       const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
-      return `<div class="post"><div class="post-hdr">${u.photo?`<div class="av" style="background-image:url('${u.photo}');background-size:cover"></div>`:`<div class="av">👤</div>`}<div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
+      const avatar = u.photo ? `<div class="av" style="background-image:url('${u.photo}');background-size:cover"></div>` : `<div class="av">👤</div>`;
+      return `<div class="post"><div class="post-hdr">${avatar}<div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
     }).join('') || '<div class="ctr">-</div>';
   });
 }
@@ -347,7 +403,10 @@ function saveProfile(){
   const bio = document.getElementById('newBio').value;
   db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>{alert('Saved!'); render();});
 }
+
+document.addEventListener('click', function() {
+  document.querySelectorAll('.post-menu.show').forEach(m => m.classList.remove('show'));
+});
 </script>
 </body>
 </html>
-
