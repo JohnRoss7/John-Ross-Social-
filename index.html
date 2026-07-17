@@ -43,19 +43,19 @@ textarea.inp{border-radius:12px;min-height:80px;resize:vertical}
 .cc{font-size:13px;margin-top:2px}
 .ctr{text-align:center;padding:40px 20px;color:#666}
 .admin-badge{background:#dc2626;color:#fff;padding:2px 6px;border-radius:8px;font-size:10px;margin-left:6px;vertical-align:middle}
-.post-actions{position:relative;display:inline-block;float:right;margin-top:4px}
-.post-menu{background:#333;border:1px solid #555;border-radius:8px;padding:4px 0;position:absolute;right:0;top:20px;z-index:50;min-width:100px;display:none}
+.post-actions{position:relative;display:inline-block;float:right}
+.menu-dots{background:none;border:none;color:#999;font-size:22px;cursor:pointer;padding:0 6px;line-height:1}
+.post-menu{background:#333;border:1px solid #555;border-radius:8px;padding:4px 0;position:absolute;right:0;top:24px;z-index:50;min-width:100px;display:none}
 .post-menu.show{display:block}
 .post-menu button{background:none;border:none;color:#fff;padding:8px 12px;width:100%;text-align:left;cursor:pointer;font-size:13px}
 .post-menu button:hover{background:#dc2626}
-.menu-dots{background:none;border:none;color:#999;font-size:20px;cursor:pointer;padding:0 4px}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="hdr">
 <div style="display:flex;align-items:center;flex:1">
-<div class="logo">John Ross</div>
+<div class="logo">John Ross Social</div>
 <div class="slogan">Your space. Your voice.</div>
 </div>
 <button class="lb" onclick="toggleLang()">EL</button>
@@ -91,8 +91,8 @@ let lang = 'en';
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',follow:'Follow',unfollow:'Unfollow',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following',delete:'Delete'},
-el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',follow:'Ακολούθηση',unfollow:'Ακολουθείς',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς',delete:'Διαγραφή'}
+en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow'},
+el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς'}
 };
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
@@ -110,10 +110,7 @@ function showTab(name){
   render();
 }
 
-auth.onAuthStateChanged(u=>{
-  user = u;
-  render();
-});
+auth.onAuthStateChanged(u=>{user = u; render();});
 
 function login(){
   const e = document.getElementById('le').value;
@@ -127,7 +124,7 @@ function register(){
   if(!e||!p) return alert('Συμπλήρωσε email και κωδικό');
   auth.createUserWithEmailAndPassword(e,p).then(cred=>{
     return db.collection('users').doc(cred.user.uid).set({
-      email:e,name:e.split('@')[0],bio:'',createdAt:Date.now()
+      email:e,name:e.split('@')[0],bio:'',followers:[],following:[],createdAt:Date.now()
     });
   }).catch(err=>alert(err.message));
 }
@@ -138,7 +135,7 @@ function googleLogin(){
     return db.collection('users').doc(cred.user.uid).set({
       email:cred.user.email,
       name:cred.user.displayName||cred.user.email.split('@')[0],
-      bio:'',createdAt:Date.now()
+      bio:'',followers:[],following:[],createdAt:Date.now()
     },{merge:true});
   }).catch(err=>alert(err.message));
 }
@@ -181,6 +178,21 @@ function deletePost(id){
 function toggleMenu(id){
   const menu = document.getElementById('menu_'+id);
   if(menu) menu.classList.toggle('show');
+}
+
+function toggleFollow(targetUid){
+  const myRef = db.collection('users').doc(user.uid);
+  const theirRef = db.collection('users').doc(targetUid);
+  myRef.get().then(doc=>{
+    const following = doc.data().following||[];
+    if(following.includes(targetUid)){
+      myRef.update({following:firebase.firestore.FieldValue.arrayRemove(targetUid)});
+      theirRef.update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+    } else {
+      myRef.update({following:firebase.firestore.FieldValue.arrayUnion(targetUid)});
+      theirRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+    }
+  });
 }
 
 function render(){
@@ -244,7 +256,6 @@ function renderHome(m){
         </div>
       </div>`;
     }).join('');
-    // Close menus on click outside
     document.addEventListener('click', function(e) {
       document.querySelectorAll('.post-menu.show').forEach(m => m.classList.remove('show'));
     });
@@ -274,11 +285,17 @@ function renderProfile(m){
   db.collection('users').doc(user.uid).get().then(doc=>{
     const u = doc.data()||{};
     const admin = isAdmin(user.email);
+    const following = (u.following||[]).length;
+    const followers = (u.followers||[]).length;
     m.innerHTML = `
       <div style="padding:20px;text-align:center">
         <div class="av av-lg" style="margin:0 auto 12px">${(u.name||user.email[0]).toUpperCase()}</div>
         <h2>${u.name||user.email} ${admin ? '<span class="admin-badge">👑 Admin</span>' : ''}</h2>
         <p style="color:#999;margin:8px 0">${u.bio||t('bio')}</p>
+        <div style="display:flex;justify-content:center;gap:20px;margin:16px 0;color:#999;font-size:13px">
+          <span><b style="color:#fff">${followers}</b> ${t('followers')}</span>
+          <span><b style="color:#fff">${following}</b> ${t('following')}</span>
+        </div>
         <div style="margin:20px 0">
           <input class="inp" id="newName" placeholder="Name" value="${u.name||''}">
           <textarea class="inp" id="newBio" placeholder="${t('bio')}">${u.bio||''}</textarea>
@@ -292,7 +309,7 @@ function renderProfile(m){
 function saveProfile(){
   const name = document.getElementById('newName').value;
   const bio = document.getElementById('newBio').value;
-  db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>alert('Saved!'));
+  db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>{alert('Saved!'); render();});
 }
 </script>
 </body>
