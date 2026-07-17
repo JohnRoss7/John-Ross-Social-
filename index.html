@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +9,13 @@
 <meta property="og:description" content="Your space. Your voice. Free expression.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://johnross7.github.io/John-Ross-Social-/">
-<meta property="og:image" content="https://johnross7.github.io/John-Ross-Social-/preview.jpg">
+<meta property="og:image" content="https://johnross7.github.io/John-Ross-Social-/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="John Ross Social">
+<meta name="twitter:description" content="Your space. Your voice. Free expression.">
+<meta name="twitter:image" content="https://johnross7.github.io/John-Ross-Social-/og-image.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;color:#fff;min-height:100vh}
@@ -20,8 +26,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;col
 .lb{background:#333;color:#fff;border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
 .post{border-bottom:1px solid #333;padding:12px}
 .post-hdr{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
-.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.av-lg{width:80px;height:80px;font-size:36px}
+.av{width:40px;height:40px;border-radius:6px;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center}
+.av-lg{width:90px;height:90px;font-size:40px;border-radius:8px}
 .pn{font-weight:700;font-size:13px}
 .ph{color:#999;font-size:11px}
 .pc{font-size:14px;line-height:1.4;margin:6px 0;word-wrap:break-word}
@@ -90,8 +96,8 @@ let lang = 'en';
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow'},
-el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς'}
+en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo'},
+el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας'}
 };
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
@@ -123,7 +129,7 @@ function register(){
   if(!e||!p) return alert('Συμπλήρωσε email και κωδικό');
   auth.createUserWithEmailAndPassword(e,p).then(cred=>{
     return db.collection('users').doc(cred.user.uid).set({
-      email:e,name:e.split('@')[0],bio:'',followers:[],following:[],createdAt:Date.now()
+      email:e,name:e.split('@')[0],bio:'',photo:'',followers:[],following:[],createdAt:Date.now()
     });
   }).catch(err=>alert(err.message));
 }
@@ -131,10 +137,11 @@ function register(){
 function googleLogin(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(cred=>{
+    const photoUrl = cred.user.photoURL || '';
     return db.collection('users').doc(cred.user.uid).set({
       email:cred.user.email,
       name:cred.user.displayName||cred.user.email.split('@')[0],
-      bio:'',followers:[],following:[],createdAt:Date.now()
+      bio:'',photo:photoUrl,followers:[],following:[],createdAt:Date.now()
     },{merge:true});
   }).catch(err=>alert(err.message));
 }
@@ -194,6 +201,13 @@ function toggleFollow(targetUid){
   }).then(()=>render());
 }
 
+function avatarHtml(u){
+  if(u.photo){
+    return `<div class="av" style="background-image:url('${u.photo}');background-size:cover"></div>`;
+  }
+  return `<div class="av">👤</div>`;
+}
+
 function render(){
   const m = document.getElementById('main');
   if(!user){
@@ -236,7 +250,7 @@ function renderHome(m){
       const comments = (p.comments||[]).map(c=>`<div class="cm"><div><div class="cu">${c.name}</div><div class="cc">${c.text}</div></div></div>`).join('');
       return `<div class="post">
         <div class="post-hdr">
-          <div class="av">👤</div>
+          ${p.photo?`<div class="av" style="background-image:url('${p.photo}');background-size:cover"></div>`:`<div class="av">👤</div>`}
           <div style="flex:1;min-width:0">
             <div class="pn">${p.name||'User'}${adminBadge}</div>
             <div class="ph">${new Date(p.createdAt).toLocaleString()}</div>
@@ -273,7 +287,7 @@ function searchUsers(q){
       const u = d.data();
       const isPostAdmin = isAdmin(u.email);
       const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
-      return `<div class="post"><div class="post-hdr"><div class="av">👤</div><div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
+      return `<div class="post"><div class="post-hdr">${u.photo?`<div class="av" style="background-image:url('${u.photo}');background-size:cover"></div>`:`<div class="av">👤</div>`}<div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
     }).join('') || '<div class="ctr">-</div>';
   });
 }
@@ -287,9 +301,12 @@ function renderProfile(m){
     const following = (u.following||[]).length;
     const followers = (u.followers||[]).length;
     const isFollowing = (u.followers||[]).includes(user.uid);
+    const avatarContent = u.photo ? `<div class="av av-lg" style="background-image:url('${u.photo}');background-size:cover;cursor:pointer" onclick="document.getElementById('photoInput').click()"></div>` : `<div class="av av-lg" style="cursor:pointer" onclick="document.getElementById('photoInput').click()">👤</div>`;
     m.innerHTML = `
       <div style="padding:20px;text-align:center">
-        <div class="av av-lg" style="margin:0 auto 12px">👤</div>
+        ${avatarContent}
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="uploadPhoto(event)">
+        <button class="btn-o" onclick="document.getElementById('photoInput').click()" style="margin-top:10px;padding:6px 14px;font-size:12px;border-radius:12px">${t('changePic')}</button>
         <h2 style="font-size:18px;margin-top:10px">${u.name||user.email} ${admin ? '<span class="admin-badge">👑 Admin</span>' : ''}</h2>
         <p style="color:#999;margin:8px 0;font-size:14px">${u.bio||t('bio')}</p>
         <div style="display:flex;justify-content:center;gap:24px;margin:16px 0;color:#999;font-size:14px">
@@ -305,6 +322,24 @@ function renderProfile(m){
         <button class="btn btn-o" onclick="logout()" style="width:100%">${t('logout')}</button>
       </div>`;
   });
+}
+
+function uploadPhoto(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(file.size > 500000){
+    alert('Η εικόνα είναι πολύ μεγάλη. Διάλεξε μικρότερη (<500KB).');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const photoData = e.target.result;
+    db.collection('users').doc(user.uid).update({photo:photoData}).then(()=>{
+      alert('Φωτογραφία αποθηκεύτηκε!');
+      render();
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 function saveProfile(){
