@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,6 +36,7 @@ textarea.inp{border-radius:12px;min-height:80px;resize:vertical}
 .cu{font-weight:700;font-size:12px}
 .cc{font-size:13px;margin-top:2px}
 .ctr{text-align:center;padding:40px 20px;color:#666}
+.admin-badge{background:#dc2626;color:#fff;padding:2px 6px;border-radius:8px;font-size:10px;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -75,11 +77,18 @@ let user = null;
 let tab = 'home';
 let lang = 'en';
 
+// Admin emails list
+const adminEmails = ['rossrossg7@gmail.com'];
+
 const T = {
 en:{slogan:'Your space. Your voice.',hello:'Hello',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',follow:'Follow',unfollow:'Unfollow',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following:'following'},
 el:{slogan:'Ο χώρος σου. Η φωνή σου.',hello:'Γειά σου',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',follow:'Ακολούθηση',unfollow:'Ακολουθείς',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following:'ακολουθείς'}
 };
 function t(k){return T[lang][k]||k}
+
+function isAdmin(email){
+  return adminEmails.includes(email);
+}
 
 function toggleLang(){
   lang = lang==='en'?'el':'en';
@@ -178,6 +187,7 @@ function render(){
 }
 
 function renderHome(m){
+  const admin = isAdmin(user.email);
   m.innerHTML = `
     <div class="post">
       <textarea class="inp" id="postText" placeholder="${t('placeholder')}"></textarea>
@@ -190,9 +200,11 @@ function renderHome(m){
     if(snap.empty){f.innerHTML='<div class="ctr">'+t('noPosts')+'</div>';return}
     f.innerHTML = snap.docs.map(d=>{
       const p = d.data();
+      const isPostAdmin = isAdmin(p.email);
+      const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
       const comments = (p.comments||[]).map(c=>`<div class="cm"><div><div class="cu">${c.name}</div><div class="cc">${c.text}</div></div></div>`).join('');
       return `<div class="post">
-        <div class="post-hdr"><div class="av">${(p.name||'?')[0].toUpperCase()}</div><div><div class="pn">${p.name||'User'}</div><div class="ph">${new Date(p.createdAt).toLocaleString()}</div></div></div>
+        <div class="post-hdr"><div class="av">${(p.name||'?')[0].toUpperCase()}</div><div><div class="pn">${p.name||'User'}${adminBadge}</div><div class="ph">${new Date(p.createdAt).toLocaleString()}</div></div></div>
         <div class="pc">${p.text}</div>
         <div class="act">
           <span class="ac" onclick="likePost('${d.id}')">❤️ <span class="heart">${p.likes||0}</span></span>
@@ -218,7 +230,9 @@ function searchUsers(q){
   db.collection('users').where('name','>=',q).where('name','<=',q+'\uf8ff').limit(20).get().then(snap=>{
     out.innerHTML = snap.docs.map(d=>{
       const u = d.data();
-      return `<div class="post"><div class="post-hdr"><div class="av">${(u.name||'?')[0].toUpperCase()}</div><div><div class="pn">${u.name}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
+      const isPostAdmin = isAdmin(u.email);
+      const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
+      return `<div class="post"><div class="post-hdr"><div class="av">${(u.name||'?')[0].toUpperCase()}</div><div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
     }).join('') || '<div class="ctr">-</div>';
   });
 }
@@ -228,10 +242,11 @@ function renderNotifs(m){m.innerHTML='<div class="ctr">'+t('noNotifs')+'</div>'}
 function renderProfile(m){
   db.collection('users').doc(user.uid).get().then(doc=>{
     const u = doc.data()||{};
+    const admin = isAdmin(user.email);
     m.innerHTML = `
       <div style="padding:20px;text-align:center">
         <div class="av av-lg" style="margin:0 auto 12px">${(u.name||user.email[0]).toUpperCase()}</div>
-        <h2>${u.name||user.email}</h2>
+        <h2>${u.name||user.email} ${admin ? '<span class="admin-badge">👑 Admin</span>' : ''}</h2>
         <p style="color:#999;margin:8px 0">${u.bio||t('bio')}</p>
         <div style="margin:20px 0">
           <input class="inp" id="newName" placeholder="Name" value="${u.name||''}">
