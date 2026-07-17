@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,8 +20,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#000;col
 .lb{background:#333;color:#fff;border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
 .post{border-bottom:1px solid #333;padding:12px}
 .post-hdr{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
-.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
-.av-lg{width:80px;height:80px;font-size:28px}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.av-lg{width:80px;height:80px;font-size:36px}
 .pn{font-weight:700;font-size:13px}
 .ph{color:#999;font-size:11px}
 .pc{font-size:14px;line-height:1.4;margin:6px 0;word-wrap:break-word}
@@ -237,7 +236,7 @@ function renderHome(m){
       const comments = (p.comments||[]).map(c=>`<div class="cm"><div><div class="cu">${c.name}</div><div class="cc">${c.text}</div></div></div>`).join('');
       return `<div class="post">
         <div class="post-hdr">
-          <div class="av">${(p.name||'?')[0].toUpperCase()}</div>
+          <div class="av">👤</div>
           <div style="flex:1;min-width:0">
             <div class="pn">${p.name||'User'}${adminBadge}</div>
             <div class="ph">${new Date(p.createdAt).toLocaleString()}</div>
@@ -274,7 +273,7 @@ function searchUsers(q){
       const u = d.data();
       const isPostAdmin = isAdmin(u.email);
       const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
-      return `<div class="post"><div class="post-hdr"><div class="av">${(u.name||'?')[0].toUpperCase()}</div><div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
+      return `<div class="post"><div class="post-hdr"><div class="av">👤</div><div><div class="pn">${u.name}${adminBadge}</div><div class="ph">${u.bio||''}</div></div></div></div>`;
     }).join('') || '<div class="ctr">-</div>';
   });
 }
@@ -290,8 +289,8 @@ function renderProfile(m){
     const isFollowing = (u.followers||[]).includes(user.uid);
     m.innerHTML = `
       <div style="padding:20px;text-align:center">
-        <div class="av av-lg" style="margin:0 auto 12px">${(u.name||user.email[0]).toUpperCase()}</div>
-        <h2 style="font-size:18px">${u.name||user.email} ${admin ? '<span class="admin-badge">👑 Admin</span>' : ''}</h2>
+        <div class="av av-lg" style="margin:0 auto 12px">👤</div>
+        <h2 style="font-size:18px;margin-top:10px">${u.name||user.email} ${admin ? '<span class="admin-badge">👑 Admin</span>' : ''}</h2>
         <p style="color:#999;margin:8px 0;font-size:14px">${u.bio||t('bio')}</p>
         <div style="display:flex;justify-content:center;gap:24px;margin:16px 0;color:#999;font-size:14px">
           <span><b style="color:#fff;font-size:18px">${followers}</b><br>${t('followers')}</span>
@@ -316,3 +315,4 @@ function saveProfile(){
 </script>
 </body>
 </html>
+
