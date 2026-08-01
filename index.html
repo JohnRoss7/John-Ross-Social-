@@ -194,7 +194,7 @@ el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδ�
 };
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;n'}[c]))}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 function toggleLang(){
   lang=lang==='en'?'el':'en';
@@ -274,15 +274,21 @@ function postContent(){
       images: compressedImages,
       likes:0,likedBy:[],comments:[],
       createdAt:Date.now()
+    }).then(() => {
+      ta.value='';
+      compressedImages = [];
+      updateImagePreview();
+    }).catch(err => {
+      alert('Σφάλμα αποστολής: ' + err.message);
     });
-    ta.value='';
-    compressedImages = [];
-    updateImagePreview();
+  }).catch(err => {
+    alert('Σφάλμα χρήστη: ' + err.message);
   });
 }
 
 function handleImageSelection(event) {
     const files = Array.from(event.target.files);
+    if(files.length === 0) return;
     
     if (compressedImages.length + files.length > 2) {
         alert('Μπορείς να επιλέξεις έως 2 φωτογραφίες το πολύ!');
@@ -291,40 +297,52 @@ function handleImageSelection(event) {
     }
 
     const previewContainer = document.getElementById('imagePreviewContainer');
-    if(previewContainer) previewContainer.innerHTML = '<span style="font-size:12px;color:#999;">Επεξεργασία φωτογραφίας...</span>';
+    if(previewContainer) previewContainer.innerHTML = '<span style="font-size:12px;color:#3b82f6;">Συμπίεση φωτογραφίας...</span>';
 
     let processedCount = 0;
     let newImages = [];
 
     files.forEach(file => {
         const reader = new FileReader();
+        reader.onerror = function() {
+            alert('Σφάλμα ανάγνωσης αρχείου.');
+            event.target.value = '';
+        };
         reader.readAsDataURL(file);
         
         reader.onload = function(e) {
             const img = new Image();
+            img.onerror = function() {
+                alert('Μη έγκυρη μορφή εικόνας.');
+                event.target.value = '';
+            };
             img.src = e.target.result;
             
             img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800;
-                const MAX_HEIGHT = 800;
-                let width = img.width;
-                let height = img.height;
+                try {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500;   // Μειωμένο στα 500px για σίγουρη επιτυχία
+                    const MAX_HEIGHT = 500;
+                    let width = img.width;
+                    let height = img.height;
 
-                if (width > height) {
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                } else {
-                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Ποιότητα 0.3 για να γίνεται πούπουλο το αρχείο (<50KB)
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.3);
+                    newImages.push(compressedDataUrl);
+                } catch(err) {
+                    alert('Σφάλμα επεξεργασίας: ' + err.message);
                 }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Αυξημένη συμπίεση (ποιότητα 0.4) για ελαφρύ αρχείο
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.4);
-                newImages.push(compressedDataUrl);
 
                 processedCount++;
                 if (processedCount === files.length) {
@@ -613,7 +631,7 @@ function uploadPhoto(event){
 }
 
 function saveProfile(){
-  const name=document.getElementById('newName').value;
+  const name=document.getElementById('newName'].value;
   const bio=document.getElementById('newBio').value;
   db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>{alert('Saved!');render();});
 }
