@@ -321,7 +321,7 @@ function handleImageSelection(event) {
             img.onload = function() {
                 try {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 500;   // Μειωμένο στα 500px για σίγουρη επιτυχία
+                    const MAX_WIDTH = 500;
                     const MAX_HEIGHT = 500;
                     let width = img.width;
                     let height = img.height;
@@ -337,7 +337,6 @@ function handleImageSelection(event) {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Ποιότητα 0.3 για να γίνεται πούπουλο το αρχείο (<50KB)
                     const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.3);
                     newImages.push(compressedDataUrl);
                 } catch(err) {
@@ -631,7 +630,7 @@ function uploadPhoto(event){
 }
 
 function saveProfile(){
-  const name=document.getElementById('newName'].value;
+  const name=document.getElementById('newName').value;
   const bio=document.getElementById('newBio').value;
   db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>{alert('Saved!');render();});
 }
