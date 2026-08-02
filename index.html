@@ -14,7 +14,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .logo-text{font-weight:800;font-size:18px}
 .lb{background:#333;color:#fff;border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
 
-/* Feed Sub-tabs (Για εσάς / Ακολουθείτε) */
+/* Feed Sub-tabs */
 .feed-tabs{display:flex;border-bottom:1px solid #333;background:#000;position:sticky;top:45px;z-index:90}
 .feed-tab{flex:1;padding:12px;background:none;border:none;color:#777;font-size:14px;font-weight:700;cursor:pointer;text-align:center;border-bottom:2px solid transparent}
 .feed-tab.active{color:#fff;border-bottom-color:#dc2626}
@@ -32,15 +32,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .post-actions{display:flex;gap:30px;color:#999;font-size:13px;margin-top:12px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
 .like-btn.liked{color:#dc2626}
+
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);border-top:1px solid #333;display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
 .nav-item{background:none;border:none;color:#999;padding:8px 12px;cursor:pointer}
 .nav-item.active{color:#dc2626}
+
 .auth-container{text-align:center;padding:80px 24px}
 .auth-container h2{margin-bottom:10px;font-size:32px;font-weight:800}
 .auth-container input{width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;padding:16px;border-radius:12px;margin:8px 0;font-size:16px;max-width:400px}
 .auth-container button{width:100%;max-width:400px;background:#dc2626;color:#fff;border:none;padding:16px;border-radius:12px;font-weight:700;cursor:pointer;font-size:16px;margin:10px 0}
 .auth-container .btn-o{background:transparent;border:1px solid #444;color:#fff}
-.empty-state{padding:60px 20px;text-align:center;color:#777;font-size:16px}
+.empty-state{padding:40px 20px;text-align:center;color:#777;font-size:15px}
 .admin-badge{background:#dc2626;color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
 </style>
 </head>
@@ -56,14 +58,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
     <button class="nav-item" data-tab="notif" onclick="showTab('bell')"><i data-lucide="bell"></i></button>
-    <button class="nav-item" data-tab="profile" onclick="showTab('user')"><i data-lucide="user"></i></button>
+    <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
   </nav>
 </main>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
   const firebaseConfig = {
@@ -87,8 +89,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
   onAuthStateChanged(auth, async (u) => {
     currentUser = u;
     if(u) {
-      const uDoc = await getDoc(doc(db, 'users', u.uid));
-      if(uDoc.exists()) userDataCache = uDoc.data();
+      const uDoc = await doc(db, 'users', u.uid);
+      const snap = await getDoc(uDoc);
+      if(snap.exists()) {
+        userDataCache = snap.data();
+      } else {
+        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || ''};
+      }
     }
     render();
   });
@@ -133,7 +140,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     try {
       let imageUrls = [];
       if(file){
-        const storageRef = ref(storage, `posts/${currentUser.uid}/${Date.now()}_${file.name}`);
+        const storageRef = ref(storage, `posts/${currentUser.uid}_${Date.now()}_${file.name}`);
         const snapshot = await uploadBytes(storageRef, file);
         const url = await getDownloadURL(snapshot.ref);
         imageUrls.push(url);
@@ -157,8 +164,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
       document.getElementById('postText').value = '';
       fileInput.value = '';
+      alert('Η δημοσίευση ανέβηκε επιτυχώς!');
     } catch(err) {
-      alert('Σφάλμα αποστολής: ' + err.message);
+      alert('Σφάλμα ανέβασματος: ' + err.message);
     } finally {
       if(postBtn) { postBtn.disabled = false; postBtn.textContent = 'Δημοσίευση'; }
     }
@@ -238,17 +246,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       m.innerHTML = '<div class="empty-state">Αναζήτηση</div>';
     } else if(currentTab === 'bell'){
       m.innerHTML = '<div class="empty-state">Ειδοποιήσεις</div>';
-    } else if(currentTab === 'user'){
+    } else if(currentTab === 'profile'){
       const displayName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
       const displayPhoto = userDataCache.photo || currentUser.photoURL || '';
       const avatarH = displayPhoto ? `<div class="avatar" style="width:80px;height:80px;border-radius:40px;margin:0 auto 12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:80px;height:80px;border-radius:40px;margin:0 auto 12px;font-size:32px">👤</div>`;
 
-      m.innerHTML = `<div style="padding:40px 20px;text-align:center">
-        ${avatarH}
-        <h2 style="font-size:22px;margin-bottom:4px">${displayName}</h2>
-        <p style="color:#999;font-size:14px;margin-bottom:20px">${currentUser.email}</p>
-        <button style="background:#333;color:#fff;border:none;padding:12px 24px;border-radius:12px;cursor:pointer;font-weight:700" onclick="logout()">Αποσύνδεση</button>
-      </div>`;
+      m.innerHTML = `
+        <div style="padding:30px 20px;text-align:center;border-bottom:1px solid #333">
+          ${avatarH}
+          <h2 style="font-size:22px;margin-bottom:4px">${displayName}</h2>
+          <p style="color:#999;font-size:14px;margin-bottom:16px">${currentUser.email}</p>
+          <button style="background:#333;color:#fff;border:none;padding:10px 20px;border-radius:12px;cursor:pointer;font-weight:700;font-size:13px" onclick="logout()">Αποσύνδεση</button>
+        </div>
+        <div style="padding:10px 16px;font-weight:700;color:#999;font-size:13px;border-bottom:1px solid #222">Οι δημοσιεύσεις μου</div>
+        <div id="userPostsFeed"></div>`;
+      loadUserPosts();
     }
     if(typeof lucide !== 'undefined') lucide.createIcons();
   }
@@ -266,7 +278,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       let docs = [];
       snap.forEach(d => docs.push({id: d.id, ...d.data()}));
 
-      // Αν είναι στην καρτέλα "Ακολουθείτε", φιλτράρουμε (π.χ. μόνο τα δικά του ή όσους ακολουθεί)
       if(feedSubTab === 'following') {
         const followingList = userDataCache.following || [];
         docs = docs.filter(p => p.uid === currentUser.uid || followingList.includes(p.uid));
@@ -276,34 +287,55 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
         }
       }
 
-      feed.innerHTML = docs.map(p => {
-        const isAdmin = adminEmails.includes(p.email);
-        const canDelete = (currentUser && currentUser.uid === p.uid) || isAdmin;
-        const isLiked = currentUser && (p.likedBy || []).includes(currentUser.uid);
-        const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid count-1"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
-        const avatarHtml = p.photo ? `<div class="avatar" style="background-image:url('${p.photo}')"></div>` : `<div class="avatar">👤</div>`;
-        const postName = p.name || 'User';
-
-        return `<div class="post">
-          <div class="post-header">
-            ${avatarHtml}
-            <div class="post-info">
-              <div class="username">${postName} ${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
-              <div class="handle">@${postName.toLowerCase().replace(/\s+/g,'')}</div>
-            </div>
-            ${canDelete ? `<button style="background:none;border:none;color:#999;cursor:pointer;font-size:16px" onclick="deletePost('${p.id}')">✕</button>` : ''}
-          </div>
-          <div class="post-content">${p.text || ''}</div>
-          ${imgHtml}
-          <div class="post-actions">
-            <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}')">❤️ ${p.likes||0}</span>
-          </div>
-        </div>`;
-      }).join('');
+      feed.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
     }, (error) => {
       feed.innerHTML = `<div class="empty-state" style="color:#ef4444">Σφάλμα φόρτωσης: ${error.message}</div>`;
     });
+  }
+
+  function loadUserPosts(){
+    const container = document.getElementById('userPostsFeed');
+    if(!container) return;
+
+    const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snap) => {
+      if(snap.empty){
+        container.innerHTML = '<div class="empty-state">Δεν έχετε κάνει κάποια δημοσίευση ακόμα</div>';
+        return;
+      }
+      let docs = [];
+      snap.forEach(d => docs.push({id: d.id, ...d.data()}));
+      container.innerHTML = docs.map(p => renderPostHtml(p)).join('');
+      if(typeof lucide !== 'undefined') lucide.createIcons();
+    }, (error) => {
+      container.innerHTML = `<div class="empty-state" style="color:#ef4444">Σφάλμα φόρτωσης: ${error.message}</div>`;
+    });
+  }
+
+  function renderPostHtml(p){
+    const isAdmin = adminEmails.includes(p.email);
+    const canDelete = (currentUser && currentUser.uid === p.uid) || isAdmin;
+    const isLiked = currentUser && (p.likedBy || []).includes(currentUser.uid);
+    const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid count-1"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
+    const avatarHtml = p.photo ? `<div class="avatar" style="background-image:url('${p.photo}')"></div>` : `<div class="avatar">👤</div>`;
+    const postName = p.name || 'User';
+
+    return `<div class="post">
+      <div class="post-header">
+        ${avatarHtml}
+        <div class="post-info">
+          <div class="username">${postName} ${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
+          <div class="handle">@${postName.toLowerCase().replace(/\s+/g,'')}</div>
+        </div>
+        ${canDelete ? `<button style="background:none;border:none;color:#999;cursor:pointer;font-size:16px" onclick="deletePost('${p.id}')">✕</button>` : ''}
+      </div>
+      <div class="post-content">${p.text || ''}</div>
+      ${imgHtml}
+      <div class="post-actions">
+        <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}')">❤️ ${p.likes||0}</span>
+      </div>
+    </div>`;
   }
 </script>
 </body>
