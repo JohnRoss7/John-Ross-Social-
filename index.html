@@ -303,41 +303,88 @@ function handleImageSelection(event) {
     let newImages = [];
 
     files.forEach(file => {
-        // Δημιουργία ImageBitmap απευθείας από το αρχείο (πολύ πιο ανθεκτικό σε κινητά)
-        createImageBitmap(file).then(bitmap => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 600;
-            const MAX_HEIGHT = 600;
-            let width = bitmap.width;
-            let height = bitmap.height;
-
-            if (width > height) {
-                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-            } else {
-                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(bitmap, 0, 0, width, height);
-
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.4);
-            newImages.push(compressedDataUrl);
-
+        // Εναλλακτική μέθοδος ασφαλούς φόρτωσης για κινητά (FileReader + Image fallback)
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                processImageToCanvas(img, file, (resultUrl) => {
+                    newImages.push(resultUrl);
+                    processedCount++;
+                    checkDone();
+                });
+            };
+            img.onerror = function() {
+                // Αν αποτύχει το Image object, δοκιμάζουμε createImageBitmap
+                createImageBitmap(file).then(bitmap => {
+                    processBitmapToCanvas(bitmap, (resultUrl) => {
+                        newImages.push(resultUrl);
+                        processedCount++;
+                        checkDone();
+                    });
+                }).catch(() => {
+                    alert('Μη έγκυρη μορφή εικόνας.');
+                    processedCount++;
+                    checkDone();
+                });
+            };
+            img.src = e.target.result;
+        };
+        reader.onerror = function() {
+            alert('Σφάλμα ανάγνωσης αρχείου.');
             processedCount++;
-            if (processedCount === files.length) {
-                compressedImages = compressedImages.concat(newImages);
-                updateImagePreview();
-            }
-        }).catch(err => {
-            console.error(err);
-            alert('Μη έγκυρη μορφή εικόνας.');
-            event.target.value = '';
-            if(previewContainer) previewContainer.innerHTML = '';
-        });
+            checkDone();
+        };
+        reader.readAsDataURL(file);
     });
-    event.target.value = '';
+
+    function checkDone() {
+        if (processedCount === files.length) {
+            compressedImages = compressedImages.concat(newImages);
+            updateImagePreview();
+            event.target.value = '';
+        }
+    }
+}
+
+function processImageToCanvas(img, file, callback) {
+    const canvas = document.createElement('canvas');
+    const MAX_WIDTH = 600;
+    const MAX_HEIGHT = 600;
+    let width = img.width;
+    let height = img.height;
+
+    if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+    } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    callback(canvas.toDataURL('image/jpeg', 0.5));
+}
+
+function processBitmapToCanvas(bitmap, callback) {
+    const canvas = document.createElement('canvas');
+    const MAX_WIDTH = 600;
+    const MAX_HEIGHT = 600;
+    let width = bitmap.width;
+    let height = bitmap.height;
+
+    if (width > height) {
+        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+    } else {
+        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    callback(canvas.toDataURL('image/jpeg', 0.5));
 }
 
 function removePreviewImage(index) {
@@ -607,17 +654,24 @@ function showSettings(){
 function uploadPhoto(event){
   const file=event.target.files[0];
   if(!file)return;
-  createImageBitmap(file).then(bitmap=>{
-    const canvas=document.createElement('canvas');
-    canvas.width=300;
-    canvas.height=300;
-    const ctx=canvas.getContext('2d');
-    ctx.drawImage(bitmap,0,0,300,300);
-    const dataUrl=canvas.toDataURL('image/jpeg',0.5);
-    db.collection('users').doc(user.uid).update({photo:dataUrl}).then(()=>{alert('OK!');render();});
-  }).catch(err=>{
-    alert('Μη έγκυρη μορφή εικόνας.');
-  });
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas=document.createElement('canvas');
+      canvas.width=300;
+      canvas.height=300;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,300,300);
+      const dataUrl=canvas.toDataURL('image/jpeg',0.5);
+      db.collection('users').doc(user.uid).update({photo:dataUrl}).then(()=>{alert('OK!');render();});
+    };
+    img.onerror = function() {
+      alert('Μη έγκυρη μορφή εικόνας.');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function saveProfile(){
