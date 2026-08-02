@@ -8,70 +8,87 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#000;color:#fff;min-height:100vh}
-.app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:#000;position:relative}
-.main-header{position:sticky;top:0;background:rgba(0,0,0,.9);backdrop-filter:blur(10px);border-bottom:1px solid #333;padding:10px 16px;z-index:100;display:flex;align-items:center;justify-content:space-between}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg-color,#000);color:var(--text-color,#fff);min-height:100vh}
+:root{--bg-color:#000;--text-color:#fff;--card-bg:#111;--border-color:#333;--subtext:#999}
+body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-color:#ddd;--subtext:#666}
+
+.app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:var(--bg-color);position:relative}
+.main-header{position:sticky;top:0;background:var(--bg-color);border-bottom:1px solid var(--border-color);padding:10px 16px;z-index:100;display:flex;align-items:center;justify-content:space-between}
 .logo-text{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
 .header-btns{display:flex;gap:8px;align-items:center}
-.lb{background:#333;color:#fff;border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
-.menu-btn{background:none;border:none;color:#fff;cursor:pointer;display:flex;align-items:center}
+.lb{background:var(--border-color);color:var(--text-color);border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
+.menu-btn{background:none;border:none;color:var(--text-color);cursor:pointer;display:flex;align-items:center}
 
 /* Sidebar */
-.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:#111;z-index:1000;transition:left .3s ease;border-right:1px solid #333;padding:20px;display:flex;flex-direction:column;justify-content:space-between}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:var(--card-bg);z-index:1000;transition:left .3s ease;border-right:1px solid var(--border-color);padding:20px;display:flex;flex-direction:column;justify-content:space-between}
 .sidebar.open{left:0}
 .sidebar-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:999;display:none}
 .sidebar-overlay.open{display:block}
-.sidebar-item{display:flex;align-items:center;gap:12px;padding:14px;color:#fff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;background:none;border:none;width:100%;text-align:left}
-.sidebar-item:hover{background:#222}
+.sidebar-item{display:flex;align-items:center;gap:12px;padding:14px;color:var(--text-color);text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;background:none;border:none;width:100%;text-align:left}
+.sidebar-item:hover{background:var(--border-color)}
 .admin-panel-btn{background:#dc2626 !important;color:#fff !important}
 
-/* Feed Sub-tabs */
-.feed-tabs{display:flex;border-bottom:1px solid #333;background:#000;position:sticky;top:45px;z-index:90}
-.feed-tab{flex:1;padding:12px;background:none;border:none;color:#777;font-size:14px;font-weight:700;cursor:pointer;text-align:center;border-bottom:2px solid transparent}
-.feed-tab.active{color:#fff;border-bottom-color:#dc2626}
+/* Settings Submenu */
+.settings-menu{padding-left:20px;display:none;flex-direction:column;gap:8px;margin-top:5px}
+.settings-menu.open{display:flex}
 
-.post{border-bottom:1px solid #333;padding:14px 16px}
+/* Feed Tabs */
+.feed-tabs{display:flex;border-bottom:1px solid var(--border-color);background:var(--bg-color);position:sticky;top:45px;z-index:90}
+.feed-tab{flex:1;padding:12px;background:none;border:none;color:var(--subtext);font-size:14px;font-weight:700;cursor:pointer;text-align:center;border-bottom:2px solid transparent}
+.feed-tab.active{color:var(--text-color);border-bottom-color:#dc2626}
+
+.post{border-bottom:1px solid var(--border-color);padding:14px 16px}
 .post-header{display:flex;gap:10px;margin-bottom:10px;align-items:center}
-.avatar{width:40px;height:40px;border-radius:8px;background:#222;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;background-size:cover;background-position:center;color:#fff}
+.avatar{width:40px;height:40px;border-radius:8px;background:var(--border-color);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;background-size:cover;background-position:center;color:var(--text-color)}
 .post-info{flex:1;min-width:0}
 .username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px}
-.handle{color:#999;font-size:13px;margin-top:1px}
+.handle{color:var(--subtext);font-size:13px;margin-top:1px}
 .post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word}
 .post-images-grid{display:grid;gap:6px;margin-top:10px;border-radius:12px;overflow:hidden}
-.post-images-grid.count-1{grid-template-columns:1fr}
-.post-image-item{width:100%;max-height:350px;object-fit:cover;background:#1a1a1a;border-radius:8px}
-.post-actions{display:flex;gap:30px;color:#999;font-size:13px;margin-top:12px;align-items:center}
+.post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
+.post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
+.like-btn{color:#fff}
 .like-btn.liked{color:#dc2626}
 
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);border-top:1px solid #333;display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
-.nav-item{background:none;border:none;color:#999;padding:8px 12px;cursor:pointer}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);border-top:1px solid var(--border-color);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
+.nav-item{background:none;border:none;color:var(--subtext);padding:8px 12px;cursor:pointer;position:relative}
 .nav-item.active{color:#dc2626}
 
 .auth-container{text-align:center;padding:80px 24px}
 .auth-container h2{margin-bottom:10px;font-size:32px;font-weight:800}
-.auth-container input{width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;padding:16px;border-radius:12px;margin:8px 0;font-size:16px;max-width:400px}
+.auth-container input{width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:16px;border-radius:12px;margin:8px 0;font-size:16px;max-width:400px}
 .auth-container button{width:100%;max-width:400px;background:#dc2626;color:#fff;border:none;padding:16px;border-radius:12px;font-weight:700;cursor:pointer;font-size:16px;margin:10px 0}
-.auth-container .btn-o{background:transparent;border:1px solid #444;color:#fff}
-.empty-state{padding:40px 20px;text-align:center;color:#777;font-size:15px}
+.auth-container .btn-o{background:transparent;border:1px solid var(--border-color);color:var(--text-color)}
+.empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
 .admin-badge{background:#dc2626;color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
+
+/* Profile Banner */
+.profile-banner{width:100%;height:140px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
+.profile-info-section{padding:0 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
+.profile-avatar-wrapper{position:absolute;top:-45px;left:20px;border:4px solid var(--bg-color);border-radius:12px;overflow:hidden}
 </style>
 </head>
-<body>
+<body class="light-mode">
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div>
     <div style="font-size:20px;font-weight:800;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
-      <span>Μενού</span>
-      <button onclick="toggleSidebar()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">✕</button>
+      <span id="menuTitle">Μενού</span>
+      <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--text-color);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div id="sidebarAdminSection"></div>
-    <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile')"><i data-lucide="user"></i> Προφίλ</button>
-    <button class="sidebar-item" onclick="toggleSidebar(); alert('Settings')"><i data-lucide="settings"></i> Ρυθμίσεις</button>
+    <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile')"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
+    <button class="sidebar-item" onclick="toggleSettingsMenu()"><i data-lucide="settings"></i> <span id="mSettings">Ρυθμίσεις</span></button>
+    
+    <div class="settings-menu" id="settingsMenu">
+      <button class="sidebar-item" onclick="toggleLang()"><i data-lucide="globe"></i> <span id="mLang">Γλώσσα: Ελληνικά</span></button>
+      <button class="sidebar-item" onclick="toggleDarkMode()"><i data-lucide="moon"></i> <span id="mDark">Dark Mode: Ανενεργό</span></button>
+    </div>
   </div>
   <div>
-    <button class="sidebar-item" style="color:#ef4444" onclick="logout()"><i data-lucide="log-out"></i> Αποσύνδεση</button>
+    <button class="sidebar-item" style="color:#ef4444" onclick="logout()"><i data-lucide="log-out"></i> <span id="mLogout">Αποσύνδεση</span></button>
   </div>
 </div>
 
@@ -87,7 +104,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
   <nav class="bottom-nav" id="bottomNav" style="display:none">
     <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
-    <button class="nav-item" data-tab="notif" onclick="showTab('bell')"><i data-lucide="bell"></i></button>
+    <button class="nav-item" data-tab="notif" onclick="showTab('notif')"><i data-lucide="bell"></i></button>
     <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
   </nav>
 </main>
@@ -110,7 +127,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  let currentUser = null, currentTab = 'home', feedSubTab = 'foryou', lang = 'el';
+  let currentUser = null, currentTab = 'home', feedSubTab = 'foryou', lang = 'el', darkMode = false;
   let userDataCache = {};
   const adminEmails = ['rossrossg7@gmail.com'];
 
@@ -122,7 +139,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       if(snap.exists()) {
         userDataCache = snap.data();
       } else {
-        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || ''};
+        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', banner: ''};
       }
     }
     render();
@@ -131,6 +148,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
   window.toggleSidebar = () => {
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('open');
+  };
+
+  window.toggleSettingsMenu = () => {
+    document.getElementById('settingsMenu').classList.toggle('open');
+  };
+
+  window.toggleDarkMode = () => {
+    darkMode = !darkMode;
+    document.body.classList.toggle('light-mode', !darkMode);
+    document.getElementById('mDark').textContent = darkMode ? (lang==='el'?'Dark Mode: Ενεργό':'Dark Mode: On') : (lang==='el'?'Dark Mode: Ανενεργό':'Dark Mode: Off');
+  };
+
+  window.toggleLang = () => {
+    lang = lang === 'el' ? 'en' : 'el';
+    document.querySelector('.lb').textContent = lang.toUpperCase();
+    document.getElementById('menuTitle').textContent = lang==='el'?'Μενού':'Menu';
+    document.getElementById('mProfile').textContent = lang==='el'?'Προφίλ':'Profile';
+    document.getElementById('mSettings').textContent = lang==='el'?'Ρυθμίσεις':'Settings';
+    document.getElementById('mLang').textContent = lang==='el'?'Γλώσσα: Ελληνικά':'Language: English';
+    document.getElementById('mDark').textContent = darkMode ? (lang==='el'?'Dark Mode: Ενεργό':'Dark Mode: On') : (lang==='el'?'Dark Mode: Ανενεργό':'Dark Mode: Off');
+    document.getElementById('mLogout').textContent = lang==='el'?'Αποσύνδεση':'Log Out';
+    render();
   };
 
   window.login = () => {
@@ -145,7 +184,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     if(!e || !p) return alert('Συμπλήρωσε email και κωδικό');
     const defaultName = e.split('@')[0];
     createUserWithEmailAndPassword(auth, e, p).then(cred => {
-      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, bio:'', photo:'', followers:[], following:[], likedPosts:[]});
+      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, bio:'', photo:'', banner:'', followers:[], following:[], likedPosts:[]});
     }).catch(err => alert(err.message));
   };
 
@@ -153,32 +192,59 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     signInWithPopup(auth, new GoogleAuthProvider()).then(async cred => {
       const defName = cred.user.displayName || cred.user.email.split('@')[0];
       await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || ''
+        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || '', banner: ''
       }, {merge:true});
     }).catch(err => alert(err.message));
   };
 
   window.logout = () => signOut(auth);
 
+  // Helper to compress and convert image file to Base64
+  const resizeImageFile = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 800;
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   window.postContent = async () => {
     const textVal = document.getElementById('postText').value.trim();
     const fileInput = document.getElementById('imageInput');
     const file = fileInput.files[0];
     
-    if(!textVal && !file) return alert('Γράψε κάτι ή πρόσθεσε φωτογραφία!');
+    if(!textVal && !file) return alert(lang==='el'?'Γράψε κάτι ή πρόσθεσε φωτογραφία!':'Write something or add a photo!');
     
     const postBtn = document.getElementById('postSubmitBtn');
-    if(postBtn) { postBtn.disabled = true; postBtn.textContent = 'Αποστολή...'; }
+    if(postBtn) { postBtn.disabled = true; postBtn.textContent = lang==='el'?'Αποστολή...':'Posting...'; }
 
     try {
       let imageUrls = [];
       if(file){
-        const base64Image = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-          reader.readAsDataURL(file);
-        });
+        const base64Image = await resizeImageFile(file);
         imageUrls.push(base64Image);
       }
 
@@ -192,37 +258,72 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
         photo: myPhoto,
         text: textVal,
         images: imageUrls,
-        likes: 0,
         likedBy: [],
-        comments: [],
         createdAt: Date.now()
       });
 
       document.getElementById('postText').value = '';
       fileInput.value = '';
-      alert('Η δημοσίευση ανέβηκε επιτυχώς!');
+      alert(lang==='el'?'Η δημοσίευση ανέβηκε επιτυχώς!':'Post uploaded successfully!');
     } catch(err) {
       alert('Σφάλμα ανέβασματος: ' + err.message);
     } finally {
-      if(postBtn) { postBtn.disabled = false; postBtn.textContent = 'Δημοσίευση'; }
+      if(postBtn) { postBtn.disabled = false; postBtn.textContent = lang==='el'?'Δημοσίευση':'Post'; }
     }
   };
 
-  window.likePost = async (id) => {
+  // Sound generator for like
+  const playLikeSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    } catch(e) {}
+  };
+
+  window.likePost = async (id, postOwnerUid) => {
     const postRef = doc(db, 'posts', id);
     const postDoc = await getDoc(postRef);
     if(!postDoc.exists()) return;
     const data = postDoc.data();
     const likedBy = data.likedBy || [];
+    
     if(likedBy.includes(currentUser.uid)){
-      await updateDoc(postRef, {likes: data.likes - 1, likedBy: arrayRemove(currentUser.uid)});
+      await updateDoc(postRef, {likedBy: arrayRemove(currentUser.uid)});
     } else {
-      await updateDoc(postRef, {likes: data.likes + 1, likedBy: arrayUnion(currentUser.uid)});
+      playLikeSound();
+      await updateDoc(postRef, {likedBy: arrayUnion(currentUser.uid)});
+      
+      // Send notification if not liking own post
+      if(postOwnerUid && postOwnerUid !== currentUser.uid) {
+        const myName = userDataCache.name || currentUser.email.split('@')[0];
+        await addDoc(collection(db, 'notifications'), {
+          toUid: postOwnerUid,
+          fromName: myName,
+          type: 'like',
+          text: lang==='el'?`${myName} έκανε like στη δημοσίευσή σου`:`${myName} liked your post`,
+          createdAt: Date.now()
+        });
+      }
     }
   };
 
   window.deletePost = async (id) => {
-    if(confirm('Διαγραφή δημοσίευσης;')) await deleteDoc(doc(db, 'posts', id));
+    if(confirm(lang==='el'?'Διαγραφή δημοσίευσης;':'Delete post?')) await deleteDoc(doc(db, 'posts', id));
+  };
+
+  window.updateProfileField = async (field, val) => {
+    await updateDoc(doc(db, 'users', currentUser.uid), {[field]: val});
+    userDataCache[field] = val;
+    render();
   };
 
   window.showTab = (name) => {
@@ -236,17 +337,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     render();
   };
 
-  window.toggleLang = () => {
-    lang = lang === 'el' ? 'en' : 'el';
-    document.querySelector('.lb').textContent = lang.toUpperCase();
-    render();
-  };
-
   window.openAdminPanel = async () => {
     toggleSidebar();
     const postsSnap = await getDocs(collection(db, 'posts'));
     const usersSnap = await getDocs(collection(db, 'users'));
-    alert(`📊 Διαχείριση Admin:\n• Συνολικές δημοσιεύσεις: ${postsSnap.size}\n• Εγγεγραμμένοι χρήστες: ${usersSnap.size}`);
+    alert(`📊 Admin Panel:\n• Posts: ${postsSnap.size}\n• Users: ${usersSnap.size}`);
   };
 
   function render(){
@@ -264,12 +359,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
         <div class="auth-container">
           <div style="font-size:60px;margin-bottom:16px">👋</div>
           <h2>John Ross Social</h2>
-          <p style="color:#999;margin-bottom:30px">Ο χώρος σου. Η φωνή σου.</p>
+          <p style="color:var(--subtext);margin-bottom:30px">${lang==='el'?'Ο χώρος σου. Η φωνή σου.':'Your space. Your voice.'}</p>
           <div style="max-width:400px;margin:0 auto">
             <input id="le" placeholder="Email" type="email">
-            <input id="lp" placeholder="Κωδικός" type="password">
-            <button onclick="login()">Σύνδεση</button>
-            <button class="btn-o" onclick="register()">Εγγραφή</button>
+            <input id="lp" placeholder=${lang==='el'?"ωτικό":"Password"} type="password">
+            <button onclick="login()">${lang==='el'?'Σύνδεση':'Log In'}</button>
+            <button class="btn-o" onclick="register()">${lang==='el'?'Εγγραφή':'Register'}</button>
             <button class="btn-o" onclick="googleLogin()">Google</button>
           </div>
         </div>`;
@@ -279,42 +374,70 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     if(currentTab === 'home'){
       m.innerHTML = `
         <div class="feed-tabs">
-          <button class="feed-tab ${feedSubTab==='foryou'?'active':''}" onclick="setFeedSubTab('foryou')">Για εσάς</button>
-          <button class="feed-tab ${feedSubTab==='following'?'active':''}" onclick="setFeedSubTab('following')">Ακολουθείτε</button>
+          <button class="feed-tab ${feedSubTab==='foryou'?'active':''}" onclick="setFeedSubTab('foryou')">${lang==='el'?'Για εσάς':'For you'}</button>
+          <button class="feed-tab ${feedSubTab==='following'?'active':''}" onclick="setFeedSubTab('following')">${lang==='el'?'Ακολουθείτε':'Following'}</button>
         </div>
-        <div style="padding:14px 16px;border-bottom:1px solid #333">
-          <textarea id="postText" placeholder="Τι σκέφτεσαι;" style="width:100%;background:transparent;border:none;color:#fff;font-size:15px;resize:none;min-height:60px;font-family:inherit"></textarea>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border-color)">
+          <textarea id="postText" placeholder="${lang==='el'?'Τι σκέφτεσαι;':'What are you thinking?'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:60px;font-family:inherit"></textarea>
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between">
-            <label for="imageInput" style="cursor:pointer;background:#262626;padding:8px 14px;border-radius:8px;font-size:13px">📷 Φωτογραφία</label>
+            <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 14px;border-radius:8px;font-size:13px">📷 ${lang==='el'?'Φωτογραφία':'Photo'}</label>
             <input type="file" id="imageInput" accept="image/*" style="display:none">
-            <button id="postSubmitBtn" style="background:#dc2626;color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">Δημοσίευση</button>
+            <button id="postSubmitBtn" style="background:#dc2626;color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
           </div>
         </div>
         <div id="feed"></div>`;
       loadFeed();
     } else if(currentTab === 'search'){
-      m.innerHTML = '<div class="empty-state">Αναζήτηση</div>';
-    } else if(currentTab === 'bell'){
-      m.innerHTML = '<div class="empty-state">Ειδοποιήσεις</div>';
+      m.innerHTML = `<div class="empty-state">${lang==='el'?'Αναζήτηση':'Search'}</div>`;
+    } else if(currentTab === 'notif'){
+      m.innerHTML = `<div id="notificationsList"></div>`;
+      loadNotifications();
     } else if(currentTab === 'profile'){
       const displayName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
       const displayPhoto = userDataCache.photo || currentUser.photoURL || '';
-      const avatarH = displayPhoto ? `<div class="avatar" style="width:80px;height:80px;border-radius:12px;margin:0 auto 12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:80px;height:80px;border-radius:12px;margin:0 auto 12px;font-size:32px">👤</div>`;
+      const displayBanner = userDataCache.banner || '';
+      const avatarH = displayPhoto ? `<div class="avatar" style="width:90px;height:90px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:90px;height:90px;border-radius:12px;font-size:36px">👤</div>`;
+      const bannerH = displayBanner ? `style="background-image:url('${displayBanner}')"` : '';
       const isAdminUser = adminEmails.includes(currentUser.email);
 
       m.innerHTML = `
-        <div style="padding:30px 20px;text-align:center;border-bottom:1px solid #333">
-          ${avatarH}
-          <h2 style="font-size:22px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:6px">
-            ${displayName} ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
-          </h2>
+        <div class="profile-banner" ${bannerH}>
+          <label style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">
+            📷 Banner <input type="file" accept="image/*" style="display:none" onchange="uploadBanner(this)">
+          </label>
         </div>
-        <div style="padding:10px 16px;font-weight:700;color:#999;font-size:13px;border-bottom:1px solid #222">Οι δημοσιεύσεις μου</div>
+        <div class="profile-info-section">
+          <div class="profile-avatar-wrapper">
+            ${avatarH}
+            <label style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>
+          </div>
+          <div style="padding-top:55px;display:flex;align-items:center;justify-content:space-between">
+            <h2 style="font-size:22px;display:flex;align-items:center;gap:6px">
+              <input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:22px;font-weight:700;width:100%;outline:none">
+              ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
+            </h2>
+          </div>
+        </div>
+        <div style="padding:10px 16px;font-weight:700;color:var(--subtext);font-size:13px;border-bottom:1px solid var(--border-color)">${lang==='el'?'Οι δημοσιεύσεις μου':'My posts'}</div>
         <div id="userPostsFeed"></div>`;
       loadUserPosts();
     }
     if(typeof lucide !== 'undefined') lucide.createIcons();
   }
+
+  window.uploadBanner = async (input) => {
+    if(input.files[0]) {
+      const b64 = await resizeImageFile(input.files[0]);
+      await updateProfileField('banner', b64);
+    }
+  };
+
+  window.uploadAvatar = async (input) => {
+    if(input.files[0]) {
+      const b64 = await resizeImageFile(input.files[0]);
+      await updateProfileField('photo', b64);
+    }
+  };
 
   function loadFeed(){
     const feed = document.getElementById('feed');
@@ -323,7 +446,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
       if(snap.empty){ 
-        feed.innerHTML = '<div class="empty-state">Δεν υπάρχουν δημοσιεύσεις</div>'; 
+        feed.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις':'No posts'}</div>`; 
         return; 
       }
       let docs = [];
@@ -333,7 +456,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
         const followingList = userDataCache.following || [];
         docs = docs.filter(p => p.uid === currentUser.uid || followingList.includes(p.uid));
         if(docs.length === 0) {
-          feed.innerHTML = '<div class="empty-state">Δεν υπάρχουν δημοσιεύσεις από τις επαφές σας</div>';
+          feed.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις από τις επαφές σας':'No posts from following'}</div>`;
           return;
         }
       }
@@ -341,7 +464,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
       feed.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
     }, (error) => {
-      feed.innerHTML = `<div class="empty-state" style="color:#ef4444">Σφάλμα φόρτωσης: ${error.message}</div>`;
+      feed.innerHTML = `<div class="empty-state" style="color:#ef4444">Error: ${error.message}</div>`;
+    });
+  }
+
+  function loadNotifications(){
+    const container = document.getElementById('notificationsList');
+    if(!container) return;
+    const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snap) => {
+      let docs = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if(data.toUid === currentUser.uid) docs.push(data);
+      });
+      if(docs.length === 0) {
+        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν έχετε ειδοποιήσεις':'No notifications'}</div>`;
+        return;
+      }
+      container.innerHTML = docs.map(n => `
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;gap:10px;align-items:center">
+          <span style="font-size:20px">❤️</span>
+          <div style="font-size:15px">${n.text}</div>
+        </div>
+      `).join('');
     });
   }
 
@@ -351,27 +497,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
-      if(snap.empty){
-        container.innerHTML = '<div class="empty-state">Δεν έχετε κάνει κάποια δημοσίευση ακόμα</div>';
-        return;
-      }
       let docs = [];
       snap.forEach(d => {
         const data = d.data();
-        if(data.uid === currentUser.uid) {
-          docs.push({id: d.id, ...data});
-        }
+        if(data.uid === currentUser.uid) docs.push({id: d.id, ...data});
       });
 
       if(docs.length === 0){
-        container.innerHTML = '<div class="empty-state">Δεν έχετε κάνει κάποια δημοσίευση ακόμα</div>';
+        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν έχετε κάνει κάποια δημοσίευση ακόμα':'No posts yet'}</div>`;
         return;
       }
 
       container.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
-    }, (error) => {
-      container.innerHTML = `<div class="empty-state" style="color:#ef4444">Σφάλμα φόρτωσης: ${error.message}</div>`;
     });
   }
 
@@ -388,14 +526,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
         ${avatarHtml}
         <div class="post-info">
           <div class="username">${postName} ${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
-          <div class="handle">@${postName.toLowerCase().replace(/\s+/g,'')}</div>
+          <div class="handle">@${postName.toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
         </div>
-        ${canDelete ? `<button style="background:none;border:none;color:#999;cursor:pointer;font-size:16px" onclick="deletePost('${p.id}')">✕</button>` : ''}
+        ${canDelete ? `<button style="background:none;border:none;color:var(--subtext);cursor:pointer;font-size:16px" onclick="deletePost('${p.id}')">✕</button>` : ''}
       </div>
       <div class="post-content">${p.text || ''}</div>
       ${imgHtml}
       <div class="post-actions">
-        <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}')">❤️ ${p.likes||0}</span>
+        <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">❤️</span>
       </div>
     </div>`;
   }
