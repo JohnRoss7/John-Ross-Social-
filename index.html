@@ -271,7 +271,7 @@ async function postContent(){
   try {
     let imageUrls = [];
     for (let file of selectedFiles) {
-      const storageRef = storage.ref().child('posts/' + user.uid + '_' + Date.now() + '_' + Math.random().toString(36.substring(7)));
+      const storageRef = storage.ref().child('posts/' + user.uid + '_' + Date.now() + '_' + Math.random().toString(36).substring(7));
       const snapshot = await storageRef.put(file);
       const downloadUrl = await snapshot.ref.getDownloadURL();
       imageUrls.push(downloadUrl);
