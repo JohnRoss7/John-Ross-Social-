@@ -16,7 +16,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .main-header{position:sticky;top:0;background:var(--bg-color);border-bottom:1px solid var(--border-color);padding:10px 16px;z-index:100;display:flex;align-items:center;justify-content:space-between}
 .logo-text{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
 .header-btns{display:flex;gap:8px;align-items:center}
-.lb{background:var(--border-color);color:var(--text-color);border:none;padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer}
 .menu-btn{background:none;border:none;color:var(--text-color);cursor:pointer;display:flex;align-items:center}
 
 /* Sidebar */
@@ -48,7 +47,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
 .post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
-.like-btn{color:#fff}
+.like-btn{color:#fff;font-size:20px}
 .like-btn.liked{color:#dc2626}
 
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);border-top:1px solid var(--border-color);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
@@ -65,8 +64,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 /* Profile Banner */
 .profile-banner{width:100%;height:140px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
-.profile-info-section{padding:0 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
-.profile-avatar-wrapper{position:absolute;top:-45px;left:20px;border:4px solid var(--bg-color);border-radius:12px;overflow:hidden}
+.profile-info-section{padding:15px 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
+.profile-avatar-container{display:flex;align-items:flex-end;gap:15px;margin-top:-50px;margin-bottom:10px;position:relative;z-index:2}
+.profile-avatar-wrapper{border:4px solid var(--bg-color);border-radius:12px;overflow:hidden;background:var(--card-bg);position:relative}
 </style>
 </head>
 <body class="light-mode">
@@ -98,7 +98,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <button class="menu-btn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
       <div class="logo-text">John Ross Social</div>
     </div>
-    <button class="lb" onclick="toggleLang()">EL</button>
   </header>
   <div id="main"></div>
   <nav class="bottom-nav" id="bottomNav" style="display:none">
@@ -162,7 +161,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.toggleLang = () => {
     lang = lang === 'el' ? 'en' : 'el';
-    document.querySelector('.lb').textContent = lang.toUpperCase();
     document.getElementById('menuTitle').textContent = lang==='el'?'Μενού':'Menu';
     document.getElementById('mProfile').textContent = lang==='el'?'Προφίλ':'Profile';
     document.getElementById('mSettings').textContent = lang==='el'?'Ρυθμίσεις':'Settings';
@@ -199,9 +197,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
-  // Helper to compress and convert image file to Base64
   const resizeImageFile = (file) => {
     return new Promise((resolve, reject) => {
+      if(!file) return resolve('');
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -223,10 +221,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           ctx.drawImage(img, 0, 0, width, height);
           resolve(canvas.toDataURL('image/jpeg', 0.7));
         };
-        img.onerror = reject;
+        img.onerror = () => reject(new Error('Failed to load image'));
         img.src = e.target.result;
       };
-      reader.onerror = reject;
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
     });
   };
@@ -245,7 +243,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       let imageUrls = [];
       if(file){
         const base64Image = await resizeImageFile(file);
-        imageUrls.push(base64Image);
+        if(base64Image) imageUrls.push(base64Image);
       }
 
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
@@ -272,14 +270,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }
   };
 
-  // Sound generator for like
   const playLikeSound = () => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
       gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
       osc.connect(gain);
@@ -302,7 +299,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       playLikeSound();
       await updateDoc(postRef, {likedBy: arrayUnion(currentUser.uid)});
       
-      // Send notification if not liking own post
       if(postOwnerUid && postOwnerUid !== currentUser.uid) {
         const myName = userDataCache.name || currentUser.email.split('@')[0];
         await addDoc(collection(db, 'notifications'), {
@@ -362,7 +358,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <p style="color:var(--subtext);margin-bottom:30px">${lang==='el'?'Ο χώρος σου. Η φωνή σου.':'Your space. Your voice.'}</p>
           <div style="max-width:400px;margin:0 auto">
             <input id="le" placeholder="Email" type="email">
-            <input id="lp" placeholder=${lang==='el'?"ωτικό":"Password"} type="password">
+            <input id="lp" placeholder=${lang==='el'?"Κωδικός":"Password"} type="password">
             <button onclick="login()">${lang==='el'?'Σύνδεση':'Log In'}</button>
             <button class="btn-o" onclick="register()">${lang==='el'?'Εγγραφή':'Register'}</button>
             <button class="btn-o" onclick="googleLogin()">Google</button>
@@ -407,11 +403,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           </label>
         </div>
         <div class="profile-info-section">
-          <div class="profile-avatar-wrapper">
-            ${avatarH}
-            <label style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>
+          <div class="profile-avatar-container">
+            <div class="profile-avatar-wrapper">
+              ${avatarH}
+              <label style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>
+            </div>
           </div>
-          <div style="padding-top:55px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;justify-content:space-between">
             <h2 style="font-size:22px;display:flex;align-items:center;gap:6px">
               <input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:22px;font-weight:700;width:100%;outline:none">
               ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
@@ -428,14 +426,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   window.uploadBanner = async (input) => {
     if(input.files[0]) {
       const b64 = await resizeImageFile(input.files[0]);
-      await updateProfileField('banner', b64);
+      if(b64) await updateProfileField('banner', b64);
     }
   };
 
   window.uploadAvatar = async (input) => {
     if(input.files[0]) {
       const b64 = await resizeImageFile(input.files[0]);
-      await updateProfileField('photo', b64);
+      if(b64) await updateProfileField('photo', b64);
     }
   };
 
@@ -484,7 +482,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       }
       container.innerHTML = docs.map(n => `
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;gap:10px;align-items:center">
-          <span style="font-size:20px">❤️</span>
+          <span style="font-size:20px">👍</span>
           <div style="font-size:15px">${n.text}</div>
         </div>
       `).join('');
@@ -533,7 +531,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <div class="post-content">${p.text || ''}</div>
       ${imgHtml}
       <div class="post-actions">
-        <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">❤️</span>
+        <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">👍</span>
       </div>
     </div>`;
   }
