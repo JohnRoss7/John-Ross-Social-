@@ -67,11 +67,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 /* Profile Banner & Layout */
 .profile-banner{width:100%;height:140px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
 .profile-info-section{padding:15px 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
-.profile-avatar-row{display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px;margin-top:-45px;position:relative;z-index:2}
+.profile-avatar-row{display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px;margin-top:-35px;position:relative;z-index:2}
 .profile-avatar-wrapper{border:4px solid var(--bg-color);border-radius:12px;overflow:hidden;background:var(--card-bg);position:relative}
 
-/* Follow Button Logic: Άσπρο by default, Κόκκινο όταν είναι Following */
-.follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px}
+/* Follow Button */
+.follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
 .follow-btn.following{background:var(--primary-color);color:#fff;border:none}
 
 /* Pull to refresh loader */
@@ -146,7 +146,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   document.body.classList.toggle('light-mode', !darkMode);
 
-  // Pull to Refresh Implementation
+  // Pull to Refresh
   let touchStartY = 0;
   window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: true});
   window.addEventListener('touchend', e => {
@@ -240,6 +240,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
+  // Ενισχυμένη συμπίεση φωτογραφιών για αποφυγή ορίου μεγέθους Firebase
   const resizeImageFile = (file) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
@@ -251,7 +252,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            const maxDim = 600;
+            const maxDim = 450; // Μέγιστη διάσταση για απόλυτη ασφάλεια μεγέθους
             if (width > height && width > maxDim) {
               height *= maxDim / width;
               width = maxDim;
@@ -263,7 +264,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.6));
+            resolve(canvas.toDataURL('image/jpeg', 0.4)); // Συμπίεση στο 40% ποιότητα
           } catch(err) {
             resolve(e.target.result);
           }
@@ -300,7 +301,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.postContent = async () => {
     const textVal = document.getElementById('postText').value.trim();
-    
     if(!textVal && !selectedPostImageBase64) return alert(lang==='el'?'Γράψε κάτι ή πρόσθεσε φωτογραφία!':'Write something or add a photo!');
     
     const postBtn = document.getElementById('postSubmitBtn');
@@ -540,9 +540,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
-          <div>
-            <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Following':'Following') : (lang==='el'?'Ακολουθήστε':'Follow')}</button>
-          </div>
+        </div>
+        <div>
+          <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Following':'Following') : (lang==='el'?'Ακολουθήστε':'Follow')}</button>
         </div>
       </div>
       <div style="padding:10px 16px;font-weight:700;color:var(--subtext);font-size:13px;border-bottom:1px solid var(--border-color)">${lang==='el'?'Δημοσιεύσεις':'Posts'}</div>
@@ -643,7 +643,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <div style="font-size:13px;color:var(--subtext)">@${(u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
           </div>
         </div>
-        <button class="follow-btn ${(userDataCache.following||[]).includes(u.uid)?'following':''}" onclick="toggleFollow('${u.uid}')">${(userDataCache.following||[]).includes(u.uid)?'Following':'Ακολουθήστε'}</button>
+        <button class="follow-btn ${(userDataCache.following||[]).includes(u.uid)?'following':''}" style="width:auto;margin-top:0;padding:6px 14px" onclick="toggleFollow('${u.uid}')">${(userDataCache.following||[]).includes(u.uid)?'Following':'Ακολουθήστε'}</button>
       </div>
     `).join('');
   }
