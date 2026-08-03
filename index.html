@@ -685,16 +685,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
-          ${!isMe ? `
-            <div class="profile-actions-row">
-              <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Following / Unfollow':'Unfollow') : 'Follow'}</button>
+          <div class="profile-actions-row">
+            ${!isMe ? `
+              <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Unfollow' : 'Follow'}</button>
               <button class="options-dots-btn" onclick="openProfileMenu()">⋮</button>
-            </div>
-          ` : `
-            <div class="profile-actions-row">
+            ` : `
               <button class="follow-btn following" onclick="openEditProfileModal()">${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}</button>
-            </div>
-          `}
+            `}
+          </div>
         </div>`;
     }
 
