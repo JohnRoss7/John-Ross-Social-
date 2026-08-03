@@ -72,7 +72,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 .follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
 .follow-btn.following{background:var(--primary-color);color:#fff;border:none}
-.edit-profile-btn{background:var(--border-color);color:var(--text-color);border:none;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
 
 #loadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-direction:column;gap:12px}
 #ptr-indicator{text-align:center;padding:10px;color:var(--subtext);font-size:13px;display:none}
@@ -90,6 +89,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     </div>
     <div id="sidebarAdminSection"></div>
     <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile')"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
+    <button class="sidebar-item" onclick="toggleSidebar(); openEditProfileModal()"><i data-lucide="edit-3"></i> <span id="mEditProfile">Επεξεργασία Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSettingsMenu()"><i data-lucide="settings"></i> <span id="mSettings">Ρυθμίσεις</span></button>
     
     <div class="settings-menu" id="settingsMenu">
@@ -222,6 +222,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const el = (lang === 'el');
     document.getElementById('menuTitle').textContent = el ? 'Μενού' : 'Menu';
     document.getElementById('mProfile').textContent = el ? 'Προφίλ' : 'Profile';
+    document.getElementById('mEditProfile').textContent = el ? 'Επεξεργασία Προφίλ' : 'Edit Profile';
     document.getElementById('mSettings').textContent = el ? 'Ρυθμίσεις' : 'Settings';
     document.getElementById('mLang').textContent = el ? 'Γλώσσα: Ελληνικά' : 'Language: English';
     document.getElementById('mDark').textContent = darkMode ? (el ? 'Dark Mode: Ενεργό' : 'Dark Mode: On') : (el ? 'Dark Mode: Ανενεργό' : 'Dark Mode: Off');
@@ -400,9 +401,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(confirm(lang==='el'?'Διαγραφή δημοσίευσης;':'Delete post?')) await deleteDoc(doc(db, 'posts', id));
   };
 
-  window.toggleEditProfile = () => {
-    isEditingProfile = !isEditingProfile;
-    render();
+  window.openEditProfileModal = () => {
+    isEditingProfile = true;
+    showTab('profile', currentUser.uid);
   };
 
   window.saveProfileChanges = async () => {
@@ -441,7 +442,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     currentTab = name;
     if(name === 'profile') {
       viewingUserId = targetUserId || currentUser.uid;
-      isEditingProfile = false;
+      if(viewingUserId !== currentUser.uid) isEditingProfile = false;
     }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     render();
@@ -573,6 +574,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(isMe && isEditingProfile) {
       profileBodyHtml = `
         <div style="padding:15px 20px;border-bottom:1px solid var(--border-color);display:flex;flex-direction:column;gap:12px">
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px">${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}</div>
           <div>
             <label style="font-size:12px;color:var(--subtext)">${lang==='el'?'Όνομα':'Name'}</label>
             <input id="editNameInput" type="text" value="${displayName}" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:15px;margin-top:4px">
@@ -587,7 +589,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           </div>
           <div style="display:flex;gap:10px">
             <button onclick="saveProfileChanges()" style="flex:1;background:var(--primary-color);color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">${lang==='el'?'Αποθήκευση':'Save'}</button>
-            <button onclick="toggleEditProfile()" style="flex:1;background:transparent;border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-weight:700;cursor:pointer">${lang==='el'?'Ακύρωση':'Cancel'}</button>
+            <button onclick="isEditingProfile=false; render()" style="flex:1;background:transparent;border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-weight:700;cursor:pointer">${lang==='el'?'Ακύρωση':'Cancel'}</button>
           </div>
         </div>`;
     } else {
@@ -611,7 +613,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
-          ${isMe ? `<div><button class="edit-profile-btn" onclick="toggleEditProfile()">${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}</button></div>` : `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button></div>`}
+          ${!isMe ? `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button></div>` : ''}
         </div>`;
     }
 
@@ -632,7 +634,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
         userDataCache.photo = b64;
         
-        // Ενημέρωση και στα posts του χρήστη
         const postsSnap = await getDocs(collection(db, 'posts'));
         postsSnap.forEach(async (postDoc) => {
           if(postDoc.data().uid === currentUser.uid) {
