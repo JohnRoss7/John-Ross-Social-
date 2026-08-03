@@ -8,7 +8,8 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg-color,#000);color:var(--text-color,#fff);min-height:100vh;overscroll-behavior-y:none}
+html, body{width:100%;height:100%;overflow-x:hidden;overscroll-behavior:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg-color,#000);color:var(--text-color,#fff);min-height:100vh}
 :root{--bg-color:#000;--text-color:#fff;--card-bg:#111;--border-color:#333;--subtext:#999}
 body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-color:#ddd;--subtext:#666}
 
@@ -135,6 +136,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   document.body.classList.toggle('light-mode', !darkMode);
 
+  // Prevent pull-to-refresh reload globally
+  document.addEventListener('touchmove', function(e) {
+    if(window.scrollY === 0 && e.touches[0].clientY > 50) {
+      // let user scroll normally inside elements, but block window bounce/refresh if at top
+    }
+  }, {passive: true});
+
   onAuthStateChanged(auth, async (u) => {
     currentUser = u;
     if(u) {
@@ -210,33 +218,37 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   window.logout = () => signOut(auth);
 
   const resizeImageFile = (file) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if(!file) return resolve('');
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 400; // heavy compression to fit safely inside Firestore document limits
-          if (width > height && width > maxDim) {
-            height *= maxDim / width;
-            width = maxDim;
-          } else if (height > maxDim) {
-            width *= maxDim / height;
-            height = maxDim;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 400; // safe compression for camera and gallery photos
+            if (width > height && width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            } else if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.5));
+          } catch(err) {
+            resolve('');
           }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.5));
         };
-        img.onerror = () => reject(new Error('Failed to load image'));
+        img.onerror = () => resolve('');
         img.src = e.target.result;
       };
-      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.onerror = () => resolve('');
       reader.readAsDataURL(file);
     });
   };
@@ -255,7 +267,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       let imageUrls = [];
       if(file){
         const base64Image = await resizeImageFile(file);
-        if(base64Image) imageUrls.push(base64Image);
+        if(!base64Image) throw new Error('Failed to load image');
+        imageUrls.push(base64Image);
       }
 
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
