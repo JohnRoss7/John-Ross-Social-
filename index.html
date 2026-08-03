@@ -72,6 +72,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 .follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
 .follow-btn.following{background:var(--primary-color);color:#fff;border:none}
+.edit-profile-btn{background:var(--border-color);color:var(--text-color);border:none;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
 
 #loadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-direction:column;gap:12px}
 #ptr-indicator{text-align:center;padding:10px;color:var(--subtext);font-size:13px;display:none}
@@ -137,7 +138,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  let currentUser = null, currentTab = 'home', feedSubTab = 'foryou';
+  let currentUser = null, currentTab = 'home', feedSubTab = 'foryou', isEditingProfile = false;
   let lang = localStorage.getItem('jrs_lang') || 'el';
   let darkMode = localStorage.getItem('jrs_dark') === 'true';
   let userDataCache = {};
@@ -399,19 +400,48 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(confirm(lang==='el'?'Διαγραφή δημοσίευσης;':'Delete post?')) await deleteDoc(doc(db, 'posts', id));
   };
 
-  window.updateProfileField = async (field, val) => {
-    if(field === 'bio' && val.length > 200) {
+  window.toggleEditProfile = () => {
+    isEditingProfile = !isEditingProfile;
+    render();
+  };
+
+  window.saveProfileChanges = async () => {
+    const newName = document.getElementById('editNameInput').value.trim();
+    const newUsername = document.getElementById('editUsernameInput').value.trim();
+    let newBio = document.getElementById('editBioInput').value.trim();
+
+    if(newBio.length > 200) {
       alert(lang==='el'?'Το bio δεν μπορεί να ξεπερνά τους 200 χαρακτήρες.':'Bio cannot exceed 200 characters.');
-      val = val.substring(0, 200);
+      newBio = newBio.substring(0, 200);
     }
-    await updateDoc(doc(db, 'users', currentUser.uid), {[field]: val});
-    userDataCache[field] = val;
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('loadingText').textContent = lang==='el'?'Αποθήκευση αλλαγών...':'Saving changes...';
+
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        name: newName,
+        username: newUsername,
+        bio: newBio
+      });
+      userDataCache.name = newName;
+      userDataCache.username = newUsername;
+      userDataCache.bio = newBio;
+      isEditingProfile = false;
+      alert(lang==='el'?'Το προφίλ ενημερώθηκε επιτυχώς!':'Profile updated successfully!');
+    } catch(err) {
+      alert('Σφάλμα: ' + err.message);
+    } finally {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      render();
+    }
   };
 
   window.showTab = (name, targetUserId = null) => {
     currentTab = name;
     if(name === 'profile') {
       viewingUserId = targetUserId || currentUser.uid;
+      isEditingProfile = false;
     }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     render();
@@ -538,32 +568,55 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const followersCount = (profileData.followers || []).length;
     const followingCount = (profileData.following || []).length;
 
-    m.innerHTML = `
-      <div class="profile-top-section">
-        <div class="profile-avatar-wrapper">
-          ${avatarH}
-          ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
-        </div>
-        <div class="profile-details">
-          <h2 style="font-size:18px;display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
-            ${isMe ? `<input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:18px;font-weight:700;width:100%;outline:none" placeholder="${lang==='el'?'Όνομα':'Name'}">` : `<span>${displayName}</span>`}
-            ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
-          </h2>
-          <div style="font-size:13px;color:var(--subtext);margin-top:2px">
-            ${isMe ? `<input type="text" value="${displayUsername}" onchange="updateProfileField('username', this.value)" style="background:transparent;border:none;color:var(--subtext);font-size:13px;width:100%;outline:none" placeholder="Username (emoji ok)">` : `@${displayUsername}`}
+    let profileBodyHtml = '';
+
+    if(isMe && isEditingProfile) {
+      profileBodyHtml = `
+        <div style="padding:15px 20px;border-bottom:1px solid var(--border-color);display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label style="font-size:12px;color:var(--subtext)">${lang==='el'?'Όνομα':'Name'}</label>
+            <input id="editNameInput" type="text" value="${displayName}" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:15px;margin-top:4px">
           </div>
-          ${isMe ? `
-            <textarea maxlength="200" onchange="updateProfileField('bio', this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-color);font-size:13px;margin-top:8px;padding:6px;border-radius:6px;resize:none;font-family:inherit" placeholder="Bio (max 200 chars)...">${displayBio}</textarea>
-          ` : (displayBio ? `<div style="font-size:14px;margin-top:8px;word-break:break-word">${linkify(displayBio)}</div>` : '')}
+          <div>
+            <label style="font-size:12px;color:var(--subtext)">Username (emoji ok)</label>
+            <input id="editUsernameInput" type="text" value="${displayUsername}" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:15px;margin-top:4px">
+          </div>
+          <div>
+            <label style="font-size:12px;color:var(--subtext)">Bio (max 200 chars)</label>
+            <textarea id="editBioInput" maxlength="200" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:14px;resize:none;min-height:70px;margin-top:4px;font-family:inherit">${displayBio}</textarea>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button onclick="saveProfileChanges()" style="flex:1;background:var(--primary-color);color:#fff;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer">${lang==='el'?'Αποθήκευση':'Save'}</button>
+            <button onclick="toggleEditProfile()" style="flex:1;background:transparent;border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-weight:700;cursor:pointer">${lang==='el'?'Ακύρωση':'Cancel'}</button>
+          </div>
+        </div>`;
+    } else {
+      profileBodyHtml = `
+        <div class="profile-top-section">
+          <div class="profile-avatar-wrapper">
+            ${avatarH}
+            ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
+          </div>
+          <div class="profile-details">
+            <h2 style="font-size:18px;display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
+              <span>${displayName}</span>
+              ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
+            </h2>
+            <div style="font-size:13px;color:var(--subtext);margin-top:2px">@${displayUsername}</div>
+            ${displayBio ? `<div style="font-size:14px;margin-top:8px;word-break:break-word">${linkify(displayBio)}</div>` : ''}
+          </div>
         </div>
-      </div>
-      <div class="profile-info-section">
-        <div style="display:flex;gap:20px;font-size:14px;color:var(--subtext)">
-          <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
-          <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
-        </div>
-        ${!isMe ? `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button></div>` : ''}
-      </div>
+        <div class="profile-info-section">
+          <div style="display:flex;gap:20px;font-size:14px;color:var(--subtext)">
+            <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
+            <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
+          </div>
+          ${isMe ? `<div><button class="edit-profile-btn" onclick="toggleEditProfile()">${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}</button></div>` : `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button></div>`}
+        </div>`;
+    }
+
+    m.innerHTML = `
+      ${profileBodyHtml}
       <div style="padding:10px 16px;font-weight:700;color:var(--subtext);font-size:13px;border-bottom:1px solid var(--border-color)">${lang==='el'?'Δημοσιεύσεις':'Posts'}</div>
       <div id="userPostsFeed"></div>`;
     loadUserPostsSpecific(uid);
@@ -578,6 +631,15 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       if(b64) {
         await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
         userDataCache.photo = b64;
+        
+        // Ενημέρωση και στα posts του χρήστη
+        const postsSnap = await getDocs(collection(db, 'posts'));
+        postsSnap.forEach(async (postDoc) => {
+          if(postDoc.data().uid === currentUser.uid) {
+            await updateDoc(doc(db, 'posts', postDoc.id), {photo: b64});
+          }
+        });
+
         render();
       }
     }
