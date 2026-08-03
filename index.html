@@ -109,7 +109,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--text-color);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div id="sidebarAdminSection"></div>
-    <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile')"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
+    <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile', currentUser ? currentUser.uid : null)"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSidebar(); openEditProfileModal()"><i data-lucide="edit-3"></i> <span id="mEditProfile">Επεξεργασία Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSettingsMenu()"><i data-lucide="settings"></i> <span id="mSettings">Ρυθμίσεις</span></button>
     
@@ -137,7 +137,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
     <button class="nav-item" data-tab="notif" onclick="showTab('notif')"><i data-lucide="bell"></i></button>
-    <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
+    <button class="nav-item" data-tab="profile" onclick="showTab('profile', currentUser ? currentUser.uid : null)"><i data-lucide="user"></i></button>
   </nav>
 </main>
 
@@ -665,6 +665,32 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           </div>
         </div>`;
     } else {
+      // Ενσωματωμένη η ακριβής λογική σου για τα action buttons:
+      let actionButtons = '';
+
+      if (isMe) {
+        actionButtons = `
+          <button onclick="openEditProfileModal()" 
+            style="width:100%;background:transparent;border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:20px;font-weight:600;cursor:pointer;margin-top:12px">
+            Επεξεργασία Προφίλ
+          </button>
+        `;
+      } else {
+        actionButtons = `
+          <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+            <button class="follow-btn ${isFollowing ? 'following' : ''}" 
+              onclick="toggleFollow('${uid}')"
+              style="flex:1;background:${isFollowing ? 'transparent' : 'var(--primary-color)'};color:${isFollowing ? 'var(--text-color)' : '#fff'};border:1px solid var(--border-color);padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
+              ${isFollowing ? 'Following' : 'Follow'}
+            </button>
+            <button onclick="openProfileMenu()" 
+              style="background:var(--card-bg);border:1px solid var(--border-color);width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">
+              ⋮
+            </button>
+          </div>
+        `;
+      }
+
       profileBodyHtml = `
         <div class="profile-top-section">
           <div class="profile-avatar-wrapper">
@@ -685,14 +711,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
-          <div class="profile-actions-row">
-            ${!isMe ? `
-              <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Unfollow' : 'Follow'}</button>
-              <button class="options-dots-btn" onclick="openProfileMenu()">⋮</button>
-            ` : `
-              <button class="follow-btn following" onclick="openEditProfileModal()">${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}</button>
-            `}
-          </div>
+          ${actionButtons}
         </div>`;
     }
 
