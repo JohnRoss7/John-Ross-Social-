@@ -71,7 +71,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .profile-info-section{padding:15px 20px 20px 20px;border-bottom:1px solid var(--border-color)}
 
 .follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
-.follow-btn.following{background:var(--primary-color);color:#fff;border:none}
+.follow-btn.following{background:transparent;color:var(--text-color);border:1px solid var(--border-color)}
 
 #loadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-direction:column;gap:12px}
 #ptr-indicator{text-align:center;padding:10px;color:var(--subtext);font-size:13px;display:none}
@@ -469,6 +469,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const myRef = doc(db, 'users', currentUser.uid);
     const targetRef = doc(db, 'users', targetUid);
     
+    const mySnap = await getDoc(myRef);
+    if(mySnap.exists()) {
+      userDataCache.following = mySnap.data().following || [];
+    }
+
     const myFollowing = userDataCache.following || [];
     const isFollowing = myFollowing.includes(targetUid);
 
@@ -565,6 +570,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(!isMe) {
       const uSnap = await getDoc(doc(db, 'users', uid));
       if(uSnap.exists()) profileData = uSnap.data();
+    } else {
+      const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
+      if(mySnap.exists()) {
+        userDataCache = mySnap.data();
+        profileData = userDataCache;
+      }
     }
 
     const displayName = profileData.name || 'User';
@@ -620,7 +631,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
-          ${!isMe ? `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Ακολουθείτε':'Following') : (lang==='el'?'Ακολουθήστε':'Follow')}</button></div>` : ''}
+          ${!isMe ? `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Unfollow':'Unfollow') : (lang==='el'?'Follow':'Follow')}</button></div>` : ''}
         </div>`;
     }
 
@@ -712,6 +723,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   async function loadAllUsersForSearch() {
     const container = document.getElementById('usersSearchList');
     if(!container) return;
+    const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
+    if(mySnap.exists()) {
+      userDataCache.following = mySnap.data().following || [];
+    }
+
     const snap = await getDocs(collection(db, 'users'));
     let users = [];
     snap.forEach(d => {
@@ -734,7 +750,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
               <div style="font-size:13px;color:var(--subtext)">@${u.username || (u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
             </div>
           </div>
-          <button class="follow-btn ${isFollowing?'following':''}" style="width:auto;margin-top:0;padding:6px 14px" onclick="toggleFollow('${u.uid}')">${isFollowing?(lang==='el'?'Ακολουθείτε':'Following'):(lang==='el'?'Ακολουθήστε':'Follow')}</button>
+          <button class="follow-btn ${isFollowing?'following':''}" style="width:auto;margin-top:0;padding:6px 14px" onclick="toggleFollow('${u.uid}')">${isFollowing?'Unfollow':'Follow'}</button>
         </div>
       `;
     }).join('');
