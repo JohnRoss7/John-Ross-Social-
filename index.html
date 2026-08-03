@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html, body{width:100%;height:100%;overflow-x:hidden;overscroll-behavior:none}
+html, body{width:100%;height:100%;overflow-x:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg-color,#000);color:var(--text-color,#fff);min-height:100vh}
 :root{--bg-color:#000;--text-color:#fff;--card-bg:#111;--border-color:#333;--subtext:#999;--primary-color:#dc2626}
 body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-color:#ddd;--subtext:#666}
@@ -73,6 +73,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 /* Follow Button Logic: Άσπρο by default, Κόκκινο όταν είναι Following */
 .follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px}
 .follow-btn.following{background:var(--primary-color);color:#fff;border:none}
+
+/* Pull to refresh loader */
+#ptr-indicator{text-align:center;padding:10px;color:var(--subtext);font-size:13px;display:none}
 </style>
 </head>
 <body>
@@ -98,7 +101,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   </div>
 </div>
 
-<main class="app-container">
+<main class="app-container" id="appContainer">
+  <div id="ptr-indicator">🔄 Ανανέωση...</div>
   <header class="main-header">
     <div class="header-btns">
       <button class="menu-btn" onclick="toggleSidebar()"><i data-lucide="menu"></i></button>
@@ -137,13 +141,29 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let darkMode = localStorage.getItem('jrs_dark') === 'true';
   let userDataCache = {};
   let viewingUserId = null;
+  let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
   document.body.classList.toggle('light-mode', !darkMode);
 
-  document.addEventListener('touchmove', function(e) {
-    if(window.scrollY === 0 && e.touches[0].clientY > 50) {}
+  // Pull to Refresh Implementation
+  let touchStartY = 0;
+  window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: true});
+  window.addEventListener('touchend', e => {
+    let touchEndY = e.changedTouches[0].clientY;
+    if(window.scrollY <= 5 && (touchEndY - touchStartY) > 120) {
+      triggerRefresh();
+    }
   }, {passive: true});
+
+  function triggerRefresh() {
+    const ptr = document.getElementById('ptr-indicator');
+    if(ptr) ptr.style.display = 'block';
+    setTimeout(() => {
+      if(ptr) ptr.style.display = 'none';
+      render();
+    }, 600);
+  }
 
   onAuthStateChanged(auth, async (u) => {
     currentUser = u;
@@ -152,12 +172,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       const snap = await getDoc(uDoc);
       if(snap.exists()) {
         userDataCache = snap.data();
-        // Ασφάλεια: Αφαίρεση τυχόν αυτο-ακολουθίας
-        if((userDataCache.following || []).includes(u.uid) || (userDataCache.followers || []).includes(u.uid)) {
-          userDataCache.following = (userDataCache.following || []).filter(id => id !== u.uid);
-          userDataCache.followers = (userDataCache.followers || []).filter(id => id !== u.uid);
-          await updateDoc(uDoc, {following: userDataCache.following, followers: userDataCache.followers});
-        }
       } else {
         userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', banner: '', followers: [], following: []};
         await setDoc(uDoc, userDataCache);
@@ -237,7 +251,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            const maxDim = 800;
+            const maxDim = 600;
             if (width > height && width > maxDim) {
               height *= maxDim / width;
               width = maxDim;
@@ -249,7 +263,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
           } catch(err) {
             resolve(e.target.result);
           }
@@ -262,22 +276,40 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     });
   };
 
+  window.handleImageSelection = async (input) => {
+    if(input.files && input.files[0]) {
+      selectedPostImageBase64 = await resizeImageFile(input.files[0]);
+      const prevContainer = document.getElementById('imagePreviewContainer');
+      if(prevContainer) {
+        prevContainer.innerHTML = `
+          <div style="position:relative;display:inline-block;margin-top:8px">
+            <img src="${selectedPostImageBase64}" style="max-height:120px;border-radius:8px;object-fit:cover">
+            <button onclick="clearPostImage()" style="position:absolute;top:-6px;right:-6px;background:#000;color:#fff;border:1px solid #fff;border-radius:50%;width:22px;height:22px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+          </div>`;
+      }
+    }
+  };
+
+  window.clearPostImage = () => {
+    selectedPostImageBase64 = '';
+    const prevContainer = document.getElementById('imagePreviewContainer');
+    if(prevContainer) prevContainer.innerHTML = '';
+    const fileInput = document.getElementById('imageInput');
+    if(fileInput) fileInput.value = '';
+  };
+
   window.postContent = async () => {
     const textVal = document.getElementById('postText').value.trim();
-    const fileInput = document.getElementById('imageInput');
-    const file = fileInput.files[0];
     
-    if(!textVal && !file) return alert(lang==='el'?'Γράψε κάτι ή πρόσθεσε φωτογραφία!':'Write something or add a photo!');
+    if(!textVal && !selectedPostImageBase64) return alert(lang==='el'?'Γράψε κάτι ή πρόσθεσε φωτογραφία!':'Write something or add a photo!');
     
     const postBtn = document.getElementById('postSubmitBtn');
     if(postBtn) { postBtn.disabled = true; postBtn.textContent = lang==='el'?'Αποστολή...':'Posting...'; }
 
     try {
       let imageUrls = [];
-      if(file){
-        const base64Image = await resizeImageFile(file);
-        if(!base64Image) throw new Error('Failed to load image');
-        imageUrls.push(base64Image);
+      if(selectedPostImageBase64){
+        imageUrls.push(selectedPostImageBase64);
       }
 
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
@@ -295,7 +327,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       });
 
       document.getElementById('postText').value = '';
-      fileInput.value = '';
+      clearPostImage();
       alert(lang==='el'?'Η δημοσίευση ανέβηκε επιτυχώς!':'Post uploaded successfully!');
     } catch(err) {
       alert('Σφάλμα ανέβασματος: ' + err.message);
@@ -371,7 +403,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   };
 
   window.toggleFollow = async (targetUid) => {
-    if(targetUid === currentUser.uid) return;
+    if(targetUid === currentUser.uid) {
+      alert(lang==='el'?'Δεν μπορείτε να ακολουθήσετε τον εαυτό σας!':'You cannot follow yourself!');
+      return;
+    }
     const myRef = doc(db, 'users', currentUser.uid);
     const targetRef = doc(db, 'users', targetUid);
     
@@ -442,9 +477,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         </div>
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color)">
           <textarea id="postText" placeholder="${lang==='el'?'Τι σκέφτεσαι;':'What are you thinking?'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:60px;font-family:inherit"></textarea>
+          <div id="imagePreviewContainer"></div>
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between">
             <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 14px;border-radius:8px;font-size:13px">📷 ${lang==='el'?'Φωτογραφία':'Photo'}</label>
-            <input type="file" id="imageInput" accept="image/*" style="display:none">
+            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelection(this)">
             <button id="postSubmitBtn" style="background:var(--primary-color);color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
           </div>
         </div>
@@ -505,7 +541,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
           <div>
-            ${!isMe ? `<button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Following':'Following') : (lang==='el'?'Ακολουθήστε':'Follow')}</button>` : ''}
+            <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Following':'Following') : (lang==='el'?'Ακολουθήστε':'Follow')}</button>
           </div>
         </div>
       </div>
