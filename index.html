@@ -149,6 +149,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   if(darkMode) document.body.classList.remove('light-mode');
   else document.body.classList.add('light-mode');
 
+  window.addEventListener('popstate', (event) => {
+    if(isEditingProfile) {
+      isEditingProfile = false;
+      render();
+    }
+  });
+
   window.clearAppCache = async () => {
     if(confirm(lang === 'el' ? 'Εκκαθάριση τοπικών δεδομένων και ανανέωση;' : 'Clear local data and reload?')) {
       localStorage.clear();
@@ -403,6 +410,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.openEditProfileModal = () => {
     isEditingProfile = true;
+    history.pushState({editing: true}, '');
     showTab('profile', currentUser.uid);
   };
 
