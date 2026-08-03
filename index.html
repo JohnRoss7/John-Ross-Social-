@@ -43,11 +43,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px}
 .handle{color:var(--subtext);font-size:13px;margin-top:1px}
 .post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word}
+.post-content a{color:#dc2626;text-decoration:underline}
 .post-images-grid{display:grid;gap:6px;margin-top:10px;border-radius:12px;overflow:hidden}
 .post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
 .post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
 
-/* Like Button Fix to prevent Android Search Popup */
 .like-action-btn{background:var(--border-color);border:none;padding:6px 12px;border-radius:20px;color:var(--text-color);cursor:pointer;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
 .like-action-btn.liked{background:#dc2626;color:#fff}
 
@@ -66,7 +66,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 /* Profile Banner & Layout */
 .profile-banner{width:100%;height:140px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
 .profile-info-section{padding:15px 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
-.profile-avatar-container{display:flex;align-items:flex-end;gap:15px;margin-top:-70px;margin-bottom:10px;position:relative;z-index:2}
+.profile-avatar-container{display:flex;align-items:flex-end;gap:15px;margin-top:-35px;margin-bottom:10px;position:relative;z-index:2}
 .profile-avatar-wrapper{border:4px solid var(--bg-color);border-radius:12px;overflow:hidden;background:var(--card-bg);position:relative}
 </style>
 </head>
@@ -133,7 +133,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let userDataCache = {};
   const adminEmails = ['rossrossg7@gmail.com'];
 
-  // Apply saved settings immediately
   document.body.classList.toggle('light-mode', !darkMode);
 
   onAuthStateChanged(auth, async (u) => {
@@ -220,7 +219,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const maxDim = 800;
+          const maxDim = 600; // stricter limit to stay well under Firestore 1MB doc limit
           if (width > height && width > maxDim) {
             height *= maxDim / width;
             width = maxDim;
@@ -232,7 +231,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.7));
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
         };
         img.onerror = () => reject(new Error('Failed to load image'));
         img.src = e.target.result;
@@ -451,6 +450,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }
   };
 
+  function linkify(text) {
+    if(!text) return '';
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+  }
+
   function loadFeed(){
     const feed = document.getElementById('feed');
     if(!feed) return;
@@ -542,7 +547,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         </div>
         ${canDelete ? `<button style="background:none;border:none;color:var(--subtext);cursor:pointer;font-size:16px" onclick="deletePost('${p.id}')">✕</button>` : ''}
       </div>
-      <div class="post-content">${p.text || ''}</div>
+      <div class="post-content">${linkify(p.text || '')}</div>
       ${imgHtml}
       <div class="post-actions">
         <button class="like-action-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">
