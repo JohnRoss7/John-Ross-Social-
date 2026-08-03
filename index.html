@@ -502,8 +502,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   window.showTab = (name, targetUserId = null) => {
     currentTab = name;
     if(name === 'profile') {
-      viewingUserId = targetUserId || currentUser.uid;
-      if(viewingUserId !== currentUser.uid) isEditingProfile = false;
+      viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
+      if(viewingUserId !== (currentUser ? currentUser.uid : null)) isEditingProfile = false;
     }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     render();
@@ -616,6 +616,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   }
 
   async function loadProfileData(uid) {
+    if(!uid || !currentUser) return;
     const m = document.getElementById('main');
     const isMe = (uid === currentUser.uid);
     let profileData = userDataCache;
@@ -665,7 +666,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           </div>
         </div>`;
     } else {
-      // Ενσωματωμένη η ακριβής λογική σου για τα action buttons:
       let actionButtons = '';
 
       if (isMe) {
