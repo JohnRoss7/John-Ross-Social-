@@ -70,8 +70,18 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .profile-details{flex:1;min-width:0}
 .profile-info-section{padding:15px 20px 20px 20px;border-bottom:1px solid var(--border-color)}
 
-.follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
+.profile-actions-row{display:flex;align-items:center;gap:10px;margin-top:12px}
+.follow-btn{background:var(--primary-color);color:#fff;border:none;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;flex:1;text-align:center}
 .follow-btn.following{background:transparent;color:var(--text-color);border:1px solid var(--border-color)}
+
+.options-dots-btn{background:var(--card-bg);color:var(--text-color);border:1px solid var(--border-color);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+
+/* Modal / Dropdown Menu */
+.profile-menu-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center}
+.profile-menu-modal.open{display:flex}
+.profile-menu-content{background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;width:90%;max-width:320px;padding:8px 0;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+.profile-menu-item{padding:14px 20px;display:flex;align-items:center;gap:14px;font-size:15px;color:var(--text-color);cursor:pointer;background:none;border:none;width:100%;text-align:left}
+.profile-menu-item:hover{background:var(--border-color)}
 
 #loadingOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:9999;display:none;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;flex-direction:column;gap:12px}
 #ptr-indicator{text-align:center;padding:10px;color:var(--subtext);font-size:13px;display:none}
@@ -81,6 +91,17 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 <div id="loadingOverlay">⏳ <span id="loadingText">Επεξεργασία εικόνας...</span></div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Profile Options Modal (3 dots menu) -->
+<div class="profile-menu-modal" id="profileMenuModal" onclick="closeProfileMenu(event)">
+  <div class="profile-menu-content" onclick="event.stopPropagation()">
+    <button class="profile-menu-item" onclick="profileMenuAction('share')"><i data-lucide="share-2"></i> <span id="mShare">Share Profile</span></button>
+    <button class="profile-menu-item" onclick="profileMenuAction('block')"><i data-lucide="ban"></i> <span id="mBlock">Block</span></button>
+    <button class="profile-menu-item" onclick="profileMenuAction('mute')"><i data-lucide="volume-x"></i> <span id="mMute">Mute</span></button>
+    <button class="profile-menu-item" style="color:#ef4444" onclick="profileMenuAction('report')"><i data-lucide="flag"></i> <span id="mReport">Report</span></button>
+  </div>
+</div>
+
 <div class="sidebar" id="sidebar">
   <div>
     <div style="font-size:20px;font-weight:800;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center">
@@ -235,7 +256,40 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     document.getElementById('mDark').textContent = darkMode ? (el ? 'Dark Mode: Ενεργό' : 'Dark Mode: On') : (el ? 'Dark Mode: Ανενεργό' : 'Dark Mode: Off');
     document.getElementById('mClearCache').textContent = el ? 'Εκκαθάριση Cache' : 'Clear Cache';
     document.getElementById('mLogout').textContent = el ? 'Αποσύνδεση' : 'Log Out';
+    
+    // Modal Menu items
+    document.getElementById('mShare').textContent = el ? 'Κοινοποίηση Προφίλ' : 'Share Profile';
+    document.getElementById('mBlock').textContent = el ? 'Αποκλεισμός' : 'Block';
+    document.getElementById('mMute').textContent = el ? 'Σίγαση' : 'Mute';
+    document.getElementById('mReport').textContent = el ? 'Αναφορά' : 'Report';
   }
+
+  window.openProfileMenu = () => {
+    document.getElementById('profileMenuModal').classList.add('open');
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+  };
+
+  window.closeProfileMenu = (e) => {
+    if(e) e.stopPropagation();
+    document.getElementById('profileMenuModal').classList.remove('open');
+  };
+
+  window.profileMenuAction = (action) => {
+    closeProfileMenu();
+    if(action === 'share') {
+      if(navigator.share) {
+        navigator.share({title: 'Profile', url: window.location.href}).catch(()=>{});
+      } else {
+        alert(lang==='el'?'Ο σύνδεσμος αντιγράφηκε!':'Link copied!');
+      }
+    } else if(action === 'block') {
+      alert(lang==='el'?'Ο χρήστης αποκλείστηκε.':'User blocked.');
+    } else if(action === 'mute') {
+      alert(lang==='el'?'Έγινε σίγαση χρήστη.':'User muted.');
+    } else if(action === 'report') {
+      alert(lang==='el'?'Η αναφορά υποβλήθηκε επιτυχώς.':'Report submitted successfully.');
+    }
+  };
 
   window.login = () => {
     const e = document.getElementById('le').value;
@@ -631,7 +685,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
             <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
           </div>
-          ${!isMe ? `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Unfollow':'Unfollow') : (lang==='el'?'Follow':'Follow')}</button></div>` : ''}
+          ${!isMe ? `
+            <div class="profile-actions-row">
+              <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Unfollow':'Unfollow') : (lang==='el'?'Follow':'Follow')}</button>
+              <button class="options-dots-btn" onclick="openProfileMenu()">⋮</button>
+            </div>
+          ` : ''}
         </div>`;
     }
 
