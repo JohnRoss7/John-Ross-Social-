@@ -64,11 +64,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
 .admin-badge{background:var(--primary-color);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
 
-/* Profile Banner & Layout (Μεγαλύτερη εικόνα προφίλ) */
-.profile-banner{width:100%;height:160px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
-.profile-info-section{padding:15px 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
-.profile-avatar-row{display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px;margin-top:-50px;position:relative;z-index:2}
-.profile-avatar-wrapper{border:4px solid var(--bg-color);border-radius:16px;overflow:hidden;background:var(--card-bg);position:relative;width:110px;height:110px}
+/* Profile Layout (Εικόνα πάνω αριστερά, Χωρίς Banner) */
+.profile-top-section{padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:flex-start;gap:16px}
+.profile-avatar-wrapper{border:3px solid var(--border-color);border-radius:16px;overflow:hidden;background:var(--card-bg);position:relative;width:80px;height:80px;flex-shrink:0}
+.profile-details{flex:1;min-width:0}
+.profile-info-section{padding:15px 20px 20px 20px;border-bottom:1px solid var(--border-color)}
 
 .follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 20px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;width:100%;text-align:center;margin-top:12px}
 .follow-btn.following{background:var(--primary-color);color:#fff;border:none}
@@ -93,7 +93,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     
     <div class="settings-menu" id="settingsMenu">
       <button class="sidebar-item" onclick="toggleLang()"><i data-lucide="globe"></i> <span id="mLang">Γλώσσα: Ελληνικά</span></button>
-      <button class="sidebar-item" onclick="toggleDarkMode()"><i data-lucide="moon"></i> <span id="mDark">Dark Mode: Ενεργό</span></button>
+      <button class="sidebar-item" onclick="toggleDarkMode()"><i data-lucide="moon"></i> <span id="mDark">Dark Mode</span></button>
       <button class="sidebar-item" onclick="clearAppCache()"><i data-lucide="trash-2"></i> <span id="mClearCache">Εκκαθάριση Cache</span></button>
     </div>
   </div>
@@ -145,9 +145,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
-  document.body.classList.toggle('light-mode', !darkMode);
+  if(darkMode) document.body.classList.remove('light-mode');
+  else document.body.classList.add('light-mode');
 
-  // Κουμπί Εκκαθάρισης Cache
   window.clearAppCache = async () => {
     if(confirm(lang === 'el' ? 'Εκκαθάριση τοπικών δεδομένων και ανανέωση;' : 'Clear local data and reload?')) {
       localStorage.clear();
@@ -187,7 +187,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       if(snap.exists()) {
         userDataCache = snap.data();
       } else {
-        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', banner: '', followers: [], following: []};
+        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', followers: [], following: []};
         await setDoc(uDoc, userDataCache);
       }
     }
@@ -240,7 +240,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(!e || !p) return alert('Συμπλήρωσε email και κωδικό');
     const defaultName = e.split('@')[0];
     createUserWithEmailAndPassword(auth, e, p).then(cred => {
-      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, bio:'', photo:'', banner:'', followers:[], following:[], likedPosts:[]});
+      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, bio:'', photo:'', followers:[], following:[], likedPosts:[]});
     }).catch(err => alert(err.message));
   };
 
@@ -248,7 +248,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     signInWithPopup(auth, new GoogleAuthProvider()).then(async cred => {
       const defName = cred.user.displayName || cred.user.email.split('@')[0];
       await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || '', banner: '', followers:[], following:[]
+        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || '', followers:[], following:[]
       }, {merge:true});
     }).catch(err => alert(err.message));
   };
@@ -527,36 +527,30 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
     const displayName = profileData.name || 'User';
     const displayPhoto = profileData.photo || '';
-    const displayBanner = profileData.banner || '';
-    const avatarH = displayPhoto ? `<div class="avatar" style="width:110px;height:110px;border-radius:16px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:110px;height:110px;border-radius:16px;font-size:42px">👤</div>`;
-    const bannerH = displayBanner ? `style="background-image:url('${displayBanner}')"` : '';
+    const avatarH = displayPhoto ? `<div class="avatar" style="width:80px;height:80px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:80px;height:80px;border-radius:12px;font-size:32px">👤</div>`;
     const isAdminUser = adminEmails.includes(profileData.email);
     const isFollowing = (userDataCache.following || []).includes(uid);
     const followersCount = (profileData.followers || []).length;
     const followingCount = (profileData.following || []).length;
 
     m.innerHTML = `
-      <div class="profile-banner" ${bannerH}>
-        ${isMe ? `<label style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">📷 Banner <input type="file" accept="image/*" style="display:none" onchange="uploadBanner(this)"></label>` : ''}
-      </div>
-      <div class="profile-avatar-row">
+      <div class="profile-top-section">
         <div class="profile-avatar-wrapper">
           ${avatarH}
-          ${isMe ? `<label style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 8px;border-radius:6px;font-size:10px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
+          ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
+        </div>
+        <div class="profile-details">
+          <h2 style="font-size:18px;display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
+            ${isMe ? `<input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:18px;font-weight:700;width:100%;outline:none">` : `<span>${displayName}</span>`}
+            ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
+          </h2>
+          <div style="font-size:13px;color:var(--subtext);margin-top:2px">@${displayName.toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
         </div>
       </div>
       <div class="profile-info-section">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <h2 style="font-size:22px;display:flex;align-items:center;gap:6px;width:100%">
-            ${isMe ? `<input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:22px;font-weight:700;width:100%;outline:none">` : `<span>${displayName}</span>`}
-            ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
-          </h2>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <div style="display:flex;gap:15px;font-size:14px;color:var(--subtext)">
-            <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
-            <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
-          </div>
+        <div style="display:flex;gap:20px;font-size:14px;color:var(--subtext)">
+          <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
+          <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
         </div>
         <div>
           <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button>
@@ -566,16 +560,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <div id="userPostsFeed"></div>`;
     loadUserPostsSpecific(uid);
   }
-
-  window.uploadBanner = async (input) => {
-    if(input.files && input.files[0]) {
-      document.getElementById('loadingOverlay').style.display = 'flex';
-      document.getElementById('loadingText').textContent = lang==='el'?'Ανεβαίνει το banner...':'Uploading banner...';
-      const b64 = await resizeImageFile(input.files[0], 800);
-      document.getElementById('loadingOverlay').style.display = 'none';
-      if(b64) await updateProfileField('banner', b64);
-    }
-  };
 
   window.uploadAvatar = async (input) => {
     if(input.files && input.files[0]) {
