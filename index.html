@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -257,7 +258,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     document.getElementById('mClearCache').textContent = el ? 'Εκκαθάριση Cache' : 'Clear Cache';
     document.getElementById('mLogout').textContent = el ? 'Αποσύνδεση' : 'Log Out';
     
-    // Modal Menu items
     document.getElementById('mShare').textContent = el ? 'Κοινοποίηση Προφίλ' : 'Share Profile';
     document.getElementById('mBlock').textContent = el ? 'Αποκλεισμός' : 'Block';
     document.getElementById('mMute').textContent = el ? 'Σίγαση' : 'Mute';
@@ -525,7 +525,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     
     const mySnap = await getDoc(myRef);
     if(mySnap.exists()) {
-      userDataCache.following = mySnap.data().following || [];
+      userDataCache = mySnap.data();
     }
 
     const myFollowing = userDataCache.following || [];
@@ -621,15 +621,17 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const isMe = (uid === currentUser.uid);
     let profileData = userDataCache;
 
+    // Ανανέωση δεδομένων τρέχοντος χρήστη απευθείας από τη βάση για απόλυτη ακρίβεια στο follow
+    const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
+    if(mySnap.exists()) {
+      userDataCache = mySnap.data();
+    }
+
     if(!isMe) {
       const uSnap = await getDoc(doc(db, 'users', uid));
       if(uSnap.exists()) profileData = uSnap.data();
     } else {
-      const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
-      if(mySnap.exists()) {
-        userDataCache = mySnap.data();
-        profileData = userDataCache;
-      }
+      profileData = userDataCache;
     }
 
     const displayName = profileData.name || 'User';
@@ -687,7 +689,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           </div>
           ${!isMe ? `
             <div class="profile-actions-row">
-              <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Unfollow':'Unfollow') : (lang==='el'?'Follow':'Follow')}</button>
+              <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Unfollow' : 'Follow'}</button>
               <button class="options-dots-btn" onclick="openProfileMenu()">⋮</button>
             </div>
           ` : ''}
@@ -784,7 +786,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(!container) return;
     const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
     if(mySnap.exists()) {
-      userDataCache.following = mySnap.data().following || [];
+      userDataCache = mySnap.data();
     }
 
     const snap = await getDocs(collection(db, 'users'));
