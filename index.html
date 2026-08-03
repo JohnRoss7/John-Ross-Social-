@@ -10,7 +10,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html, body{width:100%;height:100%;overflow-x:hidden;overscroll-behavior:none}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg-color,#000);color:var(--text-color,#fff);min-height:100vh}
-:root{--bg-color:#000;--text-color:#fff;--card-bg:#111;--border-color:#333;--subtext:#999}
+:root{--bg-color:#000;--text-color:#fff;--card-bg:#111;--border-color:#333;--subtext:#999;--primary-color:#dc2626}
 body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-color:#ddd;--subtext:#666}
 
 .app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:var(--bg-color);position:relative}
@@ -26,7 +26,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .sidebar-overlay.open{display:block}
 .sidebar-item{display:flex;align-items:center;gap:12px;padding:14px;color:var(--text-color);text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;background:none;border:none;width:100%;text-align:left}
 .sidebar-item:hover{background:var(--border-color)}
-.admin-panel-btn{background:#dc2626 !important;color:#fff !important}
+.admin-panel-btn{background:var(--primary-color) !important;color:#fff !important}
 
 /* Settings Submenu */
 .settings-menu{padding-left:20px;display:none;flex-direction:column;gap:8px;margin-top:5px}
@@ -35,40 +35,44 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 /* Feed Tabs */
 .feed-tabs{display:flex;border-bottom:1px solid var(--border-color);background:var(--bg-color);position:sticky;top:45px;z-index:90}
 .feed-tab{flex:1;padding:12px;background:none;border:none;color:var(--subtext);font-size:14px;font-weight:700;cursor:pointer;text-align:center;border-bottom:2px solid transparent}
-.feed-tab.active{color:var(--text-color);border-bottom-color:#dc2626}
+.feed-tab.active{color:var(--text-color);border-bottom-color:var(--primary-color)}
 
 .post{border-bottom:1px solid var(--border-color);padding:14px 16px}
 .post-header{display:flex;gap:10px;margin-bottom:10px;align-items:center}
 .avatar{width:40px;height:40px;border-radius:8px;background:var(--border-color);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;background-size:cover;background-position:center;color:var(--text-color)}
 .post-info{flex:1;min-width:0}
-.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px}
+.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px;cursor:pointer}
 .handle{color:var(--subtext);font-size:13px;margin-top:1px}
-.post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word;color:#dc2626}
-.post-content a{color:#dc2626;text-decoration:underline}
+.post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word;color:var(--text-color)}
+.post-content a{color:var(--primary-color);text-decoration:underline}
 .post-images-grid{display:grid;gap:6px;margin-top:10px;border-radius:12px;overflow:hidden}
 .post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
 .post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
 
 .like-action-btn{background:var(--border-color);border:none;padding:6px 12px;border-radius:20px;color:var(--text-color);cursor:pointer;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
-.like-action-btn.liked{background:#dc2626;color:#fff}
+.like-action-btn.liked{background:var(--primary-color);color:#fff}
 
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);border-top:1px solid var(--border-color);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
 .nav-item{background:none;border:none;color:var(--subtext);padding:8px 12px;cursor:pointer;position:relative}
-.nav-item.active{color:#dc2626}
+.nav-item.active{color:var(--primary-color)}
 
 .auth-container{text-align:center;padding:80px 24px}
 .auth-container h2{margin-bottom:10px;font-size:32px;font-weight:800}
 .auth-container input{width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:16px;border-radius:12px;margin:8px 0;font-size:16px;max-width:400px}
-.auth-container button{width:100%;max-width:400px;background:#dc2626;color:#fff;border:none;padding:16px;border-radius:12px;font-weight:700;cursor:pointer;font-size:16px;margin:10px 0}
+.auth-container button{width:100%;max-width:400px;background:var(--primary-color);color:#fff;border:none;padding:16px;border-radius:12px;font-weight:700;cursor:pointer;font-size:16px;margin:10px 0}
 .auth-container .btn-o{background:transparent;border:1px solid var(--border-color);color:var(--text-color)}
 .empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
-.admin-badge{background:#dc2626;color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
+.admin-badge{background:var(--primary-color);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
 
 /* Profile Banner & Layout */
 .profile-banner{width:100%;height:140px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
 .profile-info-section{padding:15px 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
-.profile-avatar-row{display:flex;align-items:center;padding:15px 20px 0 20px;background:var(--bg-color)}
+.profile-avatar-row{display:flex;align-items:center;justify-content:space-between;padding:15px 20px 0 20px;background:var(--bg-color)}
 .profile-avatar-wrapper{border:4px solid var(--bg-color);border-radius:12px;overflow:hidden;background:var(--card-bg);position:relative}
+
+/* Follow Button Logic: Άσπρο by default, Κόκκινο όταν είναι Following */
+.follow-btn{background:#fff;color:#111;border:1px solid #ccc;padding:8px 18px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px}
+.follow-btn.following{background:var(--primary-color);color:#fff;border:none}
 </style>
 </head>
 <body>
@@ -86,7 +90,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     
     <div class="settings-menu" id="settingsMenu">
       <button class="sidebar-item" onclick="toggleLang()"><i data-lucide="globe"></i> <span id="mLang">Γλώσσα: Ελληνικά</span></button>
-      <button class="sidebar-item" onclick="toggleDarkMode()"><i data-lucide="moon"></i> <span id="mDark">Dark Mode: Ανενεργό</span></button>
+      <button class="sidebar-item" onclick="toggleDarkMode()"><i data-lucide="moon"></i> <span id="mDark">Dark Mode: Ενεργό</span></button>
     </div>
   </div>
   <div>
@@ -132,26 +136,25 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let lang = localStorage.getItem('jrs_lang') || 'el';
   let darkMode = localStorage.getItem('jrs_dark') === 'true';
   let userDataCache = {};
+  let viewingUserId = null;
   const adminEmails = ['rossrossg7@gmail.com'];
 
   document.body.classList.toggle('light-mode', !darkMode);
 
-  // Prevent pull-to-refresh reload globally
   document.addEventListener('touchmove', function(e) {
-    if(window.scrollY === 0 && e.touches[0].clientY > 50) {
-      // let user scroll normally inside elements, but block window bounce/refresh if at top
-    }
+    if(window.scrollY === 0 && e.touches[0].clientY > 50) {}
   }, {passive: true});
 
   onAuthStateChanged(auth, async (u) => {
     currentUser = u;
     if(u) {
-      const uDoc = await doc(db, 'users', u.uid);
+      const uDoc = doc(db, 'users', u.uid);
       const snap = await getDoc(uDoc);
       if(snap.exists()) {
         userDataCache = snap.data();
       } else {
-        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', banner: ''};
+        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', banner: '', followers: [], following: []};
+        await setDoc(uDoc, userDataCache);
       }
     }
     render();
@@ -210,7 +213,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     signInWithPopup(auth, new GoogleAuthProvider()).then(async cred => {
       const defName = cred.user.displayName || cred.user.email.split('@')[0];
       await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || '', banner: ''
+        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || '', banner: '', followers:[], following:[]
       }, {merge:true});
     }).catch(err => alert(err.message));
   };
@@ -228,7 +231,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            const maxDim = 400; // safe compression for camera and gallery photos
+            const maxDim = 800;
             if (width > height && width > maxDim) {
               height *= maxDim / width;
               width = maxDim;
@@ -240,12 +243,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.5));
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
           } catch(err) {
-            resolve('');
+            resolve(e.target.result);
           }
         };
-        img.onerror = () => resolve('');
+        img.onerror = () => resolve(e.target.result);
         img.src = e.target.result;
       };
       reader.onerror = () => resolve('');
@@ -347,14 +350,46 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     render();
   };
 
-  window.showTab = (name) => {
+  window.showTab = (name, targetUserId = null) => {
     currentTab = name;
+    if(name === 'profile') {
+      viewingUserId = targetUserId || currentUser.uid;
+    }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     render();
   };
 
   window.setFeedSubTab = (sub) => {
     feedSubTab = sub;
+    render();
+  };
+
+  window.toggleFollow = async (targetUid) => {
+    if(targetUid === currentUser.uid) return;
+    const myRef = doc(db, 'users', currentUser.uid);
+    const targetRef = doc(db, 'users', targetUid);
+    
+    const myFollowing = userDataCache.following || [];
+    const isFollowing = myFollowing.includes(targetUid);
+
+    if(isFollowing) {
+      await updateDoc(myRef, {following: arrayRemove(targetUid)});
+      await updateDoc(targetRef, {followers: arrayRemove(currentUser.uid)});
+      userDataCache.following = myFollowing.filter(id => id !== targetUid);
+    } else {
+      await updateDoc(myRef, {following: arrayUnion(targetUid)});
+      await updateDoc(targetRef, {followers: arrayUnion(currentUser.uid)});
+      userDataCache.following = [...myFollowing, targetUid];
+
+      const myName = userDataCache.name || currentUser.email.split('@')[0];
+      await addDoc(collection(db, 'notifications'), {
+        toUid: targetUid,
+        fromName: myName,
+        type: 'follow',
+        text: lang==='el'?`${myName} άρχισε να σε ακολουθεί`:`${myName} started following you`,
+        createdAt: Date.now()
+      });
+    }
     render();
   };
 
@@ -403,50 +438,72 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <textarea id="postText" placeholder="${lang==='el'?'Τι σκέφτεσαι;':'What are you thinking?'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:60px;font-family:inherit"></textarea>
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between">
             <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 14px;border-radius:8px;font-size:13px">📷 ${lang==='el'?'Φωτογραφία':'Photo'}</label>
-            <input type="file" id="imageInput" accept="image/*" style="display:none">
-            <button id="postSubmitBtn" style="background:#dc2626;color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
+            <input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none">
+            <button id="postSubmitBtn" style="background:var(--primary-color);color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
           </div>
         </div>
         <div id="feed"></div>`;
       loadFeed();
     } else if(currentTab === 'search'){
-      m.innerHTML = `<div class="empty-state">${lang==='el'?'Αναζήτηση':'Search'}</div>`;
+      m.innerHTML = `<div id="usersSearchList"></div>`;
+      loadAllUsersForSearch();
     } else if(currentTab === 'notif'){
       m.innerHTML = `<div id="notificationsList"></div>`;
       loadNotifications();
     } else if(currentTab === 'profile'){
-      const displayName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
-      const displayPhoto = userDataCache.photo || currentUser.photoURL || '';
-      const displayBanner = userDataCache.banner || '';
-      const avatarH = displayPhoto ? `<div class="avatar" style="width:90px;height:90px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:90px;height:90px;border-radius:12px;font-size:36px">👤</div>`;
-      const bannerH = displayBanner ? `style="background-image:url('${displayBanner}')"` : '';
-      const isAdminUser = adminEmails.includes(currentUser.email);
-
-      m.innerHTML = `
-        <div class="profile-banner" ${bannerH}>
-          <label style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">
-            📷 Banner <input type="file" accept="image/*" style="display:none" onchange="uploadBanner(this)">
-          </label>
-        </div>
-        <div class="profile-avatar-row">
-          <div class="profile-avatar-wrapper">
-            ${avatarH}
-            <label style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>
-          </div>
-        </div>
-        <div class="profile-info-section">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <h2 style="font-size:22px;display:flex;align-items:center;gap:6px">
-              <input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:22px;font-weight:700;width:100%;outline:none">
-              ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
-            </h2>
-          </div>
-        </div>
-        <div style="padding:10px 16px;font-weight:700;color:var(--subtext);font-size:13px;border-bottom:1px solid var(--border-color)">${lang==='el'?'Οι δημοσιεύσεις μου':'My posts'}</div>
-        <div id="userPostsFeed"></div>`;
-      loadUserPosts();
+      loadProfileData(viewingUserId || currentUser.uid);
     }
     if(typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  async function loadProfileData(uid) {
+    const m = document.getElementById('main');
+    const isMe = (uid === currentUser.uid);
+    let profileData = userDataCache;
+
+    if(!isMe) {
+      const uSnap = await getDoc(doc(db, 'users', uid));
+      if(uSnap.exists()) profileData = uSnap.data();
+    }
+
+    const displayName = profileData.name || 'User';
+    const displayPhoto = profileData.photo || '';
+    const displayBanner = profileData.banner || '';
+    const avatarH = displayPhoto ? `<div class="avatar" style="width:90px;height:90px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:90px;height:90px;border-radius:12px;font-size:36px">👤</div>`;
+    const bannerH = displayBanner ? `style="background-image:url('${displayBanner}')"` : '';
+    const isAdminUser = adminEmails.includes(profileData.email);
+    const isFollowing = (userDataCache.following || []).includes(uid);
+    const followersCount = (profileData.followers || []).length;
+    const followingCount = (profileData.following || []).length;
+
+    m.innerHTML = `
+      <div class="profile-banner" ${bannerH}>
+        ${isMe ? `<label style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.6);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">📷 Banner <input type="file" accept="image/*" capture="environment" style="display:none" onchange="uploadBanner(this)"></label>` : ''}
+      </div>
+      <div class="profile-avatar-row">
+        <div class="profile-avatar-wrapper">
+          ${avatarH}
+          ${isMe ? `<label style="position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.7);color:#fff;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
+        </div>
+        <div>
+          ${!isMe ? `<button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? (lang==='el'?'Following':'Following') : (lang==='el'?'Ακολουθήστε':'Follow')}</button>` : ''}
+        </div>
+      </div>
+      <div class="profile-info-section">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <h2 style="font-size:22px;display:flex;align-items:center;gap:6px;width:100%">
+            ${isMe ? `<input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:22px;font-weight:700;width:100%;outline:none">` : `<span>${displayName}</span>`}
+            ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
+          </h2>
+        </div>
+        <div style="display:flex;gap:15px;margin-top:10px;font-size:14px;color:var(--subtext)">
+          <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
+          <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
+        </div>
+      </div>
+      <div style="padding:10px 16px;font-weight:700;color:var(--subtext);font-size:13px;border-bottom:1px solid var(--border-color)">${lang==='el'?'Δημοσιεύσεις':'Posts'}</div>
+      <div id="userPostsFeed"></div>`;
+    loadUserPostsSpecific(uid);
   }
 
   window.uploadBanner = async (input) => {
@@ -493,8 +550,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
       feed.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
-    }, (error) => {
-      feed.innerHTML = `<div class="empty-state" style="color:#ef4444">Error: ${error.message}</div>`;
     });
   }
 
@@ -514,14 +569,35 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       }
       container.innerHTML = docs.map(n => `
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;gap:10px;align-items:center">
-          <span style="font-size:20px">👍</span>
+          <span style="font-size:20px">${n.type==='follow'?'👤':'👍'}</span>
           <div style="font-size:15px">${n.text}</div>
         </div>
       `).join('');
     });
   }
 
-  function loadUserPosts(){
+  async function loadAllUsersForSearch() {
+    const container = document.getElementById('usersSearchList');
+    if(!container) return;
+    const snap = await getDocs(collection(db, 'users'));
+    let users = [];
+    snap.forEach(d => users.push({uid: d.id, ...d.data()}));
+
+    container.innerHTML = users.map(u => `
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="showTab('profile', '${u.uid}')">
+          <div class="avatar" style="${u.photo?`background-image:url('${u.photo}')`:''}"> ${u.photo?'':'👤'} </div>
+          <div>
+            <div style="font-weight:700">${u.name || 'User'}</div>
+            <div style="font-size:13px;color:var(--subtext)">@${(u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
+          </div>
+        </div>
+        ${u.uid !== currentUser.uid ? `<button class="follow-btn ${(userDataCache.following||[]).includes(u.uid)?'following':''}" onclick="toggleFollow('${u.uid}')">${(userDataCache.following||[]).includes(u.uid)?'Following':'Ακολουθήστε'}</button>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function loadUserPostsSpecific(uid){
     const container = document.getElementById('userPostsFeed');
     if(!container) return;
 
@@ -530,11 +606,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       let docs = [];
       snap.forEach(d => {
         const data = d.data();
-        if(data.uid === currentUser.uid) docs.push({id: d.id, ...data});
+        if(data.uid === uid) docs.push({id: d.id, ...data});
       });
 
       if(docs.length === 0){
-        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν έχετε κάνει κάποια δημοσίευση ακόμα':'No posts yet'}</div>`;
+        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις':'No posts yet'}</div>`;
         return;
       }
 
@@ -553,10 +629,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
     return `<div class="post">
       <div class="post-header">
-        ${avatarHtml}
-        <div class="post-info">
-          <div class="username">${postName} ${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
-          <div class="handle">@${postName.toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
+        <div onclick="showTab('profile', '${p.uid}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0">
+          ${avatarHtml}
+          <div class="post-info">
+            <div class="username">${postName} ${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
+            <div class="handle">@${postName.toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
+          </div>
         </div>
         ${canDelete ? `<button style="background:none;border:none;color:var(--subtext);cursor:pointer;font-size:16px" onclick="deletePost('${p.id}')">✕</button>` : ''}
       </div>
