@@ -64,7 +64,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
 .admin-badge{background:var(--primary-color);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
 
-/* Profile Layout (Εικόνα πάνω αριστερά, Χωρίς Banner) */
+/* Profile Layout */
 .profile-top-section{padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:flex-start;gap:16px}
 .profile-avatar-wrapper{border:3px solid var(--border-color);border-radius:16px;overflow:hidden;background:var(--card-bg);position:relative;width:80px;height:80px;flex-shrink:0}
 .profile-details{flex:1;min-width:0}
@@ -187,7 +187,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       if(snap.exists()) {
         userDataCache = snap.data();
       } else {
-        userDataCache = {name: u.displayName || u.email.split('@')[0], photo: u.photoURL || '', followers: [], following: []};
+        userDataCache = {name: u.displayName || u.email.split('@')[0], username: u.email.split('@')[0], bio: '', photo: u.photoURL || '', followers: [], following: []};
         await setDoc(uDoc, userDataCache);
       }
     }
@@ -240,7 +240,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(!e || !p) return alert('Συμπλήρωσε email και κωδικό');
     const defaultName = e.split('@')[0];
     createUserWithEmailAndPassword(auth, e, p).then(cred => {
-      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, bio:'', photo:'', followers:[], following:[], likedPosts:[]});
+      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, username:defaultName, bio:'', photo:'', followers:[], following:[], likedPosts:[]});
     }).catch(err => alert(err.message));
   };
 
@@ -248,7 +248,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     signInWithPopup(auth, new GoogleAuthProvider()).then(async cred => {
       const defName = cred.user.displayName || cred.user.email.split('@')[0];
       await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email, name: defName, bio:'', photo: cred.user.photoURL || '', followers:[], following:[]
+        email: cred.user.email, name: defName, username: defName, bio:'', photo: cred.user.photoURL || '', followers:[], following:[]
       }, {merge:true});
     }).catch(err => alert(err.message));
   };
@@ -400,9 +400,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   };
 
   window.updateProfileField = async (field, val) => {
+    if(field === 'bio' && val.length > 200) {
+      alert(lang==='el'?'Το bio δεν μπορεί να ξεπερνά τους 200 χαρακτήρες.':'Bio cannot exceed 200 characters.');
+      val = val.substring(0, 200);
+    }
     await updateDoc(doc(db, 'users', currentUser.uid), {[field]: val});
     userDataCache[field] = val;
-    render();
   };
 
   window.showTab = (name, targetUserId = null) => {
@@ -526,6 +529,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }
 
     const displayName = profileData.name || 'User';
+    const displayUsername = profileData.username || displayName.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const displayBio = profileData.bio || '';
     const displayPhoto = profileData.photo || '';
     const avatarH = displayPhoto ? `<div class="avatar" style="width:80px;height:80px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:80px;height:80px;border-radius:12px;font-size:32px">👤</div>`;
     const isAdminUser = adminEmails.includes(profileData.email);
@@ -541,10 +546,15 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         </div>
         <div class="profile-details">
           <h2 style="font-size:18px;display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
-            ${isMe ? `<input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:18px;font-weight:700;width:100%;outline:none">` : `<span>${displayName}</span>`}
+            ${isMe ? `<input type="text" value="${displayName}" onchange="updateProfileField('name', this.value)" style="background:transparent;border:none;color:var(--text-color);font-size:18px;font-weight:700;width:100%;outline:none" placeholder="${lang==='el'?'Όνομα':'Name'}">` : `<span>${displayName}</span>`}
             ${isAdminUser ? '<span class="admin-badge">Admin</span>' : ''}
           </h2>
-          <div style="font-size:13px;color:var(--subtext);margin-top:2px">@${displayName.toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
+          <div style="font-size:13px;color:var(--subtext);margin-top:2px">
+            ${isMe ? `<input type="text" value="${displayUsername}" onchange="updateProfileField('username', this.value)" style="background:transparent;border:none;color:var(--subtext);font-size:13px;width:100%;outline:none" placeholder="Username (emoji ok)">` : `@${displayUsername}`}
+          </div>
+          ${isMe ? `
+            <textarea maxlength="200" onchange="updateProfileField('bio', this.value)" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-color);color:var(--text-color);font-size:13px;margin-top:8px;padding:6px;border-radius:6px;resize:none;font-family:inherit" placeholder="Bio (max 200 chars)...">${displayBio}</textarea>
+          ` : (displayBio ? `<div style="font-size:14px;margin-top:8px;word-break:break-word">${linkify(displayBio)}</div>` : '')}
         </div>
       </div>
       <div class="profile-info-section">
@@ -552,9 +562,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <span><b>${followersCount}</b> ${lang==='el'?'Ακόλουθοι':'Followers'}</span>
           <span><b>${followingCount}</b> ${lang==='el'?'Ακολουθεί':'Following'}</span>
         </div>
-        <div>
-          <button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button>
-        </div>
+        ${!isMe ? `<div><button class="follow-btn ${isFollowing?'following':''}" onclick="toggleFollow('${uid}')">${isFollowing ? 'Following' : (lang==='el'?'Ακολουθήστε':'Follow')}</button></div>` : ''}
       </div>
       <div style="padding:10px 16px;font-weight:700;color:var(--subtext);font-size:13px;border-bottom:1px solid var(--border-color)">${lang==='el'?'Δημοσιεύσεις':'Posts'}</div>
       <div id="userPostsFeed"></div>`;
@@ -567,7 +575,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       document.getElementById('loadingText').textContent = lang==='el'?'Ανεβαίνει η φωτογραφία...':'Uploading photo...';
       const b64 = await resizeImageFile(input.files[0], 400);
       document.getElementById('loadingOverlay').style.display = 'none';
-      if(b64) await updateProfileField('photo', b64);
+      if(b64) {
+        await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
+        userDataCache.photo = b64;
+        render();
+      }
     }
   };
 
@@ -646,8 +658,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="showTab('profile', '${u.uid}')">
           <div class="avatar" style="${u.photo?`background-image:url('${u.photo}')`:''}"> ${u.photo?'':'👤'} </div>
           <div>
-            <div style="font-weight:700">${u.name || 'User'}</div>
-            <div style="font-size:13px;color:var(--subtext)">@${(u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
+            <div style="font-weight:700">${u.name || 'User'} ${adminEmails.includes(u.email)?'<span class="admin-badge">Admin</span>':''}</div>
+            <div style="font-size:13px;color:var(--subtext)">@${u.username || (u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
           </div>
         </div>
         <button class="follow-btn ${(userDataCache.following||[]).includes(u.uid)?'following':''}" style="width:auto;margin-top:0;padding:6px 14px" onclick="toggleFollow('${u.uid}')">${(userDataCache.following||[]).includes(u.uid)?'Following':'Ακολουθήστε'}</button>
