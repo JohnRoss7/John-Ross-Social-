@@ -46,9 +46,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .post-images-grid{display:grid;gap:6px;margin-top:10px;border-radius:12px;overflow:hidden}
 .post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
 .post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
-.post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
-.like-btn{color:#fff;font-size:20px}
-.like-btn.liked{color:#dc2626}
+
+/* Like Button Fix to prevent Android Search Popup */
+.like-action-btn{background:var(--border-color);border:none;padding:6px 12px;border-radius:20px;color:var(--text-color);cursor:pointer;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.like-action-btn.liked{background:#dc2626;color:#fff}
 
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card-bg);border-top:1px solid var(--border-color);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
 .nav-item{background:none;border:none;color:var(--subtext);padding:8px 12px;cursor:pointer;position:relative}
@@ -62,14 +63,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
 .admin-badge{background:#dc2626;color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
 
-/* Profile Banner */
+/* Profile Banner & Layout */
 .profile-banner{width:100%;height:140px;background:var(--border-color);background-size:cover;background-position:center;position:relative}
 .profile-info-section{padding:15px 20px 20px 20px;position:relative;border-bottom:1px solid var(--border-color)}
-.profile-avatar-container{display:flex;align-items:flex-end;gap:15px;margin-top:-50px;margin-bottom:10px;position:relative;z-index:2}
+.profile-avatar-container{display:flex;align-items:flex-end;gap:15px;margin-top:-70px;margin-bottom:10px;position:relative;z-index:2}
 .profile-avatar-wrapper{border:4px solid var(--bg-color);border-radius:12px;overflow:hidden;background:var(--card-bg);position:relative}
 </style>
 </head>
-<body class="light-mode">
+<body>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <div class="sidebar" id="sidebar">
@@ -126,9 +127,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  let currentUser = null, currentTab = 'home', feedSubTab = 'foryou', lang = 'el', darkMode = false;
+  let currentUser = null, currentTab = 'home', feedSubTab = 'foryou';
+  let lang = localStorage.getItem('jrs_lang') || 'el';
+  let darkMode = localStorage.getItem('jrs_dark') === 'true';
   let userDataCache = {};
   const adminEmails = ['rossrossg7@gmail.com'];
+
+  // Apply saved settings immediately
+  document.body.classList.toggle('light-mode', !darkMode);
 
   onAuthStateChanged(auth, async (u) => {
     currentUser = u;
@@ -155,20 +161,27 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.toggleDarkMode = () => {
     darkMode = !darkMode;
+    localStorage.setItem('jrs_dark', darkMode);
     document.body.classList.toggle('light-mode', !darkMode);
-    document.getElementById('mDark').textContent = darkMode ? (lang==='el'?'Dark Mode: Ενεργό':'Dark Mode: On') : (lang==='el'?'Dark Mode: Ανενεργό':'Dark Mode: Off');
+    updateTexts();
   };
 
   window.toggleLang = () => {
     lang = lang === 'el' ? 'en' : 'el';
-    document.getElementById('menuTitle').textContent = lang==='el'?'Μενού':'Menu';
-    document.getElementById('mProfile').textContent = lang==='el'?'Προφίλ':'Profile';
-    document.getElementById('mSettings').textContent = lang==='el'?'Ρυθμίσεις':'Settings';
-    document.getElementById('mLang').textContent = lang==='el'?'Γλώσσα: Ελληνικά':'Language: English';
-    document.getElementById('mDark').textContent = darkMode ? (lang==='el'?'Dark Mode: Ενεργό':'Dark Mode: On') : (lang==='el'?'Dark Mode: Ανενεργό':'Dark Mode: Off');
-    document.getElementById('mLogout').textContent = lang==='el'?'Αποσύνδεση':'Log Out';
+    localStorage.setItem('jrs_lang', lang);
+    updateTexts();
     render();
   };
+
+  function updateTexts() {
+    const el = (lang === 'el');
+    document.getElementById('menuTitle').textContent = el ? 'Μενού' : 'Menu';
+    document.getElementById('mProfile').textContent = el ? 'Προφίλ' : 'Profile';
+    document.getElementById('mSettings').textContent = el ? 'Ρυθμίσεις' : 'Settings';
+    document.getElementById('mLang').textContent = el ? 'Γλώσσα: Ελληνικά' : 'Language: English';
+    document.getElementById('mDark').textContent = darkMode ? (el ? 'Dark Mode: Ενεργό' : 'Dark Mode: On') : (el ? 'Dark Mode: Ανενεργό' : 'Dark Mode: Off');
+    document.getElementById('mLogout').textContent = el ? 'Αποσύνδεση' : 'Log Out';
+  }
 
   window.login = () => {
     const e = document.getElementById('le').value;
@@ -347,6 +360,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     } else {
       sidebarAdmin.innerHTML = '';
     }
+    updateTexts();
 
     const m = document.getElementById('main');
     if(!currentUser){
@@ -531,7 +545,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <div class="post-content">${p.text || ''}</div>
       ${imgHtml}
       <div class="post-actions">
-        <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">👍</span>
+        <button class="like-action-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">
+          <span>👍</span> Like
+        </button>
       </div>
     </div>`;
   }
