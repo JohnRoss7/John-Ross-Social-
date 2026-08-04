@@ -519,7 +519,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.toggleFollow = async (targetUid) => {
     if(targetUid === currentUser.uid) {
-      alert(lang==='el'?'Δεν μπορείτε να ακολουθήσετε τον εαυτό σας!':'You cannot follow yourself!');
+      alert(lang==='el'?'Δεν μπορείτε να ακολουθήσετε τον εαυτό σας! Μόνο οι άλλοι χρήστες.':'You cannot follow yourself! Only other users.');
       return;
     }
     const myRef = doc(db, 'users', currentUser.uid);
@@ -673,9 +673,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
       if (isMe) {
         actionButtons = `
-          <button onclick="openEditProfileModal()" 
-            style="width:100%;background:transparent;border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:20px;font-weight:600;cursor:pointer;margin-top:12px">
-            Επεξεργασία Προφίλ
+          <button class="follow-btn" onclick="toggleFollow('${uid}')"
+            style="width:100%;margin-top:12px;background:var(--primary-color);color:#fff;border:none;padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
+            Follow
           </button>
         `;
       } else {
