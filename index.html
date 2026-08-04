@@ -348,7 +348,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             resolve(e.target.result);
           }
         };
-        img.onerror = () => resolve(e.target.result);
+        img.onerror = () => {
+          // Fallback if image fails canvas draw
+          resolve(e.target.result);
+        };
         img.src = e.target.result;
       };
       reader.onerror = () => resolve('');
@@ -358,9 +361,16 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.handleImageSelection = async (input) => {
     if(input.files && input.files[0]) {
+      const file = input.files[0];
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingText').textContent = lang==='el'?'Επεξεργασία φωτογραφίας...':'Processing photo...';
-      selectedPostImageBase64 = await resizeImageFile(input.files[0], 800);
+      
+      try {
+        selectedPostImageBase64 = await resizeImageFile(file, 800);
+      } catch(err) {
+        selectedPostImageBase64 = '';
+      }
+      
       document.getElementById('loadingOverlay').style.display = 'none';
 
       const prevContainer = document.getElementById('imagePreviewContainer');
@@ -528,7 +538,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.toggleFollow = async (targetUid) => {
     if(targetUid === currentUser.uid) {
-      alert(lang==='el'?'Δεν μπορείτε να ακολουθήσετε τον εαυτό σας! Μόνο οι άλλοι χρήστες.':'You cannot follow yourself! Only other users.');
       return;
     }
     const myRef = doc(db, 'users', currentUser.uid);
