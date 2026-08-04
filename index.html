@@ -45,6 +45,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .handle{color:var(--subtext);font-size:13px;margin-top:1px}
 .post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word;color:var(--text-color)}
 .post-content a{color:var(--primary-color);text-decoration:underline}
+.post-content .mention{color:var(--primary-color);font-weight:700;cursor:pointer}
 .post-images-grid{display:grid;gap:6px;margin-top:10px;border-radius:12px;overflow:hidden}
 .post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
 .post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
@@ -63,6 +64,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .auth-container .btn-o{background:transparent;border:1px solid var(--border-color);color:var(--text-color)}
 .empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
 .admin-badge{background:var(--primary-color);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
+
+/* Mention Autocomplete Dropdown */
+.mention-dropdown{position:absolute;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;max-height:150px;overflow-y:auto;width:220px;z-index:150;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
+.mention-item{padding:10px 12px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:8px}
+.mention-item:hover{background:var(--border-color)}
 
 /* Profile Layout */
 .profile-top-section{padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:flex-start;gap:16px}
@@ -336,7 +342,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   window.openProfileMenu = () => { document.getElementById('profileMenuModal').classList.add('open'); if(typeof lucide!=='undefined') lucide.createIcons(); };
   window.closeProfileMenu = (e) => { if(e) e.stopPropagation(); document.getElementById('profileMenuModal').classList.remove('open'); };
 
-  // Lightbox Συνδέσεις με το Ιστορικό ώστε το πίσω κουμπί να κλείνει τη φωτογραφία και να αφήνει τον χρήστη στο προφίλ
   window.openLightbox = (url) => {
     if(!url) return;
     const modal = document.getElementById('lightboxModal');
@@ -445,6 +450,63 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const camIn = document.getElementById('cameraInput'); if(camIn) camIn.value = '';
   };
 
+  // Mention Autocomplete & Char Counter Logic
+  window.handlePostInput = (textarea) => {
+    const val = textarea.value;
+    if(val.length > 500) {
+      textarea.value = val.substring(0, 500);
+    }
+    const countEl = document.getElementById('charCount');
+    if(countEl) {
+      countEl.textContent = `${textarea.value.length}/500`;
+    }
+
+    // Mention check
+    const cursorPos = textarea.selectionStart;
+    const textBeforeCursor = textarea.value.substring(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+    const dropdown = document.getElementById('mentionDropdown');
+    
+    if(match && dropdown) {
+      const queryStr = match[1].toLowerCase();
+      let matches = [];
+      for(let uid in allUsersProfiles) {
+        let u = allUsersProfiles[uid];
+        let uname = (u.username || '').toLowerCase();
+        if(uname.includes(queryStr)) {
+          matches.push(u);
+        }
+      }
+      if(matches.length > 0) {
+        dropdown.innerHTML = matches.map(u => `
+          <div class="mention-item" onclick="insertMention('${u.username}')">
+            <div class="avatar" style="width:24px;height:24px;font-size:12px;${u.photo?`background-image:url('${u.photo}')`:''}"> ${u.photo?'':'👤'} </div>
+            <span>@${u.username}</span>
+          </div>`).join('');
+        dropdown.style.display = 'block';
+      } else {
+        dropdown.style.display = 'none';
+      }
+    } else if(dropdown) {
+      dropdown.style.display = 'none';
+    }
+  };
+
+  window.insertMention = (username) => {
+    const textarea = document.getElementById('postText');
+    const dropdown = document.getElementById('mentionDropdown');
+    if(!textarea) return;
+    const cursorPos = textarea.selectionStart;
+    const textBefore = textarea.value.substring(0, cursorPos);
+    const textAfter = textarea.value.substring(cursorPos);
+    
+    const newTextBefore = textBefore.replace(/@([a-zA-Z0-9_]*)$/, `@${username} `);
+    textarea.value = newTextBefore + textAfter;
+    if(dropdown) dropdown.style.display = 'none';
+    textarea.focus();
+    handlePostInput(textarea);
+  };
+
   window.postContent = async () => {
     const textEl = document.getElementById('postText');
     const textVal = textEl ? textEl.value.trim() : '';
@@ -457,12 +519,32 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       let imageUrls = selectedPostImageBase64 ? [selectedPostImageBase64] : [];
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
 
+      // Αποθήκευση ποστ
       await addDoc(collection(db, 'posts'), {
         uid: currentUser.uid, name: myName, email: currentUser.email || '',
         text: textVal, images: imageUrls, likedBy: [], createdAt: Date.now()
       });
 
+      // Εντοπισμός mentions για αποστολή ειδοποιήσεων
+      const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+      let match;
+      let notifiedUids = new Set();
+      while ((match = mentionRegex.exec(textVal)) !== null) {
+        let mentionedUsername = match[1].toLowerCase();
+        for(let targetUid in allUsersProfiles) {
+          let u = allUsersProfiles[targetUid];
+          if((u.username || '').toLowerCase() === mentionedUsername && targetUid !== currentUser.uid && !notifiedUids.has(targetUid)) {
+            notifiedUids.add(targetUid);
+            await addDoc(collection(db, 'notifications'), {
+              toUid: targetUid, fromName: myName, type: 'mention',
+              text: lang==='el'?`${myName} σε έκανε mention σε δημοσίευση`:`${myName} mentioned you in a post`, createdAt: Date.now()
+            });
+          }
+        }
+      }
+
       if(textEl) textEl.value = '';
+      const countEl = document.getElementById('charCount'); if(countEl) countEl.textContent = '0/500';
       clearPostImage();
     } catch(err) {
       alert('Error: ' + err.message);
@@ -525,7 +607,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }
   };
 
-  // Διαχείριση πλοήγησης με προσθήκη στο history ώστε το πίσω κουμπί να επιστρέφει σωστά στην αρχική
   window.showTab = (name, targetUserId = null, pushHistory = true) => {
     currentTab = name;
     if(name === 'profile') viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
@@ -612,8 +693,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <button class="feed-tab ${feedSubTab==='foryou'?'active':''}" onclick="setFeedSubTab('foryou')">${lang==='el'?'Για εσάς':'For you'}</button>
           <button class="feed-tab ${feedSubTab==='following'?'active':''}" onclick="setFeedSubTab('following')">${lang==='el'?'Ακολουθείτε':'Following'}</button>
         </div>
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border-color)">
-          <textarea id="postText" placeholder="${lang==='el'?'Τι σκέφτεσαι;':'What are you thinking?'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:60px;font-family:inherit"></textarea>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);position:relative">
+          <textarea id="postText" maxlength="500" placeholder="${lang==='el'?'Τι σκέφτεσαι; (Χρησιμοποίησε @ για mention)':'What are you thinking? (@ to mention)'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:70px;font-family:inherit" oninput="handlePostInput(this)"></textarea>
+          <div id="mentionDropdown" class="mention-dropdown"></div>
+          <div style="display:flex;justify-content:flex-end;font-size:12px;color:var(--subtext);margin-bottom:6px" id="charCount">0/500</div>
           <div id="imagePreviewContainer"></div>
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <div style="display:flex;gap:6px">
@@ -755,8 +838,27 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   function linkify(text) {
     if(!text) return '';
+    // Links και Mentions (με κόκκινο χρώμα)
+    const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    
+    let formatted = escaped.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+    formatted = formatted.replace(mentionRegex, (match, uname) => {
+      // Βρίσκουμε αντιστοιχία χρήστη για να δώσουμε δυνατότητα πλοήγησης στο προφίλ του
+      let targetUid = null;
+      for(let uid in allUsersProfiles) {
+        if((allUsersProfiles[uid].username || '').toLowerCase() === uname.toLowerCase()) {
+          targetUid = uid;
+          break;
+        }
+      }
+      if(targetUid) {
+        return `<span class="mention" onclick="showTab('profile', '${targetUid}')">@${uname}</span>`;
+      }
+      return `<span class="mention">@${uname}</span>`;
+    });
+    return formatted;
   }
 
   function loadFeed(){
@@ -788,12 +890,16 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       let docs = [];
       snap.forEach(d => { if(d.data().toUid === currentUser.uid) docs.push(d.data()); });
       if(docs.length === 0) { container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν έχετε ειδοποιήσεις':'No notifications'}</div>`; return; }
-      container.innerHTML = docs.map(n => `
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;gap:10px;align-items:center">
-          <span style="font-size:20px">${n.type==='follow'?'👤':'👍'}</span>
-          <div style="font-size:15px">${n.text}</div>
-        </div>
-      `).join('');
+      container.innerHTML = docs.map(n => {
+        let icon = '👍';
+        if(n.type === 'follow') icon = '👤';
+        if(n.type === 'mention') icon = '💬';
+        return `
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;gap:12px;align-items:center">
+            <span style="font-size:20px">${icon}</span>
+            <div style="font-size:15px">${n.text}</div>
+          </div>`;
+      }).join('');
     });
   }
 
