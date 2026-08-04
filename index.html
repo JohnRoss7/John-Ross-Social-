@@ -126,7 +126,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     </div>
   </div>
   <div>
-    <button class="sidebar-item" style="color:#ef4444" onclick="logout()"><i data-lucide="log-out"></i> <span id="mLogout">Αποσύνδεση</span></button>
+    <div style="font-size:14px;font-weight:700;color:var(--primary-color);margin-bottom:8px" id="dangerZoneTitle">Danger Zone</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button class="sidebar-item" onclick="logout()"><i data-lucide="log-out"></i> <span id="mLogout">Log Out</span></button>
+      <button class="sidebar-item" style="color:#ef4444" onclick="deleteAccount()"><i data-lucide="trash-2"></i> <span id="mDeleteAccount">Delete Account</span></button>
+    </div>
   </div>
 </div>
 
@@ -149,7 +153,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -215,6 +219,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(isEditingProfile) {
       isEditingProfile = false;
       render();
+      return;
+    }
+    if(currentTab === 'profile') {
+      showTab('home', null, false);
       return;
     }
     if(currentTab !== 'home') {
@@ -316,6 +324,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const mDark = document.getElementById('mDark'); if(mDark) mDark.textContent = darkMode ? (el ? 'Dark Mode: Ενεργό' : 'Dark Mode: On') : (el ? 'Dark Mode: Ανενεργό' : 'Dark Mode: Off');
     const mClearCache = document.getElementById('mClearCache'); if(mClearCache) mClearCache.textContent = el ? 'Εκκαθάριση Cache' : 'Clear Cache';
     const mLogout = document.getElementById('mLogout'); if(mLogout) mLogout.textContent = el ? 'Αποσύνδεση' : 'Log Out';
+    const mDeleteAccount = document.getElementById('mDeleteAccount'); if(mDeleteAccount) mDeleteAccount.textContent = el ? 'Διαγραφή Λογαριασμού' : 'Delete Account';
+    const dangerZoneTitle = document.getElementById('dangerZoneTitle'); if(dangerZoneTitle) dangerZoneTitle.textContent = el ? 'Επικίνδυνη Ζώνη' : 'Danger Zone';
     
     const mShare = document.getElementById('mShare'); if(mShare) mShare.textContent = el ? 'Κοινοποίηση Προφίλ' : 'Share Profile';
     const mBlock = document.getElementById('mBlock'); if(mBlock) mBlock.textContent = el ? 'Αποκλεισμός' : 'Block';
@@ -375,6 +385,20 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   };
 
   window.logout = () => signOut(auth);
+
+  window.deleteAccount = async () => {
+    if(confirm(lang === 'el' ? 'Είστε σίγουρος ότι θέλετε να διαγράψετε τον λογαριασμό σας; Αυτή η ενέργεια είναι μόνιμη.' : 'Are you sure you want to delete your account? This action is permanent.')) {
+      try {
+        const u = auth.currentUser;
+        if(u) {
+          await deleteDoc(doc(db, 'users', u.uid));
+          await deleteUser(u);
+        }
+      } catch(err) {
+        alert(lang === 'el' ? 'Απαιτείται πρόσφατη σύνδεση για διαγραφή. Παρακαλώ αποσυνδεθείτε και συνδεθείτε ξανά.' : 'Recent login required for deletion. Please log out and log back in.');
+      }
+    }
+  };
 
   const readFileAsBase64 = (file) => {
     return new Promise((resolve) => {
