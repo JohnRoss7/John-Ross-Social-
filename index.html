@@ -162,6 +162,28 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
+  // Δυνατός και καθαρός ήχος Like (Web Audio API - Bleep/Pop)
+  function playLikeSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Νότα D5
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // Ανέβασμα σε A5
+      
+      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // Δυνατή ένταση
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    } catch(e) {}
+  }
+
   const isAdminUserCheck = (userObj) => {
     if(!userObj) return false;
     if(userObj.email && adminEmails.includes(userObj.email)) return true;
@@ -394,6 +416,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   };
 
   window.likePost = async (id, ownerUid) => {
+    playLikeSound(); // Παίξτε δυνατός ήχος αμέσως στο πάτημα
     const postRef = doc(db, 'posts', id);
     const postDoc = await getDoc(postRef);
     if(!postDoc.exists()) return;
@@ -536,6 +559,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <div style="display:flex;gap:6px">
               <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">🖼️ ${lang==='el'?'Συλλογή':'Gallery'}</label>
+              <!-- Χωρίς κανένα περιορισμό τύπου για να ανοίγει απρόσκοπτα όλη η συλλογή / φάκελος κάμερας -->
               <input type="file" id="imageInput" style="display:none" onchange="handleImageSelection(this)">
 
               <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
