@@ -85,7 +85,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 </head>
 <body>
 
-<div id="loadingOverlay">⏳ <span id="loadingText">Επεξεργασία εικόνας...</span></div>
+<div id="loadingOverlay">⏳ <span id="loadingText">Φόρτωση...</span></div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <div class="profile-menu-modal" id="profileMenuModal" onclick="closeProfileMenu(event)">
@@ -162,7 +162,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
-  // Δυνατός και καθαρός ήχος Like (Web Audio API)
   function playLikeSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -324,31 +323,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
-  // Βελτιωμένη συνάρτηση επεξεργασίας εικόνας
-  const processImageSafe = (file) => {
+  // Ασφαλής ανάγνωση αρχείου εικόνας με FileReader (αποφυγή προβλημάτων canvas)
+  const readFileAsBase64 = (file) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            let w = img.width, h = img.height;
-            const maxD = 900;
-            if (w > h && w > maxD) { h *= maxD / w; w = maxD; }
-            else if (h > maxD) { w *= maxD / h; h = maxD; }
-            canvas.width = w; canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL('image/jpeg', 0.75));
-          } catch(ex) {
-            resolve(e.target.result);
-          }
-        };
-        img.onerror = () => resolve(e.target.result);
-        img.src = e.target.result;
-      };
+      reader.onload = (e) => resolve(e.target.result);
       reader.onerror = () => resolve('');
       reader.readAsDataURL(file);
     });
@@ -360,9 +340,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       const loadingOverlay = document.getElementById('loadingOverlay');
       const loadingText = document.getElementById('loadingText');
       if(loadingOverlay) loadingOverlay.style.display = 'flex';
-      if(loadingText) loadingText.textContent = lang==='el'?'Επεξεργασία εικόνας...':'Processing image...';
+      if(loadingText) loadingText.textContent = lang==='el'?'Φόρτωση εικόνας...':'Loading image...';
       
-      selectedPostImageBase64 = await processImageSafe(file);
+      selectedPostImageBase64 = await readFileAsBase64(file);
       
       if(loadingOverlay) loadingOverlay.style.display = 'none';
 
@@ -463,7 +443,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       await updateDoc(doc(db, 'users', currentUser.uid), {name: newName, username: newUsername, bio: newBio});
       userDataCache.name = newName; userDataCache.username = newUsername; userDataCache.bio = newBio;
       
-      // Αυτόματη ενημέρωση ονόματος στα υπάρχοντα posts
       const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid));
       const postSnap = await getDocs(q);
       const batch = writeBatch(db);
@@ -570,7 +549,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <div style="display:flex;gap:6px">
               <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">🖼️ ${lang==='el'?'Συλλογή':'Gallery'}</label>
-              <input type="file" id="imageInput" style="display:none" onchange="handleImageSelection(this)">
+              <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelection(this)">
 
               <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
               <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelection(this)">
@@ -692,12 +671,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       if(loadingOverlay) loadingOverlay.style.display = 'flex';
       if(loadingText) loadingText.textContent = lang==='el'?'Ανεβαίνει η φωτογραφία...':'Uploading photo...';
       
-      const b64 = await processImageSafe(input.files[0]);
+      const b64 = await readFileAsBase64(input.files[0]);
       if(b64) {
         await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
         userDataCache.photo = b64;
         
-        // Ενημέρωση και στις υπάρχουσες δημοσιεύσεις αυτόματα
         const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid));
         const postSnap = await getDocs(q);
         const batch = writeBatch(db);
