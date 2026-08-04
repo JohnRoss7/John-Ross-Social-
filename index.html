@@ -41,7 +41,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .post-header{display:flex;gap:10px;margin-bottom:10px;align-items:center}
 .avatar{width:40px;height:40px;border-radius:8px;background:var(--border-color);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;background-size:cover;background-position:center;color:var(--text-color)}
 .post-info{flex:1;min-width:0}
-.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:5px;cursor:pointer}
+.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;cursor:pointer}
 .handle{color:var(--subtext);font-size:13px;margin-top:1px}
 .post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word;color:var(--text-color)}
 .post-content a{color:var(--primary-color);text-decoration:underline}
@@ -373,6 +373,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(prevContainer) prevContainer.innerHTML = '';
     const fileInput = document.getElementById('imageInput');
     if(fileInput) fileInput.value = '';
+    const camInput = document.getElementById('cameraInput');
+    if(camInput) camInput.value = '';
   };
 
   window.postContent = async () => {
@@ -598,9 +600,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color)">
           <textarea id="postText" placeholder="${lang==='el'?'Τι σκέφτεσαι;':'What are you thinking?'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:60px;font-family:inherit"></textarea>
           <div id="imagePreviewContainer"></div>
-          <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between">
-            <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 14px;border-radius:8px;font-size:13px">📷 ${lang==='el'?'Φωτογραφία':'Photo'}</label>
-            <input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelection(this)">
+          <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;gap:6px">
+              <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px">🖼️ ${lang==='el'?'Συλλογή':'Gallery'}</label>
+              <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelection(this)">
+
+              <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
+              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelection(this)">
+            </div>
             <button id="postSubmitBtn" style="background:var(--primary-color);color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
           </div>
         </div>
@@ -673,9 +680,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
       if (isMe) {
         actionButtons = `
-          <button class="follow-btn" onclick="toggleFollow('${uid}')"
+          <button class="follow-btn" onclick="openEditProfileModal()"
             style="width:100%;margin-top:12px;background:var(--primary-color);color:#fff;border:none;padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
-            Follow
+            ${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}
           </button>
         `;
       } else {
@@ -698,7 +705,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         <div class="profile-top-section">
           <div class="profile-avatar-wrapper">
             ${avatarH}
-            ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" capture="environment" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
+            ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
           </div>
           <div class="profile-details">
             <h2 style="font-size:18px;display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
