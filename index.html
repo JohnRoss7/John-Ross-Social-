@@ -39,7 +39,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 .post{border-bottom:1px solid var(--border-color);padding:14px 16px}
 .post-header{display:flex;gap:10px;margin-bottom:10px;align-items:center}
-.avatar{width:40px;height:40px;border-radius:8px;background:var(--border-color);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;background-size:cover;background-position:center;color:var(--text-color)}
+.avatar{width:40px;height:40px;border-radius:8px;background:var(--border-color);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;background-size:cover;background-position:center center;color:var(--text-color)}
 .post-info{flex:1;min-width:0}
 .username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;cursor:pointer}
 .handle{color:var(--subtext);font-size:13px;margin-top:1px}
@@ -66,12 +66,18 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 /* Profile Layout */
 .profile-top-section{padding:20px;border-bottom:1px solid var(--border-color);display:flex;align-items:flex-start;gap:16px}
-.profile-avatar-wrapper{border:3px solid var(--border-color);border-radius:16px;overflow:hidden;background:var(--card-bg);position:relative;width:80px;height:80px;flex-shrink:0}
+.profile-avatar-wrapper{border:3px solid var(--border-color);border-radius:16px;overflow:hidden;background:var(--card-bg);position:relative;width:80px;height:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.profile-avatar-wrapper .avatar{width:100%;height:100%;border-radius:0;background-position:center center;background-size:cover}
 .profile-details{flex:1;min-width:0}
 .profile-info-section{padding:15px 20px 20px 20px;border-bottom:1px solid var(--border-color)}
 
 .follow-btn{background:var(--primary-color);color:#fff;border:none;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;text-align:center}
 .follow-btn.following{background:transparent;color:var(--text-color);border:1px solid var(--border-color)}
+
+/* Lightbox Modal για ολόκληρη την εικόνα προφίλ */
+.lightbox-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
+.lightbox-modal.open{display:flex}
+.lightbox-content{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
 
 .profile-menu-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center}
 .profile-menu-modal.open{display:flex}
@@ -87,6 +93,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
 <div id="loadingOverlay">⏳ <span id="loadingText">Φόρτωση...</span></div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- Lightbox για προβολή πλήρους φωτογραφίας προφίλ -->
+<div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
+  <img id="lightboxImg" class="lightbox-content" src="" alt="Full Profile Photo">
+</div>
 
 <div class="profile-menu-modal" id="profileMenuModal" onclick="closeProfileMenu(event)">
   <div class="profile-menu-content" onclick="event.stopPropagation()">
@@ -139,7 +150,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCPIg-aoWUhqOqO5hyHUd66HLcHPyC6e70",
@@ -158,7 +169,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let lang = localStorage.getItem('jrs_lang') || 'el';
   let darkMode = localStorage.getItem('jrs_dark') === 'true';
   let userDataCache = {};
-  let allUsersProfiles = {}; // Cache για δυναμική φόρτωση στοιχείων χρηστών
+  let allUsersProfiles = {};
   let viewingUserId = null;
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
@@ -233,7 +244,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }, 400);
   }
 
-  // Αρχικοποίηση λήψης προφίλ όλων των χρηστών για άμεση δυναμική ενημέρωση
   function startUsersListener() {
     onSnapshot(collection(db, 'users'), (snapshot) => {
       snapshot.forEach(docSnap => {
@@ -242,7 +252,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           userDataCache = docSnap.data();
         }
       });
-      // Αν είμαστε ήδη σε feed ή προφίλ, ανανέωση εμφάνισης
       if(currentTab === 'home') loadFeed();
     });
   }
@@ -305,6 +314,22 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.openProfileMenu = () => { document.getElementById('profileMenuModal').classList.add('open'); if(typeof lucide!=='undefined') lucide.createIcons(); };
   window.closeProfileMenu = (e) => { if(e) e.stopPropagation(); document.getElementById('profileMenuModal').classList.remove('open'); };
+
+  // Συναρτήσεις Lightbox για άνοιγμα ολόκληρης της φωτογραφίας
+  window.openLightbox = (url) => {
+    if(!url) return;
+    const modal = document.getElementById('lightboxModal');
+    const img = document.getElementById('lightboxImg');
+    if(modal && img) {
+      img.src = url;
+      modal.classList.add('open');
+    }
+  };
+
+  window.closeLightbox = () => {
+    const modal = document.getElementById('lightboxModal');
+    if(modal) modal.classList.remove('open');
+  };
 
   window.profileMenuAction = (action) => {
     closeProfileMenu();
@@ -597,7 +622,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const displayUsername = profileData.username || displayName.toLowerCase().replace(/[^a-z0-9]/g,'');
     const displayBio = profileData.bio || '';
     const displayPhoto = profileData.photo || '';
-    const avatarH = displayPhoto ? `<div class="avatar" style="width:80px;height:80px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:80px;height:80px;border-radius:12px;font-size:32px">👤</div>`;
+    
+    // Προσθήκη δυνατότητας κλικ για άνοιγμα ολόκληρης της φωτογραφίας προφίλ μέσω lightbox
+    const avatarH = displayPhoto ? `<div class="avatar" style="background-image:url('${displayPhoto}')" onclick="openLightbox('${displayPhoto}')" title="Προβολή φωτογραφίας"></div>` : `<div class="avatar" style="font-size:32px">👤</div>`;
+    
     const isAdminUser = isAdminUserCheck(profileData);
     const isFollowing = (userDataCache.following || []).includes(uid);
     const followersCount = (profileData.followers || []).length;
@@ -641,7 +669,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         <div class="profile-top-section">
           <div class="profile-avatar-wrapper">
             ${avatarH}
-            ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
+            ${isMe ? `<label style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;padding:3px 6px;border-radius:4px;font-size:9px;cursor:pointer;z-index:2">📷 <input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>` : ''}
           </div>
           <div class="profile-details">
             <h2 style="font-size:18px;display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap">
@@ -668,7 +696,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     loadUserPostsSpecific(uid);
   }
 
-  // Άμεση αποθήκευση φωτογραφίας προφίλ
   window.uploadAvatar = async (input) => {
     if(input.files && input.files[0]) {
       const loadingOverlay = document.getElementById('loadingOverlay');
@@ -770,7 +797,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   }
 
   function renderPostHtml(p){
-    // Παίρνουμε τα στοιχεία προφίλ δυναμικά από το cache ή από το ίδιο το post για fallback
     const userProfile = allUsersProfiles[p.uid] || {};
     const postName = userProfile.name || p.name || 'User';
     const postPhoto = userProfile.photo || p.photo || '';
@@ -779,7 +805,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const canDelete = (currentUser && currentUser.uid === p.uid) || isAdmin;
     const isLiked = currentUser && (p.likedBy || []).includes(currentUser.uid);
     const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
-    const avatarHtml = postPhoto ? `<div class="avatar" style="background-image:url('${postPhoto}')"></div>` : `<div class="avatar">👤</div>`;
+    const avatarHtml = postPhoto ? `<div class="avatar" style="background-image:url('${postPhoto}')" onclick="event.stopPropagation(); openLightbox('${postPhoto}')" title="Προβολή φωτογραφίας"></div>` : `<div class="avatar">👤</div>`;
 
     return `<div class="post">
       <div class="post-header">
