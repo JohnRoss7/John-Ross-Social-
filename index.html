@@ -139,7 +139,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCPIg-aoWUhqOqO5hyHUd66HLcHPyC6e70",
@@ -158,6 +158,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let lang = localStorage.getItem('jrs_lang') || 'el';
   let darkMode = localStorage.getItem('jrs_dark') === 'true';
   let userDataCache = {};
+  let allUsersProfiles = {}; // Cache για δυναμική φόρτωση στοιχείων χρηστών
   let viewingUserId = null;
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
@@ -232,6 +233,20 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }, 400);
   }
 
+  // Αρχικοποίηση λήψης προφίλ όλων των χρηστών για άμεση δυναμική ενημέρωση
+  function startUsersListener() {
+    onSnapshot(collection(db, 'users'), (snapshot) => {
+      snapshot.forEach(docSnap => {
+        allUsersProfiles[docSnap.id] = docSnap.data();
+        if(currentUser && docSnap.id === currentUser.uid) {
+          userDataCache = docSnap.data();
+        }
+      });
+      // Αν είμαστε ήδη σε feed ή προφίλ, ανανέωση εμφάνισης
+      if(currentTab === 'home') loadFeed();
+    });
+  }
+
   onAuthStateChanged(auth, async (u) => {
     currentUser = u;
     if(u) {
@@ -243,6 +258,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         userDataCache = {email: u.email, name: u.displayName || u.email.split('@')[0], username: u.email.split('@')[0], bio: '', photo: u.photoURL || '', followers: [], following: []};
         await setDoc(uDoc, userDataCache);
       }
+      startUsersListener();
     }
     render();
   });
@@ -323,7 +339,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
-  // Ασφαλής ανάγνωση αρχείου εικόνας με FileReader (αποφυγή προβλημάτων canvas)
   const readFileAsBase64 = (file) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
@@ -380,10 +395,9 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     try {
       let imageUrls = selectedPostImageBase64 ? [selectedPostImageBase64] : [];
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
-      const myPhoto = userDataCache.photo || currentUser.photoURL || '';
 
       await addDoc(collection(db, 'posts'), {
-        uid: currentUser.uid, name: myName, email: currentUser.email || '', photo: myPhoto,
+        uid: currentUser.uid, name: myName, email: currentUser.email || '',
         text: textVal, images: imageUrls, likedBy: [], createdAt: Date.now()
       });
 
@@ -442,15 +456,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), {name: newName, username: newUsername, bio: newBio});
       userDataCache.name = newName; userDataCache.username = newUsername; userDataCache.bio = newBio;
-      
-      const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid));
-      const postSnap = await getDocs(q);
-      const batch = writeBatch(db);
-      postSnap.forEach(pDoc => {
-        batch.update(pDoc.ref, {name: newName});
-      });
-      await batch.commit();
-
       isEditingProfile = false;
     } catch(err) {
       alert('Error: ' + err.message);
@@ -576,7 +581,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const m = document.getElementById('main');
     if(!m) return;
     const isMe = (uid === currentUser.uid);
-    let profileData = userDataCache;
+    let profileData = allUsersProfiles[uid] || userDataCache;
 
     const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
     if(mySnap.exists()) userDataCache = mySnap.data();
@@ -663,7 +668,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     loadUserPostsSpecific(uid);
   }
 
-  // Αυτόματη ενημέρωση φωτογραφίας προφίλ στα posts
+  // Άμεση αποθήκευση φωτογραφίας προφίλ
   window.uploadAvatar = async (input) => {
     if(input.files && input.files[0]) {
       const loadingOverlay = document.getElementById('loadingOverlay');
@@ -675,14 +680,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       if(b64) {
         await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
         userDataCache.photo = b64;
-        
-        const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid));
-        const postSnap = await getDocs(q);
-        const batch = writeBatch(db);
-        postSnap.forEach(pDoc => {
-          batch.update(pDoc.ref, {photo: b64});
-        });
-        await batch.commit();
+        allUsersProfiles[currentUser.uid] = userDataCache;
       }
 
       if(loadingOverlay) loadingOverlay.style.display = 'none';
@@ -772,12 +770,16 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   }
 
   function renderPostHtml(p){
-    const isAdmin = isAdminUserCheck(p);
+    // Παίρνουμε τα στοιχεία προφίλ δυναμικά από το cache ή από το ίδιο το post για fallback
+    const userProfile = allUsersProfiles[p.uid] || {};
+    const postName = userProfile.name || p.name || 'User';
+    const postPhoto = userProfile.photo || p.photo || '';
+    
+    const isAdmin = isAdminUserCheck({email: p.email, ...userProfile});
     const canDelete = (currentUser && currentUser.uid === p.uid) || isAdmin;
     const isLiked = currentUser && (p.likedBy || []).includes(currentUser.uid);
     const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
-    const avatarHtml = p.photo ? `<div class="avatar" style="background-image:url('${p.photo}')"></div>` : `<div class="avatar">👤</div>`;
-    const postName = p.name || 'User';
+    const avatarHtml = postPhoto ? `<div class="avatar" style="background-image:url('${postPhoto}')"></div>` : `<div class="avatar">👤</div>`;
 
     return `<div class="post">
       <div class="post-header">
