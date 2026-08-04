@@ -45,7 +45,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .handle{color:var(--subtext);font-size:13px;margin-top:1px}
 .post-content{font-size:16px;line-height:1.5;margin-bottom:10px;word-break:break-word;color:var(--text-color)}
 .post-content a{color:var(--primary-color);text-decoration:underline}
-.post-content .mention{color:var(--primary-color);font-weight:700;cursor:pointer}
+.post-content .mention, .post-content .hashtag{color:var(--primary-color);font-weight:700;cursor:pointer}
 .post-images-grid{display:grid;gap:6px;margin-top:10px;border-radius:12px;overflow:hidden}
 .post-image-item{width:100%;max-height:350px;object-fit:cover;background:var(--border-color);border-radius:8px}
 .post-actions{display:flex;gap:30px;color:var(--subtext);font-size:13px;margin-top:12px;align-items:center}
@@ -65,7 +65,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .empty-state{padding:40px 20px;text-align:center;color:var(--subtext);font-size:15px}
 .admin-badge{background:var(--primary-color);color:#fff;padding:2px 6px;border-radius:8px;font-size:10px}
 
-/* Mention Autocomplete Dropdown */
+/* Mention / Hashtag Dropdown */
 .mention-dropdown{position:absolute;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;max-height:150px;overflow-y:auto;width:220px;z-index:150;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.5)}
 .mention-item{padding:10px 12px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:8px}
 .mention-item:hover{background:var(--border-color)}
@@ -80,7 +80,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .follow-btn{background:var(--primary-color);color:#fff;border:none;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;text-align:center}
 .follow-btn.following{background:transparent;color:var(--text-color);border:1px solid var(--border-color)}
 
-/* Lightbox Modal απολύτως κεντραρισμένο */
+/* Lightbox Modal */
 .lightbox-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
 .lightbox-modal.open{display:flex}
 .lightbox-content{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;display:block;margin:auto}
@@ -100,7 +100,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 <div id="loadingOverlay">⏳ <span id="loadingText">Φόρτωση...</span></div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-<!-- Lightbox για προβολή πλήρους φωτογραφίας προφίλ -->
 <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
   <img id="lightboxImg" class="lightbox-content" src="" alt="Full Profile Photo">
 </div>
@@ -181,6 +180,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let userDataCache = {};
   let allUsersProfiles = {};
   let viewingUserId = null;
+  let viewingHashtag = null; // Νέα μεταβλητή για προβολή καρτέλας hashtag
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
@@ -215,11 +215,15 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   if(darkMode) document.body.classList.remove('light-mode');
   else document.body.classList.add('light-mode');
 
-  // Ενιαίος χειρισμός Ιστορικού (Browser Back / Mobile Back Button)
   window.addEventListener('popstate', (event) => {
     if(document.getElementById('lightboxModal').classList.contains('open')) {
       closeLightbox();
       history.pushState(null, '', window.location.href);
+      return;
+    }
+    if(viewingHashtag) {
+      viewingHashtag = null;
+      render();
       return;
     }
     if(isEditingProfile) {
@@ -261,7 +265,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(ptr) ptr.style.display = 'block';
     setTimeout(() => {
       if(ptr) ptr.style.display = 'none';
-      if(currentTab === 'profile') loadProfileData(viewingUserId || currentUser.uid);
+      if(viewingHashtag) loadHashtagPosts(viewingHashtag);
+      else if(currentTab === 'profile') loadProfileData(viewingUserId || currentUser.uid);
       else if(currentTab === 'home') loadFeed();
       else if(currentTab === 'search') loadAllUsersForSearch();
       else if(currentTab === 'notif') loadNotifications();
@@ -276,7 +281,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           userDataCache = docSnap.data();
         }
       });
-      if(currentTab === 'home') loadFeed();
+      if(currentTab === 'home' && !viewingHashtag) loadFeed();
     });
   }
 
@@ -450,7 +455,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const camIn = document.getElementById('cameraInput'); if(camIn) camIn.value = '';
   };
 
-  // Mention Autocomplete & Char Counter Logic
   window.handlePostInput = (textarea) => {
     const val = textarea.value;
     if(val.length > 500) {
@@ -461,7 +465,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       countEl.textContent = `${textarea.value.length}/500`;
     }
 
-    // Mention check
     const cursorPos = textarea.selectionStart;
     const textBeforeCursor = textarea.value.substring(0, cursorPos);
     const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
@@ -519,13 +522,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       let imageUrls = selectedPostImageBase64 ? [selectedPostImageBase64] : [];
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
 
-      // Αποθήκευση ποστ
       await addDoc(collection(db, 'posts'), {
         uid: currentUser.uid, name: myName, email: currentUser.email || '',
         text: textVal, images: imageUrls, likedBy: [], createdAt: Date.now()
       });
 
-      // Εντοπισμός mentions για αποστολή ειδοποιήσεων
       const mentionRegex = /@([a-zA-Z0-9_]+)/g;
       let match;
       let notifiedUids = new Set();
@@ -578,7 +579,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(confirm(lang==='el'?'Διαγραφή δημοσίευσης;':'Delete post?')) await deleteDoc(doc(db, 'posts', id));
   };
 
-  window.openEditProfileModal = () => { isEditingProfile = true; history.pushState({editing: true}, ''); showTab('profile', currentUser.uid, false); };
+  window.openEditProfileModal = () => { viewingHashtag = null; isEditingProfile = true; history.pushState({editing: true}, ''); showTab('profile', currentUser.uid, false); };
 
   window.saveProfileChanges = async () => {
     const editName = document.getElementById('editNameInput');
@@ -608,12 +609,19 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   };
 
   window.showTab = (name, targetUserId = null, pushHistory = true) => {
+    viewingHashtag = null;
     currentTab = name;
     if(name === 'profile') viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     if (pushHistory) {
       history.pushState({tab: name, targetUserId}, '');
     }
+    render();
+  };
+
+  window.openHashtagTab = (tag) => {
+    viewingHashtag = tag;
+    history.pushState({hashtag: tag}, '');
     render();
   };
 
@@ -687,6 +695,19 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       return;
     }
     if(bottomNav) bottomNav.style.display = 'flex';
+
+    if(viewingHashtag) {
+      m.innerHTML = `
+        <div style="padding:16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px">
+          <button onclick="window.history.back()" style="background:none;border:none;color:var(--text-color);cursor:pointer;font-size:18px"><i data-lucide="arrow-left"></i></button>
+          <h2 style="font-size:18px;color:var(--primary-color)">#${viewingHashtag}</h2>
+        </div>
+        <div id="hashtagPostsFeed"></div>`;
+      loadHashtagPosts(viewingHashtag);
+      if(typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
+
     if(currentTab === 'home'){
       m.innerHTML = `
         <div class="feed-tabs">
@@ -694,7 +715,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <button class="feed-tab ${feedSubTab==='following'?'active':''}" onclick="setFeedSubTab('following')">${lang==='el'?'Ακολουθείτε':'Following'}</button>
         </div>
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);position:relative">
-          <textarea id="postText" maxlength="500" placeholder="${lang==='el'?'Τι σκέφτεσαι; (Χρησιμοποίησε @ για mention)':'What are you thinking? (@ to mention)'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:70px;font-family:inherit" oninput="handlePostInput(this)"></textarea>
+          <textarea id="postText" maxlength="500" placeholder="${lang==='el'?'Τι σκέφτεσαι; (Χρησιμοποίησε @ για mention και # για hashtag)':'What are you thinking? (@ mention, # hashtag)'}" style="width:100%;background:transparent;border:none;color:var(--text-color);font-size:15px;resize:none;min-height:70px;font-family:inherit" oninput="handlePostInput(this)"></textarea>
           <div id="mentionDropdown" class="mention-dropdown"></div>
           <div style="display:flex;justify-content:flex-end;font-size:12px;color:var(--subtext);margin-bottom:6px" id="charCount">0/500</div>
           <div id="imagePreviewContainer"></div>
@@ -838,14 +859,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   function linkify(text) {
     if(!text) return '';
-    // Links και Mentions (με κόκκινο χρώμα)
     const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    const hashtagRegex = /#([a-zA-Z0-9_α-ωΑ-ΩίϊΐόάέήίήύϋΰώΏΆΈΉΊΌΎΏ]+)/g; // Υποστήριξη και ελληνικών hashtags
     
     let formatted = escaped.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
+    
     formatted = formatted.replace(mentionRegex, (match, uname) => {
-      // Βρίσκουμε αντιστοιχία χρήστη για να δώσουμε δυνατότητα πλοήγησης στο προφίλ του
       let targetUid = null;
       for(let uid in allUsersProfiles) {
         if((allUsersProfiles[uid].username || '').toLowerCase() === uname.toLowerCase()) {
@@ -858,6 +879,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       }
       return `<span class="mention">@${uname}</span>`;
     });
+
+    // Μετατροπή hashtag σε κόκκινο χρώμα και άνοιγμα νέας καρτέλας με τα ποστ αυτού του hashtag
+    formatted = formatted.replace(hashtagRegex, (match, tag) => {
+      return `<span class="hashtag" onclick="openHashtagTab('${tag}')">#${tag}</span>`;
+    });
+
     return formatted;
   }
 
@@ -878,6 +905,30 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         }
       }
       feed.innerHTML = docs.map(p => renderPostHtml(p)).join('');
+      if(typeof lucide !== 'undefined') lucide.createIcons();
+    });
+  }
+
+  function loadHashtagPosts(tag) {
+    const container = document.getElementById('hashtagPostsFeed');
+    if(!container) return;
+    const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snap) => {
+      let docs = [];
+      snap.forEach(d => {
+        let data = d.data();
+        let txt = data.text || '';
+        // Έλεγχος αν περιέχει το hashtag (case-insensitive)
+        const regex = new RegExp(`#${tag}\\b`, 'i');
+        if(regex.test(txt)) {
+          docs.push({id: d.id, ...data});
+        }
+      });
+      if(docs.length === 0) {
+        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν βρέθηκαν δημοσιεύσεις με αυτό το hashtag':'No posts found with this hashtag'}</div>`;
+        return;
+      }
+      container.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
     });
   }
@@ -915,7 +966,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       const isFollowing = (userDataCache.following || []).includes(u.uid);
       return `
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0" onclick="isEditingProfile=false; showTab('profile', '${u.uid}')">
+          <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0" onclick="viewingHashtag=null; isEditingProfile=false; showTab('profile', '${u.uid}')">
             <div class="avatar" style="${u.photo?`background-image:url('${u.photo}')`:''}"> ${u.photo?'':'👤'} </div>
             <div style="min-width:0;flex:1">
               <div style="font-weight:700">${u.name || 'User'} ${isAdminUserCheck(u)?'<span class="admin-badge">Admin</span>':''}</div>
@@ -953,7 +1004,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
     return `<div class="post">
       <div class="post-header">
-        <div onclick="isEditingProfile=false; showTab('profile', '${p.uid}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0">
+        <div onclick="viewingHashtag=null; isEditingProfile=false; showTab('profile', '${p.uid}')" style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0">
           ${avatarHtml}
           <div class="post-info">
             <div class="username">${postName} ${isAdmin ? '<span class="admin-badge">Admin</span>' : ''}</div>
