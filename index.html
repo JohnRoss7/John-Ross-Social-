@@ -321,7 +321,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
-  const resizeImageFile = (file, maxDimension = 720) => {
+  const resizeImageFile = (file, maxDimension = 500) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
       const reader = new FileReader();
@@ -343,13 +343,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
           } catch(err) {
             resolve(e.target.result);
           }
         };
         img.onerror = () => {
-          // Fallback if image fails canvas draw
           resolve(e.target.result);
         };
         img.src = e.target.result;
@@ -366,7 +365,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       document.getElementById('loadingText').textContent = lang==='el'?'Επεξεργασία φωτογραφίας...':'Processing photo...';
       
       try {
-        selectedPostImageBase64 = await resizeImageFile(file, 800);
+        selectedPostImageBase64 = await resizeImageFile(file, 500);
       } catch(err) {
         selectedPostImageBase64 = '';
       }
