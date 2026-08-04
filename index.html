@@ -164,6 +164,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
+  const isAdminUserCheck = (userObj) => {
+    if(!userObj) return false;
+    if(userObj.email && adminEmails.includes(userObj.email)) return true;
+    if(currentUser && currentUser.email && adminEmails.includes(currentUser.email)) return true;
+    return false;
+  };
+
   if(darkMode) document.body.classList.remove('light-mode');
   else document.body.classList.add('light-mode');
 
@@ -213,7 +220,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       if(snap.exists()) {
         userDataCache = snap.data();
       } else {
-        userDataCache = {name: u.displayName || u.email.split('@')[0], username: u.email.split('@')[0], bio: '', photo: u.photoURL || '', followers: [], following: []};
+        userDataCache = {email: u.email, name: u.displayName || u.email.split('@')[0], username: u.email.split('@')[0], bio: '', photo: u.photoURL || '', followers: [], following: []};
         await setDoc(uDoc, userDataCache);
       }
     }
@@ -314,7 +321,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
-  const resizeImageFile = (file, maxDimension = 500) => {
+  const resizeImageFile = (file, maxDimension = 720) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
       const reader = new FileReader();
@@ -336,7 +343,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.6));
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
           } catch(err) {
             resolve(e.target.result);
           }
@@ -353,7 +360,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(input.files && input.files[0]) {
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingText').textContent = lang==='el'?'Επεξεργασία φωτογραφίας...':'Processing photo...';
-      selectedPostImageBase64 = await resizeImageFile(input.files[0], 600);
+      selectedPostImageBase64 = await resizeImageFile(input.files[0], 800);
       document.getElementById('loadingOverlay').style.display = 'none';
 
       const prevContainer = document.getElementById('imagePreviewContainer');
@@ -396,7 +403,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       await addDoc(collection(db, 'posts'), {
         uid: currentUser.uid,
         name: myName,
-        email: currentUser.email,
+        email: currentUser.email || '',
         photo: myPhoto,
         text: textVal,
         images: imageUrls,
@@ -565,7 +572,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   function render(){
     const sidebarAdmin = document.getElementById('sidebarAdminSection');
-    if(currentUser && adminEmails.includes(currentUser.email)){
+    if(currentUser && isAdminUserCheck(userDataCache)){
       sidebarAdmin.innerHTML = `<button class="sidebar-item admin-panel-btn" onclick="openAdminPanel()"><i data-lucide="shield-alert"></i> Admin Panel</button>`;
     } else {
       sidebarAdmin.innerHTML = '';
@@ -602,10 +609,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <div id="imagePreviewContainer"></div>
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <div style="display:flex;gap:6px">
-              <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px">🖼️ ${lang==='el'?'Συλλογή':'Gallery'}</label>
+              <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">🖼️ ${lang==='el'?'Συλλογή':'Gallery'}</label>
               <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelection(this)">
 
-              <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
+              <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
               <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelection(this)">
             </div>
             <button id="postSubmitBtn" style="background:var(--primary-color);color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
@@ -648,7 +655,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const displayBio = profileData.bio || '';
     const displayPhoto = profileData.photo || '';
     const avatarH = displayPhoto ? `<div class="avatar" style="width:80px;height:80px;border-radius:12px;background-image:url('${displayPhoto}')"></div>` : `<div class="avatar" style="width:80px;height:80px;border-radius:12px;font-size:32px">👤</div>`;
-    const isAdminUser = adminEmails.includes(profileData.email);
+    const isAdminUser = isAdminUserCheck(profileData);
     const isFollowing = (userDataCache.following || []).includes(uid);
     const followersCount = (profileData.followers || []).length;
     const followingCount = (profileData.following || []).length;
@@ -836,7 +843,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <div style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0" onclick="isEditingProfile=false; showTab('profile', '${u.uid}')">
             <div class="avatar" style="${u.photo?`background-image:url('${u.photo}')`:''}"> ${u.photo?'':'👤'} </div>
             <div style="min-width:0;flex:1">
-              <div style="font-weight:700">${u.name || 'User'} ${adminEmails.includes(u.email)?'<span class="admin-badge">Admin</span>':''}</div>
+              <div style="font-weight:700">${u.name || 'User'} ${isAdminUserCheck(u)?'<span class="admin-badge">Admin</span>':''}</div>
               <div style="font-size:13px;color:var(--subtext)">@${u.username || (u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
             </div>
           </div>
@@ -869,7 +876,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   }
 
   function renderPostHtml(p){
-    const isAdmin = adminEmails.includes(p.email);
+    const isAdmin = isAdminUserCheck(p);
     const canDelete = (currentUser && currentUser.uid === p.uid) || isAdmin;
     const isLiked = currentUser && (p.likedBy || []).includes(currentUser.uid);
     const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid count-1"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
