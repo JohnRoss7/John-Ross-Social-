@@ -106,7 +106,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--text-color);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div id="sidebarAdminSection"></div>
-    <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile', currentUser ? currentUser.uid : null)"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
+    <button class="sidebar-item" onclick="toggleSidebar(); openMyProfile()"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSidebar(); openEditProfileModal()"><i data-lucide="edit-3"></i> <span id="mEditProfile">Επεξεργασία Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSettingsMenu()"><i data-lucide="settings"></i> <span id="mSettings">Ρυθμίσεις</span></button>
     
@@ -134,7 +134,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
     <button class="nav-item" data-tab="notif" onclick="showTab('notif')"><i data-lucide="bell"></i></button>
-    <button class="nav-item" data-tab="profile" onclick="showTab('profile', currentUser ? currentUser.uid : null)"><i data-lucide="user"></i></button>
+    <button class="nav-item" data-tab="profile" onclick="openMyProfile()"><i data-lucide="user"></i></button>
   </nav>
 </main>
 
@@ -464,6 +464,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     showTab('profile', currentUser.uid);
   };
 
+  window.openMyProfile = () => {
+    isEditingProfile = false;
+    if(currentUser) {
+      showTab('profile', currentUser.uid);
+    }
+  };
+
   window.saveProfileChanges = async () => {
     const newName = document.getElementById('editNameInput').value.trim();
     const newUsername = document.getElementById('editUsernameInput').value.trim();
@@ -500,10 +507,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     currentTab = name;
     if(name === 'profile') {
       viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
-      // Αν ανοίγουμε το προφίλ μας κανονικά από το κουμπί (χωρίς να πατήθηκε επεξεργασία), σιγουρεύουμε ότι δεν είμαστε σε κατάσταση φόρμας επεξεργασίας:
-      if(viewingUserId === currentUser.uid && targetUserId === currentUser.uid) {
-        // Αν προέρχεται από κλικ στο ανθρωπάκι, κλείνουμε το edit mode εκτός αν ο χρήστης ζήτησε ρητά επεξεργασία
-      }
     }
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     render();
