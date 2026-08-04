@@ -139,7 +139,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, arrayUnion, arrayRemove, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCPIg-aoWUhqOqO5hyHUd66HLcHPyC6e70",
@@ -162,7 +162,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   let selectedPostImageBase64 = '';
   const adminEmails = ['rossrossg7@gmail.com'];
 
-  // Δυνατός και καθαρός ήχος Like (Web Audio API - Bleep/Pop)
+  // Δυνατός και καθαρός ήχος Like (Web Audio API)
   function playLikeSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -170,10 +170,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       const gainNode = audioCtx.createGain();
       
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Νότα D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // Ανέβασμα σε A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
       
-      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime); // Δυνατή ένταση
+      gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
       
       osc.connect(gainNode);
@@ -324,6 +324,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.logout = () => signOut(auth);
 
+  // Βελτιωμένη συνάρτηση επεξεργασίας εικόνας
   const processImageSafe = (file) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
@@ -334,13 +335,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           try {
             const canvas = document.createElement('canvas');
             let w = img.width, h = img.height;
-            const maxD = 800;
+            const maxD = 900;
             if (w > h && w > maxD) { h *= maxD / w; w = maxD; }
             else if (h > maxD) { w *= maxD / h; h = maxD; }
             canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
           } catch(ex) {
             resolve(e.target.result);
           }
@@ -416,7 +417,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   };
 
   window.likePost = async (id, ownerUid) => {
-    playLikeSound(); // Παίξτε δυνατός ήχος αμέσως στο πάτημα
+    playLikeSound();
     const postRef = doc(db, 'posts', id);
     const postDoc = await getDoc(postRef);
     if(!postDoc.exists()) return;
@@ -461,6 +462,16 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), {name: newName, username: newUsername, bio: newBio});
       userDataCache.name = newName; userDataCache.username = newUsername; userDataCache.bio = newBio;
+      
+      // Αυτόματη ενημέρωση ονόματος στα υπάρχοντα posts
+      const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid));
+      const postSnap = await getDocs(q);
+      const batch = writeBatch(db);
+      postSnap.forEach(pDoc => {
+        batch.update(pDoc.ref, {name: newName});
+      });
+      await batch.commit();
+
       isEditingProfile = false;
     } catch(err) {
       alert('Error: ' + err.message);
@@ -559,7 +570,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <div style="display:flex;gap:6px">
               <label for="imageInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">🖼️ ${lang==='el'?'Συλλογή':'Gallery'}</label>
-              <!-- Χωρίς κανένα περιορισμό τύπου για να ανοίγει απρόσκοπτα όλη η συλλογή / φάκελος κάμερας -->
               <input type="file" id="imageInput" style="display:none" onchange="handleImageSelection(this)">
 
               <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
@@ -674,19 +684,31 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     loadUserPostsSpecific(uid);
   }
 
+  // Αυτόματη ενημέρωση φωτογραφίας προφίλ στα posts
   window.uploadAvatar = async (input) => {
     if(input.files && input.files[0]) {
       const loadingOverlay = document.getElementById('loadingOverlay');
       const loadingText = document.getElementById('loadingText');
       if(loadingOverlay) loadingOverlay.style.display = 'flex';
       if(loadingText) loadingText.textContent = lang==='el'?'Ανεβαίνει η φωτογραφία...':'Uploading photo...';
+      
       const b64 = await processImageSafe(input.files[0]);
-      if(loadingOverlay) loadingOverlay.style.display = 'none';
       if(b64) {
         await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
         userDataCache.photo = b64;
-        render();
+        
+        // Ενημέρωση και στις υπάρχουσες δημοσιεύσεις αυτόματα
+        const q = query(collection(db, 'posts'), where('uid', '==', currentUser.uid));
+        const postSnap = await getDocs(q);
+        const batch = writeBatch(db);
+        postSnap.forEach(pDoc => {
+          batch.update(pDoc.ref, {photo: b64});
+        });
+        await batch.commit();
       }
+
+      if(loadingOverlay) loadingOverlay.style.display = 'none';
+      render();
     }
   };
 
