@@ -74,10 +74,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .follow-btn{background:var(--primary-color);color:#fff;border:none;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;text-align:center}
 .follow-btn.following{background:transparent;color:var(--text-color);border:1px solid var(--border-color)}
 
-/* Lightbox Modal για ολόκληρη την εικόνα προφίλ */
+/* Lightbox Modal απολύτως κεντραρισμένο */
 .lightbox-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
 .lightbox-modal.open{display:flex}
-.lightbox-content{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+.lightbox-content{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px;display:block;margin:auto}
 
 .profile-menu-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center}
 .profile-menu-modal.open{display:flex}
@@ -115,7 +115,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <button onclick="toggleSidebar()" style="background:none;border:none;color:var(--text-color);font-size:18px;cursor:pointer">✕</button>
     </div>
     <div id="sidebarAdminSection"></div>
-    <button class="sidebar-item" onclick="toggleSidebar(); openMyProfile()"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
+    <button class="sidebar-item" onclick="toggleSidebar(); showTab('profile')"><i data-lucide="user"></i> <span id="mProfile">Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSidebar(); openEditProfileModal()"><i data-lucide="edit-3"></i> <span id="mEditProfile">Επεξεργασία Προφίλ</span></button>
     <button class="sidebar-item" onclick="toggleSettingsMenu()"><i data-lucide="settings"></i> <span id="mSettings">Ρυθμίσεις</span></button>
     
@@ -143,7 +143,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
     <button class="nav-item" data-tab="notif" onclick="showTab('notif')"><i data-lucide="bell"></i></button>
-    <button class="nav-item" data-tab="profile" onclick="openMyProfile()"><i data-lucide="user"></i></button>
+    <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
   </nav>
 </main>
 
@@ -205,10 +205,20 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   if(darkMode) document.body.classList.remove('light-mode');
   else document.body.classList.add('light-mode');
 
-  window.addEventListener('popstate', () => {
+  // Ενιαίος χειρισμός Ιστορικού (Browser Back / Mobile Back Button)
+  window.addEventListener('popstate', (event) => {
+    if(document.getElementById('lightboxModal').classList.contains('open')) {
+      closeLightbox();
+      history.pushState(null, '', window.location.href);
+      return;
+    }
     if(isEditingProfile) {
       isEditingProfile = false;
       render();
+      return;
+    }
+    if(currentTab !== 'home') {
+      showTab('home', null, false);
     }
   });
 
@@ -268,6 +278,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         await setDoc(uDoc, userDataCache);
       }
       startUsersListener();
+      history.replaceState({tab: 'home'}, '');
     }
     render();
   });
@@ -315,7 +326,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   window.openProfileMenu = () => { document.getElementById('profileMenuModal').classList.add('open'); if(typeof lucide!=='undefined') lucide.createIcons(); };
   window.closeProfileMenu = (e) => { if(e) e.stopPropagation(); document.getElementById('profileMenuModal').classList.remove('open'); };
 
-  // Συναρτήσεις Lightbox για άνοιγμα ολόκληρης της φωτογραφίας
+  // Lightbox Συνδέσεις με το Ιστορικό ώστε το πίσω κουμπί να κλείνει τη φωτογραφία και να αφήνει τον χρήστη στο προφίλ
   window.openLightbox = (url) => {
     if(!url) return;
     const modal = document.getElementById('lightboxModal');
@@ -323,6 +334,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(modal && img) {
       img.src = url;
       modal.classList.add('open');
+      history.pushState({lightbox: true}, '');
     }
   };
 
@@ -460,8 +472,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(confirm(lang==='el'?'Διαγραφή δημοσίευσης;':'Delete post?')) await deleteDoc(doc(db, 'posts', id));
   };
 
-  window.openEditProfileModal = () => { isEditingProfile = true; history.pushState({editing: true}, ''); showTab('profile', currentUser.uid); };
-  window.openMyProfile = () => { isEditingProfile = false; if(currentUser) showTab('profile', currentUser.uid); };
+  window.openEditProfileModal = () => { isEditingProfile = true; history.pushState({editing: true}, ''); showTab('profile', currentUser.uid, false); };
 
   window.saveProfileChanges = async () => {
     const editName = document.getElementById('editNameInput');
@@ -490,10 +501,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     }
   };
 
-  window.showTab = (name, targetUserId = null) => {
+  // Διαχείριση πλοήγησης με προσθήκη στο history ώστε το πίσω κουμπί να επιστρέφει σωστά στην αρχική
+  window.showTab = (name, targetUserId = null, pushHistory = true) => {
     currentTab = name;
     if(name === 'profile') viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    if (pushHistory) {
+      history.pushState({tab: name, targetUserId}, '');
+    }
     render();
   };
 
@@ -623,7 +638,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const displayBio = profileData.bio || '';
     const displayPhoto = profileData.photo || '';
     
-    // Προσθήκη δυνατότητας κλικ για άνοιγμα ολόκληρης της φωτογραφίας προφίλ μέσω lightbox
     const avatarH = displayPhoto ? `<div class="avatar" style="background-image:url('${displayPhoto}')" onclick="openLightbox('${displayPhoto}')" title="Προβολή φωτογραφίας"></div>` : `<div class="avatar" style="font-size:32px">👤</div>`;
     
     const isAdminUser = isAdminUserCheck(profileData);
