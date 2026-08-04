@@ -209,7 +209,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     setTimeout(() => {
       if(ptr) ptr.style.display = 'none';
       render();
-    }, 600);
+    }, 500);
   }
 
   onAuthStateChanged(auth, async (u) => {
@@ -343,7 +343,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.5));
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
           } catch(err) {
             resolve(e.target.result);
           }
@@ -353,7 +353,13 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         };
         img.src = e.target.result;
       };
-      reader.onerror = () => resolve('');
+      reader.onerror = () => {
+        // Fallback άμεσου ανάγνωσης σε περίπτωση σφάλματος
+        const r2 = new FileReader();
+        r2.onload = (ev) => resolve(ev.target.result);
+        r2.onerror = () => resolve('');
+        r2.readAsDataURL(file);
+      };
       reader.readAsDataURL(file);
     });
   };
@@ -362,7 +368,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(input.files && input.files[0]) {
       const file = input.files[0];
       document.getElementById('loadingOverlay').style.display = 'flex';
-      document.getElementById('loadingText').textContent = lang==='el'?'Συμπίεση φωτογραφίας...':'Compressing photo...';
+      document.getElementById('loadingText').textContent = lang==='el'?'Επεξεργασία φωτογραφίας...':'Processing photo...';
       
       try {
         selectedPostImageBase64 = await resizeImageFile(file, 600);
@@ -374,11 +380,15 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
       const prevContainer = document.getElementById('imagePreviewContainer');
       if(prevContainer) {
-        prevContainer.innerHTML = `
-          <div style="position:relative;display:inline-block;margin-top:8px">
-            <img src="${selectedPostImageBase64}" style="max-height:120px;border-radius:8px;object-fit:cover">
-            <button onclick="clearPostImage()" style="position:absolute;top:-6px;right:-6px;background:#000;color:#fff;border:1px solid #fff;border-radius:50%;width:22px;height:22px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
-          </div>`;
+        if(selectedPostImageBase64) {
+          prevContainer.innerHTML = `
+            <div style="position:relative;display:inline-block;margin-top:8px">
+              <img src="${selectedPostImageBase64}" style="max-height:120px;border-radius:8px;object-fit:cover">
+              <button onclick="clearPostImage()" style="position:absolute;top:-6px;right:-6px;background:#000;color:#fff;border:1px solid #fff;border-radius:50%;width:22px;height:22px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+            </div>`;
+        } else {
+          prevContainer.innerHTML = `<span style="color:#ef4444;font-size:13px">${lang==='el'?'Σφάλμα φόρτωσης εικόνας':'Image load error'}</span>`;
+        }
       }
     }
   };
