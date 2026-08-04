@@ -73,7 +73,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 .follow-btn{background:var(--primary-color);color:#fff;border:none;padding:8px 24px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px;text-align:center}
 .follow-btn.following{background:transparent;color:var(--text-color);border:1px solid var(--border-color)}
 
-/* Modal / Dropdown Menu */
 .profile-menu-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center}
 .profile-menu-modal.open{display:flex}
 .profile-menu-content{background:var(--card-bg);border:1px solid var(--border-color);border-radius:16px;width:90%;max-width:320px;padding:8px 0;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
@@ -89,7 +88,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 <div id="loadingOverlay">⏳ <span id="loadingText">Επεξεργασία εικόνας...</span></div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-<!-- Profile Options Modal (3 dots menu) -->
 <div class="profile-menu-modal" id="profileMenuModal" onclick="closeProfileMenu(event)">
   <div class="profile-menu-content" onclick="event.stopPropagation()">
     <button class="profile-menu-item" onclick="profileMenuAction('share')"><i data-lucide="share-2"></i> <span id="mShare">Share Profile</span></button>
@@ -174,7 +172,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   if(darkMode) document.body.classList.remove('light-mode');
   else document.body.classList.add('light-mode');
 
-  window.addEventListener('popstate', (event) => {
+  window.addEventListener('popstate', () => {
     if(isEditingProfile) {
       isEditingProfile = false;
       render();
@@ -182,13 +180,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   });
 
   window.clearAppCache = async () => {
-    if(confirm(lang === 'el' ? 'Εκκαθάριση τοπικών δεδομένων και ανανέωση;' : 'Clear local data and reload?')) {
+    if(confirm(lang === 'el' ? 'Εκκαθάριση τοπικών δεδομένων και ανανέωση?' : 'Clear local data and reload?')) {
       localStorage.clear();
       if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for(let registration of registrations) {
-          await registration.unregister();
-        }
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for(let r of regs) await r.unregister();
       }
       window.location.reload(true);
     }
@@ -198,7 +194,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   window.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive: true});
   window.addEventListener('touchend', e => {
     let touchEndY = e.changedTouches[0].clientY;
-    if(window.scrollY <= 5 && (touchEndY - touchStartY) > 120) {
+    if(window.scrollY <= 5 && (touchEndY - touchStartY) > 130) {
       triggerRefresh();
     }
   }, {passive: true});
@@ -208,8 +204,12 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(ptr) ptr.style.display = 'block';
     setTimeout(() => {
       if(ptr) ptr.style.display = 'none';
-      render();
-    }, 500);
+      // Ανανέωση μόνο της τρέχουσας καρτέλας, χωρίς να αλλάζει οθόνη
+      if(currentTab === 'profile') loadProfileData(viewingUserId || currentUser.uid);
+      else if(currentTab === 'home') loadFeed();
+      else if(currentTab === 'search') loadAllUsersForSearch();
+      else if(currentTab === 'notif') loadNotifications();
+    }, 400);
   }
 
   onAuthStateChanged(auth, async (u) => {
@@ -267,61 +267,43 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     document.getElementById('mReport').textContent = el ? 'Αναφορά' : 'Report';
   }
 
-  window.openProfileMenu = () => {
-    document.getElementById('profileMenuModal').classList.add('open');
-    if(typeof lucide !== 'undefined') lucide.createIcons();
-  };
-
-  window.closeProfileMenu = (e) => {
-    if(e) e.stopPropagation();
-    document.getElementById('profileMenuModal').classList.remove('open');
-  };
+  window.openProfileMenu = () => { document.getElementById('profileMenuModal').classList.add('open'); if(typeof lucide!=='undefined') lucide.createIcons(); };
+  window.closeProfileMenu = (e) => { if(e) e.stopPropagation(); document.getElementById('profileMenuModal').classList.remove('open'); };
 
   window.profileMenuAction = (action) => {
     closeProfileMenu();
     if(action === 'share') {
-      if(navigator.share) {
-        navigator.share({title: 'Profile', url: window.location.href}).catch(()=>{});
-      } else {
-        alert(lang==='el'?'Ο σύνδεσμος αντιγράφηκε!':'Link copied!');
-      }
-    } else if(action === 'block') {
-      alert(lang==='el'?'Ο χρήστης αποκλείστηκε.':'User blocked.');
-    } else if(action === 'mute') {
-      alert(lang==='el'?'Έγινε σίγαση χρήστη.':'User muted.');
-    } else if(action === 'report') {
-      alert(lang==='el'?'Η αναφορά υποβλήθηκε επιτυχώς.':'Report submitted successfully.');
+      if(navigator.share) navigator.share({title: 'Profile', url: window.location.href}).catch(()=>{});
+      else alert(lang==='el'?'Ο σύνδεσμος αντιγράφηκε!':'Link copied!');
+    } else {
+      alert(lang==='el'?'Επιτυχής ενέργεια.':'Action successful.');
     }
   };
 
   window.login = () => {
-    const e = document.getElementById('le').value;
-    const p = document.getElementById('lp').value;
-    signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
+    signInWithEmailAndPassword(auth, document.getElementById('le').value, document.getElementById('lp').value).catch(err => alert(err.message));
   };
 
   window.register = () => {
     const e = document.getElementById('le').value;
     const p = document.getElementById('lp').value;
     if(!e || !p) return alert('Συμπλήρωσε email και κωδικό');
-    const defaultName = e.split('@')[0];
+    const def = e.split('@')[0];
     createUserWithEmailAndPassword(auth, e, p).then(cred => {
-      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:defaultName, username:defaultName, bio:'', photo:'', followers:[], following:[], likedPosts:[]});
+      return setDoc(doc(db, 'users', cred.user.uid), {email:e, name:def, username:def, bio:'', photo:'', followers:[], following:[]});
     }).catch(err => alert(err.message));
   };
 
   window.googleLogin = () => {
     signInWithPopup(auth, new GoogleAuthProvider()).then(async cred => {
-      const defName = cred.user.displayName || cred.user.email.split('@')[0];
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        email: cred.user.email, name: defName, username: defName, bio:'', photo: cred.user.photoURL || '', followers:[], following:[]
-      }, {merge:true});
+      const def = cred.user.displayName || cred.user.email.split('@')[0];
+      await setDoc(doc(db, 'users', cred.user.uid), {email: cred.user.email, name: def, username: def, bio:'', photo: cred.user.photoURL || '', followers:[], following:[]}, {merge:true});
     }).catch(err => alert(err.message));
   };
 
   window.logout = () => signOut(auth);
 
-  const resizeImageFile = (file, maxDimension = 600) => {
+  const processImageSafe = (file) => {
     return new Promise((resolve) => {
       if(!file) return resolve('');
       const reader = new FileReader();
@@ -330,36 +312,22 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
         img.onload = () => {
           try {
             const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            if (width > height && width > maxDimension) {
-              height *= maxDimension / width;
-              width = maxDimension;
-            } else if (height > maxDimension) {
-              width *= maxDimension / height;
-              height = maxDimension;
-            }
-            canvas.width = width;
-            canvas.height = height;
+            let w = img.width, h = img.height;
+            const maxD = 800;
+            if (w > h && w > maxD) { h *= maxD / w; w = maxD; }
+            else if (h > maxD) { w *= maxD / h; h = maxD; }
+            canvas.width = w; canvas.height = h;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.6));
-          } catch(err) {
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          } catch(ex) {
             resolve(e.target.result);
           }
         };
-        img.onerror = () => {
-          resolve(e.target.result);
-        };
+        img.onerror = () => resolve(e.target.result);
         img.src = e.target.result;
       };
-      reader.onerror = () => {
-        // Fallback άμεσου ανάγνωσης σε περίπτωση σφάλματος
-        const r2 = new FileReader();
-        r2.onload = (ev) => resolve(ev.target.result);
-        r2.onerror = () => resolve('');
-        r2.readAsDataURL(file);
-      };
+      reader.onerror = () => resolve('');
       reader.readAsDataURL(file);
     });
   };
@@ -368,26 +336,22 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(input.files && input.files[0]) {
       const file = input.files[0];
       document.getElementById('loadingOverlay').style.display = 'flex';
-      document.getElementById('loadingText').textContent = lang==='el'?'Επεξεργασία φωτογραφίας...':'Processing photo...';
+      document.getElementById('loadingText').textContent = lang==='el'?'Επεξεργασία εικόνας...':'Processing image...';
       
-      try {
-        selectedPostImageBase64 = await resizeImageFile(file, 600);
-      } catch(err) {
-        selectedPostImageBase64 = '';
-      }
+      selectedPostImageBase64 = await processImageSafe(file);
       
       document.getElementById('loadingOverlay').style.display = 'none';
 
-      const prevContainer = document.getElementById('imagePreviewContainer');
-      if(prevContainer) {
+      const prev = document.getElementById('imagePreviewContainer');
+      if(prev) {
         if(selectedPostImageBase64) {
-          prevContainer.innerHTML = `
+          prev.innerHTML = `
             <div style="position:relative;display:inline-block;margin-top:8px">
-              <img src="${selectedPostImageBase64}" style="max-height:120px;border-radius:8px;object-fit:cover">
-              <button onclick="clearPostImage()" style="position:absolute;top:-6px;right:-6px;background:#000;color:#fff;border:1px solid #fff;border-radius:50%;width:22px;height:22px;font-size:12px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+              <img src="${selectedPostImageBase64}" style="max-height:140px;border-radius:8px;object-fit:cover">
+              <button onclick="clearPostImage()" style="position:absolute;top:-6px;right:-6px;background:#000;color:#fff;border:1px solid #fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
             </div>`;
         } else {
-          prevContainer.innerHTML = `<span style="color:#ef4444;font-size:13px">${lang==='el'?'Σφάλμα φόρτωσης εικόνας':'Image load error'}</span>`;
+          prev.innerHTML = `<span style="color:#ef4444;font-size:13px">${lang==='el'?'Σφάλμα φόρτωσης':'Load error'}</span>`;
         }
       }
     }
@@ -395,88 +359,53 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.clearPostImage = () => {
     selectedPostImageBase64 = '';
-    const prevContainer = document.getElementById('imagePreviewContainer');
-    if(prevContainer) prevContainer.innerHTML = '';
-    const fileInput = document.getElementById('imageInput');
-    if(fileInput) fileInput.value = '';
-    const camInput = document.getElementById('cameraInput');
-    if(camInput) camInput.value = '';
+    const prev = document.getElementById('imagePreviewContainer');
+    if(prev) prev.innerHTML = '';
+    const imgIn = document.getElementById('imageInput'); if(imgIn) imgIn.value = '';
+    const camIn = document.getElementById('cameraInput'); if(camIn) camIn.value = '';
   };
 
   window.postContent = async () => {
     const textVal = document.getElementById('postText').value.trim();
-    if(!textVal && !selectedPostImageBase64) return alert(lang==='el'?'Γράψε κάτι ή πρόσθεσε φωτογραφία!':'Write something or add a photo!');
+    if(!textVal && !selectedPostImageBase64) return alert(lang==='el'?'Γράψε κάτι ή πρόσθεσε φωτογραφία!':'Write something or add photo!');
     
     const postBtn = document.getElementById('postSubmitBtn');
     if(postBtn) { postBtn.disabled = true; postBtn.textContent = lang==='el'?'Αποστολή...':'Posting...'; }
 
     try {
-      let imageUrls = [];
-      if(selectedPostImageBase64){
-        imageUrls.push(selectedPostImageBase64);
-      }
-
+      let imageUrls = selectedPostImageBase64 ? [selectedPostImageBase64] : [];
       const myName = userDataCache.name || currentUser.displayName || currentUser.email.split('@')[0];
       const myPhoto = userDataCache.photo || currentUser.photoURL || '';
 
       await addDoc(collection(db, 'posts'), {
-        uid: currentUser.uid,
-        name: myName,
-        email: currentUser.email || '',
-        photo: myPhoto,
-        text: textVal,
-        images: imageUrls,
-        likedBy: [],
-        createdAt: Date.now()
+        uid: currentUser.uid, name: myName, email: currentUser.email || '', photo: myPhoto,
+        text: textVal, images: imageUrls, likedBy: [], createdAt: Date.now()
       });
 
       document.getElementById('postText').value = '';
       clearPostImage();
-      alert(lang==='el'?'Η δημοσίευση ανέβηκε επιτυχώς!':'Post uploaded successfully!');
     } catch(err) {
-      alert('Σφάλμα ανέβασματος: ' + err.message);
+      alert('Error: ' + err.message);
     } finally {
       if(postBtn) { postBtn.disabled = false; postBtn.textContent = lang==='el'?'Δημοσίευση':'Post'; }
     }
   };
 
-  const playLikeSound = () => {
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
-    } catch(e) {}
-  };
-
-  window.likePost = async (id, postOwnerUid) => {
+  window.likePost = async (id, ownerUid) => {
     const postRef = doc(db, 'posts', id);
     const postDoc = await getDoc(postRef);
     if(!postDoc.exists()) return;
-    const data = postDoc.data();
-    const likedBy = data.likedBy || [];
+    const likedBy = postDoc.data().likedBy || [];
     
     if(likedBy.includes(currentUser.uid)){
       await updateDoc(postRef, {likedBy: arrayRemove(currentUser.uid)});
     } else {
-      playLikeSound();
       await updateDoc(postRef, {likedBy: arrayUnion(currentUser.uid)});
-      
-      if(postOwnerUid && postOwnerUid !== currentUser.uid) {
+      if(ownerUid && ownerUid !== currentUser.uid) {
         const myName = userDataCache.name || currentUser.email.split('@')[0];
         await addDoc(collection(db, 'notifications'), {
-          toUid: postOwnerUid,
-          fromName: myName,
-          type: 'like',
-          text: lang==='el'?`${myName} έκανε like στη δημοσίευσή σου`:`${myName} liked your post`,
-          createdAt: Date.now()
+          toUid: ownerUid, fromName: myName, type: 'like',
+          text: lang==='el'?`${myName} έκανε like στη δημοσίευσή σου`:`${myName} liked your post`, createdAt: Date.now()
         });
       }
     }
@@ -486,45 +415,24 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(confirm(lang==='el'?'Διαγραφή δημοσίευσης;':'Delete post?')) await deleteDoc(doc(db, 'posts', id));
   };
 
-  window.openEditProfileModal = () => {
-    isEditingProfile = true;
-    history.pushState({editing: true}, '');
-    showTab('profile', currentUser.uid);
-  };
-
-  window.openMyProfile = () => {
-    isEditingProfile = false;
-    if(currentUser) {
-      showTab('profile', currentUser.uid);
-    }
-  };
+  window.openEditProfileModal = () => { isEditingProfile = true; history.pushState({editing: true}, ''); showTab('profile', currentUser.uid); };
+  window.openMyProfile = () => { isEditingProfile = false; if(currentUser) showTab('profile', currentUser.uid); };
 
   window.saveProfileChanges = async () => {
     const newName = document.getElementById('editNameInput').value.trim();
     const newUsername = document.getElementById('editUsernameInput').value.trim();
     let newBio = document.getElementById('editBioInput').value.trim();
-
-    if(newBio.length > 200) {
-      alert(lang==='el'?'Το bio δεν μπορεί να ξεπερνά τους 200 χαρακτήρες.':'Bio cannot exceed 200 characters.');
-      newBio = newBio.substring(0, 200);
-    }
+    if(newBio.length > 200) newBio = newBio.substring(0, 200);
 
     document.getElementById('loadingOverlay').style.display = 'flex';
-    document.getElementById('loadingText').textContent = lang==='el'?'Αποθήκευση αλλαγών...':'Saving changes...';
+    document.getElementById('loadingText').textContent = lang==='el'?'Αποθήκευση...':'Saving...';
 
     try {
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        name: newName,
-        username: newUsername,
-        bio: newBio
-      });
-      userDataCache.name = newName;
-      userDataCache.username = newUsername;
-      userDataCache.bio = newBio;
+      await updateDoc(doc(db, 'users', currentUser.uid), {name: newName, username: newUsername, bio: newBio});
+      userDataCache.name = newName; userDataCache.username = newUsername; userDataCache.bio = newBio;
       isEditingProfile = false;
-      alert(lang==='el'?'Το προφίλ ενημερώθηκε επιτυχώς!':'Profile updated successfully!');
     } catch(err) {
-      alert('Σφάλμα: ' + err.message);
+      alert('Error: ' + err.message);
     } finally {
       document.getElementById('loadingOverlay').style.display = 'none';
       render();
@@ -533,29 +441,19 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.showTab = (name, targetUserId = null) => {
     currentTab = name;
-    if(name === 'profile') {
-      viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
-    }
+    if(name === 'profile') viewingUserId = targetUserId || (currentUser ? currentUser.uid : null);
     document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     render();
   };
 
-  window.setFeedSubTab = (sub) => {
-    feedSubTab = sub;
-    render();
-  };
+  window.setFeedSubTab = (sub) => { feedSubTab = sub; render(); };
 
   window.toggleFollow = async (targetUid) => {
-    if(targetUid === currentUser.uid) {
-      return;
-    }
+    if(targetUid === currentUser.uid) return;
     const myRef = doc(db, 'users', currentUser.uid);
     const targetRef = doc(db, 'users', targetUid);
-    
     const mySnap = await getDoc(myRef);
-    if(mySnap.exists()) {
-      userDataCache = mySnap.data();
-    }
+    if(mySnap.exists()) userDataCache = mySnap.data();
 
     const myFollowing = userDataCache.following || [];
     const isFollowing = myFollowing.includes(targetUid);
@@ -568,14 +466,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       await updateDoc(myRef, {following: arrayUnion(targetUid)});
       await updateDoc(targetRef, {followers: arrayUnion(currentUser.uid)});
       userDataCache.following = [...myFollowing, targetUid];
-
       const myName = userDataCache.name || currentUser.email.split('@')[0];
       await addDoc(collection(db, 'notifications'), {
-        toUid: targetUid,
-        fromName: myName,
-        type: 'follow',
-        text: lang==='el'?`${myName} άρχισε να σε ακολουθεί`:`${myName} started following you`,
-        createdAt: Date.now()
+        toUid: targetUid, fromName: myName, type: 'follow',
+        text: lang==='el'?`${myName} άρχισε να σε ακολουθεί`:`${myName} started following you`, createdAt: Date.now()
       });
     }
     render();
@@ -583,14 +477,14 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
 
   window.openAdminPanel = async () => {
     toggleSidebar();
-    const postsSnap = await getDocs(collection(db, 'posts'));
-    const usersSnap = await getDocs(collection(db, 'users'));
-    alert(`📊 Admin Panel:\n• Posts: ${postsSnap.size}\n• Users: ${usersSnap.size}`);
+    const pSnap = await getDocs(collection(db, 'posts'));
+    const uSnap = await getDocs(collection(db, 'users'));
+    alert(`📊 Admin Panel:\n• Posts: ${pSnap.size}\n• Users: ${uSnap.size}`);
   };
 
   function render(){
     const sidebarAdmin = document.getElementById('sidebarAdminSection');
-    if(currentUser && isAdminUserCheck(userDataCache)){
+    if(currentUser && isAdminUserCheck(userDataCache)) {
       sidebarAdmin.innerHTML = `<button class="sidebar-item admin-panel-btn" onclick="openAdminPanel()"><i data-lucide="shield-alert"></i> Admin Panel</button>`;
     } else {
       sidebarAdmin.innerHTML = '';
@@ -631,7 +525,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
               <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelection(this)">
 
               <label for="cameraInput" style="cursor:pointer;background:var(--border-color);padding:8px 12px;border-radius:8px;font-size:13px;display:inline-block">📷 ${lang==='el'?'Κάμερα':'Camera'}</label>
-              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageSelection(this)">
+              <input type="file" id="cameraInput" accept="image/*" style="display:none" onchange="handleImageSelection(this)">
             </div>
             <button id="postSubmitBtn" style="background:var(--primary-color);color:#fff;border:none;padding:8px 20px;border-radius:12px;font-weight:700;cursor:pointer" onclick="postContent()">${lang==='el'?'Δημοσίευση':'Post'}</button>
           </div>
@@ -657,9 +551,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     let profileData = userDataCache;
 
     const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
-    if(mySnap.exists()) {
-      userDataCache = mySnap.data();
-    }
+    if(mySnap.exists()) userDataCache = mySnap.data();
 
     if(!isMe) {
       const uSnap = await getDoc(doc(db, 'users', uid));
@@ -689,11 +581,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <input id="editNameInput" type="text" value="${displayName}" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:15px;margin-top:4px">
           </div>
           <div>
-            <label style="font-size:12px;color:var(--subtext)">Username (emoji ok)</label>
+            <label style="font-size:12px;color:var(--subtext)">Username</label>
             <input id="editUsernameInput" type="text" value="${displayUsername}" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:15px;margin-top:4px">
           </div>
           <div>
-            <label style="font-size:12px;color:var(--subtext)">Bio (max 200 chars)</label>
+            <label style="font-size:12px;color:var(--subtext)">Bio (max 200)</label>
             <textarea id="editBioInput" maxlength="200" style="width:100%;background:var(--card-bg);border:1px solid var(--border-color);color:var(--text-color);padding:10px;border-radius:8px;font-size:14px;resize:none;min-height:70px;margin-top:4px;font-family:inherit">${displayBio}</textarea>
           </div>
           <div>
@@ -701,30 +593,16 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           </div>
         </div>`;
     } else {
-      let actionButtons = '';
-
-      if (isMe) {
-        actionButtons = `
-          <button class="follow-btn" onclick="openEditProfileModal()"
-            style="width:100%;margin-top:12px;background:var(--primary-color);color:#fff;border:none;padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
-            ${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}
+      let actionButtons = isMe ? `
+        <button class="follow-btn" onclick="openEditProfileModal()" style="width:100%;margin-top:12px;background:var(--primary-color);color:#fff;border:none;padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
+          ${lang==='el'?'Επεξεργασία Προφίλ':'Edit Profile'}
+        </button>` : `
+        <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+          <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${uid}')" style="flex:1;background:${isFollowing ? 'transparent' : 'var(--primary-color)'};color:${isFollowing ? 'var(--text-color)' : '#fff'};border:1px solid var(--border-color);padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
+            ${isFollowing ? 'Following' : 'Follow'}
           </button>
-        `;
-      } else {
-        actionButtons = `
-          <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
-            <button class="follow-btn ${isFollowing ? 'following' : ''}" 
-              onclick="toggleFollow('${uid}')"
-              style="flex:1;background:${isFollowing ? 'transparent' : 'var(--primary-color)'};color:${isFollowing ? 'var(--text-color)' : '#fff'};border:1px solid var(--border-color);padding:10px;border-radius:20px;font-weight:700;cursor:pointer">
-              ${isFollowing ? 'Following' : 'Follow'}
-            </button>
-            <button onclick="openProfileMenu()" 
-              style="background:var(--card-bg);border:1px solid var(--border-color);width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">
-              ⋮
-            </button>
-          </div>
-        `;
-      }
+          <button onclick="openProfileMenu()" style="background:var(--card-bg);border:1px solid var(--border-color);width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">⋮</button>
+        </div>`;
 
       profileBodyHtml = `
         <div class="profile-top-section">
@@ -761,19 +639,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     if(input.files && input.files[0]) {
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingText').textContent = lang==='el'?'Ανεβαίνει η φωτογραφία...':'Uploading photo...';
-      const b64 = await resizeImageFile(input.files[0], 400);
+      const b64 = await processImageSafe(input.files[0]);
       document.getElementById('loadingOverlay').style.display = 'none';
       if(b64) {
         await updateDoc(doc(db, 'users', currentUser.uid), {photo: b64});
         userDataCache.photo = b64;
-        
-        const postsSnap = await getDocs(collection(db, 'posts'));
-        postsSnap.forEach(async (postDoc) => {
-          if(postDoc.data().uid === currentUser.uid) {
-            await updateDoc(doc(db, 'posts', postDoc.id), {photo: b64});
-          }
-        });
-
         render();
       }
     }
@@ -788,16 +658,11 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   function loadFeed(){
     const feed = document.getElementById('feed');
     if(!feed) return;
-    
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
-      if(snap.empty){ 
-        feed.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις':'No posts'}</div>`; 
-        return; 
-      }
+      if(snap.empty){ feed.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις':'No posts'}</div>`; return; }
       let docs = [];
       snap.forEach(d => docs.push({id: d.id, ...d.data()}));
-
       if(feedSubTab === 'following') {
         const followingList = userDataCache.following || [];
         docs = docs.filter(p => p.uid === currentUser.uid || followingList.includes(p.uid));
@@ -806,7 +671,6 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
           return;
         }
       }
-
       feed.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
     });
@@ -818,14 +682,8 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
       let docs = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if(data.toUid === currentUser.uid) docs.push(data);
-      });
-      if(docs.length === 0) {
-        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν έχετε ειδοποιήσεις':'No notifications'}</div>`;
-        return;
-      }
+      snap.forEach(d => { if(d.data().toUid === currentUser.uid) docs.push(d.data()); });
+      if(docs.length === 0) { container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν έχετε ειδοποιήσεις':'No notifications'}</div>`; return; }
       container.innerHTML = docs.map(n => `
         <div style="padding:14px 16px;border-bottom:1px solid var(--border-color);display:flex;gap:10px;align-items:center">
           <span style="font-size:20px">${n.type==='follow'?'👤':'👍'}</span>
@@ -838,21 +696,10 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
   async function loadAllUsersForSearch() {
     const container = document.getElementById('usersSearchList');
     if(!container) return;
-    const mySnap = await getDoc(doc(db, 'users', currentUser.uid));
-    if(mySnap.exists()) {
-      userDataCache = mySnap.data();
-    }
-
     const snap = await getDocs(collection(db, 'users'));
     let users = [];
-    snap.forEach(d => {
-      if(d.id !== currentUser.uid) users.push({uid: d.id, ...d.data()});
-    });
-
-    if(users.length === 0) {
-      container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν βρέθηκαν άλλοι χρήστες':'No other users found'}</div>`;
-      return;
-    }
+    snap.forEach(d => { if(d.id !== currentUser.uid) users.push({uid: d.id, ...d.data()}); });
+    if(users.length === 0) { container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν βρέθηκαν άλλοι χρήστες':'No other users'}</div>`; return; }
 
     container.innerHTML = users.map(u => {
       const isFollowing = (userDataCache.following || []).includes(u.uid);
@@ -862,32 +709,22 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
             <div class="avatar" style="${u.photo?`background-image:url('${u.photo}')`:''}"> ${u.photo?'':'👤'} </div>
             <div style="min-width:0;flex:1">
               <div style="font-weight:700">${u.name || 'User'} ${isAdminUserCheck(u)?'<span class="admin-badge">Admin</span>':''}</div>
-              <div style="font-size:13px;color:var(--subtext)">@${u.username || (u.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'')}</div>
+              <div style="font-size:13px;color:var(--subtext)">@${u.username || 'user'}</div>
             </div>
           </div>
           <button class="follow-btn ${isFollowing?'following':''}" style="width:auto;margin-top:0;padding:6px 14px" onclick="toggleFollow('${u.uid}')">${isFollowing?'Unfollow':'Follow'}</button>
-        </div>
-      `;
+        </div>`;
     }).join('');
   }
 
   function loadUserPostsSpecific(uid){
     const container = document.getElementById('userPostsFeed');
     if(!container) return;
-
     const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
       let docs = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if(data.uid === uid) docs.push({id: d.id, ...data});
-      });
-
-      if(docs.length === 0){
-        container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις':'No posts yet'}</div>`;
-        return;
-      }
-
+      snap.forEach(d => { if(d.data().uid === uid) docs.push({id: d.id, ...d.data()}); });
+      if(docs.length === 0){ container.innerHTML = `<div class="empty-state">${lang==='el'?'Δεν υπάρχουν δημοσιεύσεις':'No posts yet'}</div>`; return; }
       container.innerHTML = docs.map(p => renderPostHtml(p)).join('');
       if(typeof lucide !== 'undefined') lucide.createIcons();
     });
@@ -897,7 +734,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
     const isAdmin = isAdminUserCheck(p);
     const canDelete = (currentUser && currentUser.uid === p.uid) || isAdmin;
     const isLiked = currentUser && (p.likedBy || []).includes(currentUser.uid);
-    const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid count-1"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
+    const imgHtml = (p.images && p.images.length > 0) ? `<div class="post-images-grid"><img src="${p.images[0]}" class="post-image-item"></div>` : '';
     const avatarHtml = p.photo ? `<div class="avatar" style="background-image:url('${p.photo}')"></div>` : `<div class="avatar">👤</div>`;
     const postName = p.name || 'User';
 
@@ -915,9 +752,7 @@ body.light-mode{--bg-color:#f9f9f9;--text-color:#111;--card-bg:#fff;--border-col
       <div class="post-content">${linkify(p.text || '')}</div>
       ${imgHtml}
       <div class="post-actions">
-        <button class="like-action-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')">
-          <span>👍</span> Like
-        </button>
+        <button class="like-action-btn ${isLiked?'liked':''}" onclick="likePost('${p.id}', '${p.uid}')"><span>👍</span> Like</button>
       </div>
     </div>`;
   }
