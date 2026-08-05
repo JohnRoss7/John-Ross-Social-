@@ -7,7 +7,9 @@
 <meta property="og:title" content="John Ross Social">
 <meta property="og:description" content="Your space. Your voice. Free expression.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://hnross7.github.io/">
+<meta property="og:url" content="https://johnross7.github.io/John-Ross-Social-/">
+<meta property="og:image" content="https://johnross7.github.io/John-Ross-Social-/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#000000">
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
@@ -56,6 +58,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .post-actions span{display:flex;align-items:center;gap:5px;cursor:pointer}
 .post-actions i{width:18px;height:18px}
 .like-btn.liked svg,.like-btn.liked{color:#dc2626}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.pop{animation:pop .3s}
 
 /* Comments */
 .comments-section{margin-top:10px;padding-top:10px;border-top:1px solid #222}
@@ -85,7 +89,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 /* Notif Badge */
 .nav-badge{position:absolute;top:6px;right:14px;width:8px;height:8px;background:#dc2626;border-radius:50%;display:none}
-.notif-item{padding:12px 16px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:between;gap:12px}
+.notif-item{padding:12px 16px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;gap:12px}
 
 /* Auth */
 .auth-container{text-align:center;padding:60px 24px}
@@ -130,6 +134,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     <a onclick="goSearch();closeSidebar()"><i data-lucide="search"></i> Search</a>
     <a onclick="goNotif();closeSidebar()"><i data-lucide="bell"></i> Notifications</a>
     <a onclick="goProfile();closeSidebar()"><i data-lucide="user"></i> Profile</a>
+    <a onclick="aiAssistant();closeSidebar()"><i data-lucide="bot"></i> AI Assistant</a>
+    <a onclick="settings();closeSidebar()"><i data-lucide="settings"></i> Settings</a>
     <hr>
     <a onclick="logout();closeSidebar()"><i data-lucide="log-out"></i> Logout</a>
   </nav>
@@ -178,8 +184,8 @@ let user=null,tab='home',feedType='foryou',lang='en';
 const adminEmails=['rossrossg7@gmail.com'];
 
 const T={
-en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo',slogan:'Your space. Your voice.',reply:'Reply',send:'Send'},
-el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',reply:'Απάντηση',send:'Αποστολή'}
+en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo',slogan:'Your space. Your voice.',reply:'Reply',send:'Send',aiTitle:'AI Assistant',aiSubtitle:'Ask me anything about the app',aiPlaceholder:'Type your question...',settings:'Settings',language:'Language',comingSoon:'Coming soon'},
+el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',reply:'Απάντηση',send:'Αποστολή',aiTitle:'Βοηθός AI',aiSubtitle:'Ρώτα με οτιδήποτε για την εφαρμογή',aiPlaceholder:'Γράψε την ερώτησή σου...',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα'}
 };
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
@@ -197,6 +203,8 @@ function goHome(){showTab('home')}
 function goSearch(){showTab('search')}
 function goNotif(){showTab('notif')}
 function goProfile(){showTab('profile')}
+function aiAssistant(){alert(t('aiTitle')+' - '+t('comingSoon'));}
+function settings(){showSettings()}
 
 function showTab(name){
   tab=name;
@@ -238,7 +246,6 @@ function register(){
   }).catch(err=>alert(err.message));
 }
 
-// Διόρθωση Sign In για Υπολογιστή (Χρήση Redirect αν αποτύχει το Popup)
 function googleLogin(){
   const provider=new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(cred=>{
@@ -288,7 +295,6 @@ function likePost(id){
       ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
     } else {
       ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
-      // Δημιουργία ειδοποίησης Like αν δεν είναι δικό σου ποστ
       if(postData.uid !== user.uid) {
         db.collection('notifications').add({
           userId: postData.uid,
@@ -343,7 +349,6 @@ function toggleFollow(targetUid){
       myRef.update({following:firebase.firestore.FieldValue.arrayUnion(targetUid)});
       hisRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
       
-      // Προσθήκη ειδοποίησης Follow
       db.collection('notifications').add({
         userId: targetUid,
         senderId: user.uid,
@@ -431,7 +436,6 @@ function renderPosts(snap,f){
   f.innerHTML=snap.docs.map(d=>{
     const p=d.data();
     const postId=d.id;
-    // ADMIN ΕΛΕΓΧΟΣ: Εμφανίζεται MONO αν το email ανήκει στη λίστα adminEmails σου
     const isPostAdmin=isAdmin(p.email);
     const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
     const canDelete=(user.uid===p.uid)||isAdmin(user.email);
@@ -503,7 +507,6 @@ function searchUsers(q){
   });
 }
 
-// ΕΙΔΟΠΟΙΗΣΕΙΣ & ΚΟΚΚΙΝΟ ΣΗΜΑ
 function listenUnreadNotifs(userId){
   db.collection('notifications')
     .where('userId','==',userId)
@@ -528,7 +531,6 @@ function renderNotifs(m){
         return;
       }
       
-      // Σήμανση ως αναγνωσμένες
       snap.docs.forEach(doc=>{
         if(!doc.data().read) {
           db.collection('notifications').doc(doc.id).update({read:true});
@@ -579,6 +581,18 @@ function renderProfile(m){
       </div>`;
     if(typeof lucide!=='undefined')lucide.createIcons();
   });
+}
+
+function showSettings(){
+  const m=document.getElementById('main');
+  m.innerHTML=`
+    <div class="profile">
+      <h2 style="margin-bottom:20px">${t('settings')}</h2>
+      <div class="profile-form">
+        <label style="display:block;margin:10px 0;color:#999">${t('language')}</label>
+        <button onclick="toggleLang();showSettings()">${lang==='en'?'🇬🇧 English':'🇬🇷 Ελληνικά'} → ${lang==='en'?'Ελληνικά':'English'}</button>
+      </div>
+    </div>`;
 }
 
 function uploadPhoto(event){
