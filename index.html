@@ -106,7 +106,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
 .notif-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer}
 .notif-item:hover{background:var(--hover)}
-.notif-item:active{background:var(--card)}
 
 .img-preview{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .img-preview img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
@@ -125,13 +124,19 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .user-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer}
 .user-list-item:hover{background:var(--hover)}
 
-/* Edit post modal */
 .edit-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1500;display:none;align-items:center;justify-content:center;padding:20px}
 .edit-modal.show{display:flex}
 .edit-box{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:400px}
 .edit-box textarea{width:100%;min-height:100px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:12px;font-size:15px;font-family:inherit;resize:vertical;outline:none}
 .edit-actions{display:flex;gap:10px;margin-top:14px}
 .edit-actions button{flex:1;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;border:none}
+
+/* Single post view */
+.single-post-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.single-post-header button{background:none;border:none;color:var(--text);cursor:pointer}
+.cta-box{margin:20px 16px;padding:20px;background:var(--card);border-radius:16px;text-align:center;border:1px solid var(--border)}
+.cta-box h3{margin-bottom:8px;font-size:18px}
+.cta-box p{color:var(--muted);margin-bottom:16px;font-size:14px}
 </style>
 </head>
 <body>
@@ -162,7 +167,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
   <img id="lightboxImg" src="" alt="">
 </div>
 
-<!-- Edit Post Modal -->
 <div class="edit-modal" id="editModal">
   <div class="edit-box">
     <h3 style="margin-bottom:12px;font-weight:700">Επεξεργασία</h3>
@@ -215,11 +219,12 @@ let pendingImages = [];
 let viewingUid = null;
 let historyStack = [];
 let editingPostId = null;
+let singlePostId = null; // για shared post
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit'},
-  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία'}
+  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register'},
+  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή'}
 };
 
 function t(k){return T[lang][k]||k}
@@ -232,8 +237,8 @@ function loadTheme(){if(localStorage.getItem('theme')==='light')document.body.cl
 
 function openSidebar(){document.getElementById('sidebar').classList.add('show');document.getElementById('overlay').classList.add('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').classList.remove('show')}
-function goHome(){showTab('home')}
-function goProfile(){viewingUid=null;showTab('profile')}
+function goHome(){singlePostId=null; showTab('home')}
+function goProfile(){viewingUid=null; singlePostId=null; showTab('profile')}
 function aiAssistant(){alert(t('comingSoon'))}
 function settings(){showSettings()}
 
@@ -266,11 +271,29 @@ function setFeedType(type){
   if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
+/* ===== Έλεγχος για shared post από URL ===== */
+function checkSharedPost(){
+  const params = new URLSearchParams(window.location.search);
+  const postId = params.get('post');
+  if(postId){
+    singlePostId = postId;
+    return true;
+  }
+  return false;
+}
+
 auth.onAuthStateChanged(u=>{
   user=u;
   const adminItem=document.getElementById('adminMenuItem');
   if(adminItem) adminItem.style.display = (u && isAdmin(u.email)) ? 'block' : 'none';
-  render();
+  
+  // Αν υπάρχει shared post, δείχνουμε αυτό
+  if(checkSharedPost()){
+    renderSinglePost();
+  } else {
+    render();
+  }
+  
   if(u) listenUnreadNotifs(u.uid);
   if(typeof lucide!=='undefined') lucide.createIcons();
 });
@@ -291,9 +314,8 @@ function googleLogin(){
   });
 }
 function saveUserToDb(u){db.collection('users').doc(u.uid).set({email:u.email,name:u.displayName||u.email.split('@')[0],bio:'',photo:u.photoURL||'',followers:[],following:[],createdAt:Date.now()},{merge:true})}
-function logout(){auth.signOut();sessionStorage.removeItem('jrs_tab');historyStack=[]}
+function logout(){auth.signOut();sessionStorage.removeItem('jrs_tab');historyStack=[];singlePostId=null}
 
-/* Βοηθητική: φέρνει το όνομα χρήστη */
 async function getUserName(uid){
   try{
     const doc = await db.collection('users').doc(uid).get();
@@ -383,6 +405,7 @@ function playLikeSound(){
 }
 
 async function likePost(id,el){
+  if(!user){ alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first'); return; }
   const ref=db.collection('posts').doc(id);
   const doc = await ref.get();
   const p = doc.data();
@@ -396,15 +419,15 @@ async function likePost(id,el){
     if(p.uid !== user.uid){
       const myName = await getUserName(user.uid);
       db.collection('notifications').add({
-        userId: p.uid,
-        senderId: user.uid,
+        userId: p.uid, senderId: user.uid,
         text: myName + (lang==='el' ? ' έκανε like στη δημοσίευσή σου.' : ' liked your post.'),
-        read: false,
-        timestamp: Date.now()
+        read: false, timestamp: Date.now()
       });
     }
   }
-  if(tab==='profile'){
+  // Αν είμαστε σε single post, ξαναφορτώνουμε
+  if(singlePostId) renderSinglePost();
+  else if(tab==='profile'){
     setTimeout(()=>{
       const feed=document.getElementById('myPostsFeed');
       if(feed) loadProfilePosts(viewingUid||user.uid, feed);
@@ -413,6 +436,7 @@ async function likePost(id,el){
 }
 
 async function addComment(postId){
+  if(!user){ alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first'); return; }
   const inp=document.getElementById('c_'+postId);
   if(!inp||!inp.value.trim()) return;
   const doc = await db.collection('posts').doc(postId).get();
@@ -420,33 +444,30 @@ async function addComment(postId){
   await db.collection('posts').doc(postId).update({
     comments: firebase.firestore.FieldValue.arrayUnion({
       name: user.displayName || user.email.split('@')[0],
-      email: user.email,
-      text: inp.value,
-      time: Date.now()
+      email: user.email, text: inp.value, time: Date.now()
     })
   });
   if(p.uid !== user.uid){
     const myName = await getUserName(user.uid);
     db.collection('notifications').add({
-      userId: p.uid,
-      senderId: user.uid,
+      userId: p.uid, senderId: user.uid,
       text: myName + (lang==='el' ? ' σχολίασε τη δημοσίευσή σου.' : ' commented on your post.'),
-      read: false,
-      timestamp: Date.now()
+      read: false, timestamp: Date.now()
     });
   }
   inp.value='';
+  if(singlePostId) renderSinglePost();
 }
 
 function deletePost(id){
   if(!confirm(t('delete')+'?')) return;
   db.collection('posts').doc(id).delete();
   document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+  if(singlePostId) { singlePostId=null; goHome(); }
 }
 
 function togglePostMenu(id){
   event.stopPropagation();
-  // Κλείνουμε όλα τα άλλα
   document.querySelectorAll('.post-menu.show').forEach(m=>{
     if(m.id !== 'pm_'+id) m.classList.remove('show');
   });
@@ -457,9 +478,7 @@ function togglePostMenu(id){
 function copyPostLink(postId){
   const url = window.location.origin + window.location.pathname + '?post=' + postId;
   if(navigator.clipboard){
-    navigator.clipboard.writeText(url).then(()=>{
-      alert(lang==='el' ? 'Ο σύνδεσμος αντιγράφηκε!' : 'Link copied!');
-    }).catch(()=> prompt('Copy:', url));
+    navigator.clipboard.writeText(url).then(()=>alert(lang==='el'?'Ο σύνδεσμος αντιγράφηκε!':'Link copied!'));
   }else{
     prompt('Copy:', url);
   }
@@ -472,19 +491,14 @@ function openEditPost(postId, currentText){
   document.getElementById('editModal').classList.add('show');
   document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
 }
-
-function closeEditModal(){
-  document.getElementById('editModal').classList.remove('show');
-  editingPostId = null;
-}
-
+function closeEditModal(){ document.getElementById('editModal').classList.remove('show'); editingPostId=null; }
 function saveEditPost(){
   const newText = document.getElementById('editText').value.trim();
   if(!editingPostId) return;
   db.collection('posts').doc(editingPostId).update({ text: newText }).then(()=>{
     closeEditModal();
-    // Ανανέωση
-    if(tab==='home') loadFeed();
+    if(singlePostId) renderSinglePost();
+    else if(tab==='home') loadFeed();
     else if(tab==='profile'){
       const feed = document.getElementById('myPostsFeed');
       if(feed) loadProfilePosts(viewingUid||user.uid, feed);
@@ -493,7 +507,7 @@ function saveEditPost(){
 }
 
 async function toggleFollow(targetUid){
-  if(targetUid===user.uid) return;
+  if(!user || targetUid===user.uid) return;
   const myRef=db.collection('users').doc(user.uid);
   const hisRef=db.collection('users').doc(targetUid);
   const myDoc = await myRef.get();
@@ -507,11 +521,9 @@ async function toggleFollow(targetUid){
     await hisRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
     const myName = await getUserName(user.uid);
     db.collection('notifications').add({
-      userId: targetUid,
-      senderId: user.uid,
+      userId: targetUid, senderId: user.uid,
       text: myName + (lang==='el' ? ' άρχισε να σε ακολουθεί.' : ' started following you.'),
-      read: false,
-      timestamp: Date.now()
+      read: false, timestamp: Date.now()
     });
   }
   if(tab==='profile') renderProfile(document.getElementById('main'));
@@ -523,9 +535,53 @@ function searchHashtag(tag){showTab('search'); setTimeout(()=>{const inp=documen
 
 function openLightbox(src){document.getElementById('lightboxImg').src=src; document.getElementById('lightbox').classList.add('show')}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
-function openUserProfile(uid){if(!uid) return; viewingUid=uid; showTab('profile')}
+function openUserProfile(uid){if(!uid) return; viewingUid=uid; singlePostId=null; showTab('profile')}
+
+/* ===== SINGLE POST VIEW (μόνο το ποστ) ===== */
+function renderSinglePost(){
+  const m = document.getElementById('main');
+  document.getElementById('bottomNav').style.display = user ? 'flex' : 'none';
+  
+  m.innerHTML = `
+    <div class="single-post-header">
+      <button onclick="singlePostId=null; history.replaceState({},''); goHome()">
+        <i data-lucide="arrow-left" style="width:22px;height:22px"></i>
+      </button>
+      <div style="font-weight:700;font-size:17px">Post</div>
+    </div>
+    <div id="singlePostContent"><div class="empty-state">Φόρτωση...</div></div>
+    ${!user ? `
+      <div class="cta-box">
+        <h3>${t('joinUs')}</h3>
+        <p>${t('joinDesc')}</p>
+        <button class="btn-full" style="width:100%" onclick="singlePostId=null; history.replaceState({},''); showTab('home')">${t('signIn')}</button>
+      </div>
+    ` : ''}
+  `;
+  
+  db.collection('posts').doc(singlePostId).get().then(doc=>{
+    if(!doc.exists){
+      document.getElementById('singlePostContent').innerHTML = '<div class="empty-state">Το ποστ δεν βρέθηκε</div>';
+      return;
+    }
+    // Δημιουργούμε ένα fake snapshot για να χρησιμοποιήσουμε την υπάρχουσα renderPosts
+    const fakeSnap = { empty: false, docs: [doc] };
+    const container = document.getElementById('singlePostContent');
+    renderPosts(fakeSnap, container);
+  }).catch(()=>{
+    document.getElementById('singlePostContent').innerHTML = '<div class="empty-state">Σφάλμα φόρτωσης</div>';
+  });
+  
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
 
 function render(){
+  // Αν έχουμε single post, μην κάνουμε κανονικό render
+  if(singlePostId){
+    renderSinglePost();
+    return;
+  }
+  
   const m=document.getElementById('main');
   if(!user){
     document.getElementById('bottomNav').style.display='none';
@@ -605,8 +661,8 @@ function renderPosts(snap,f){
     const p=d.data(), postId=d.id;
     const isPostAdmin=isAdmin(p.email);
     const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
-    const canDelete=(user.uid===p.uid)||isAdmin(user.email);
-    const isLiked=(p.likedBy||[]).includes(user.uid);
+    const canDelete = user && ((user.uid===p.uid)||isAdmin(user.email));
+    const isLiked = user && (p.likedBy||[]).includes(user.uid);
     const images=p.images||[];
     const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
     const comments=(p.comments||[]).map(c=>`
@@ -616,27 +672,17 @@ function renderPosts(snap,f){
       ?`<div class="avatar" style="background-image:url('${p.photo}')" onclick="openUserProfile('${p.uid}')"></div>`
       :`<div class="avatar" onclick="openUserProfile('${p.uid}')">👤</div>`;
     
-    // Μενού 3 τελείες
-    let menuHtml = '';
-    if(canDelete){
-      menuHtml = `
-        <div class="post-menu-container">
-          <button class="menu-btn-icon" onclick="togglePostMenu('${postId}')"><i data-lucide="more-horizontal"></i></button>
-          <div class="post-menu" id="pm_${postId}">
-            <button onclick="copyPostLink('${postId}')"><i data-lucide="link"></i> ${t('copyLink')}</button>
+    let menuHtml = `
+      <div class="post-menu-container">
+        <button class="menu-btn-icon" onclick="togglePostMenu('${postId}')"><i data-lucide="more-horizontal"></i></button>
+        <div class="post-menu" id="pm_${postId}">
+          <button onclick="copyPostLink('${postId}')"><i data-lucide="link"></i> ${t('copyLink')}</button>
+          ${canDelete ? `
             <button onclick="openEditPost('${postId}', \`${esc(p.text||'').replace(/`/g,'')}\`)"><i data-lucide="edit-3"></i> ${t('edit')}</button>
             <button onclick="deletePost('${postId}')"><i data-lucide="trash-2"></i> ${t('delete')}</button>
-          </div>
-        </div>`;
-    } else {
-      menuHtml = `
-        <div class="post-menu-container">
-          <button class="menu-btn-icon" onclick="togglePostMenu('${postId}')"><i data-lucide="more-horizontal"></i></button>
-          <div class="post-menu" id="pm_${postId}">
-            <button onclick="copyPostLink('${postId}')"><i data-lucide="link"></i> ${t('copyLink')}</button>
-          </div>
-        </div>`;
-    }
+          ` : ''}
+        </div>
+      </div>`;
 
     return `
       <div class="post">
@@ -655,15 +701,17 @@ function renderPosts(snap,f){
             <i data-lucide="thumbs-up" style="width:16px;height:16px"></i> ${p.likes||0}
           </span>
           <span><i data-lucide="message-circle"></i> ${(p.comments||[]).length}</span>
-          <span><i data-lucide="share-2"></i></span>
+          <span onclick="copyPostLink('${postId}')"><i data-lucide="share-2"></i></span>
         </div>
         ${comments?`<div class="comments-section">${comments}</div>`:''}
-        <div class="comment-input-row">
-          <input id="c_${postId}" placeholder="${t('comment')}...">
-          <button onclick="addComment('${postId}')" style="background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:9999px;cursor:pointer">
-            <i data-lucide="send" style="width:16px;height:16px"></i>
-          </button>
-        </div>
+        ${user ? `
+          <div class="comment-input-row">
+            <input id="c_${postId}" placeholder="${t('comment')}...">
+            <button onclick="addComment('${postId}')" style="background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:9999px;cursor:pointer">
+              <i data-lucide="send" style="width:16px;height:16px"></i>
+            </button>
+          </div>
+        ` : ''}
       </div>`;
   }).join('');
   if(typeof lucide!=='undefined') lucide.createIcons();
@@ -733,9 +781,7 @@ function renderNotifs(m){
         <div class="handle">${new Date(n.timestamp||Date.now()).toLocaleString()}</div>
       </div>`;
     }).join('');
-  }).catch(()=>{
-    m.innerHTML = '<div class="empty-state">Σφάλμα</div>';
-  });
+  }).catch(()=>{ m.innerHTML = '<div class="empty-state">Σφάλμα</div>'; });
 }
 
 function loadProfilePosts(uid, feedEl){
