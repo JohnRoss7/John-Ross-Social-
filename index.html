@@ -29,7 +29,6 @@ body.light {
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
 .app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:var(--bg);position:relative;border-left:1px solid var(--border);border-right:1px solid var(--border)}
 
-/* Sidebar */
 .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:var(--bg);border-right:1px solid var(--border);z-index:1000;transition:left .3s;display:flex;flex-direction:column}
 .sidebar.show{left:0}
 .sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
@@ -44,19 +43,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:none}
 .overlay.show{display:block}
 
-/* Header */
 .main-header{position:sticky;top:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 16px;z-index:100;display:flex;align-items:center;gap:12px}
 body.light .main-header{background:rgba(255,255,255,.85)}
 .menu-btn{background:none;border:none;color:var(--text);cursor:pointer;padding:6px}
 .menu-btn i{width:24px;height:24px}
 .logo-text{font-weight:700;font-size:18px;flex:1}
 
-/* Tabs */
 .top-tabs{display:flex;border-bottom:1px solid var(--border)}
 .tab-btn{flex:1;padding:16px;background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;border-bottom:3px solid transparent;font-weight:500}
 .tab-btn.active{color:var(--text);border-bottom-color:var(--accent);font-weight:700}
 
-/* Post */
 .post{border-bottom:1px solid var(--border);padding:14px 16px}
 .post:hover{background:var(--hover)}
 .post-header{display:flex;gap:12px;margin-bottom:6px;align-items:flex-start}
@@ -69,14 +65,15 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .post-images{display:grid;gap:6px;margin:10px 0;border-radius:12px;overflow:hidden}
 .post-images.one{grid-template-columns:1fr}
 .post-images.two{grid-template-columns:1fr 1fr}
-.post-images img{width:100%;max-height:320px;object-fit:cover;border-radius:12px;cursor:pointer}
+.post-images img{width:100%;max-height:340px;object-fit:cover;border-radius:12px;cursor:pointer}
 .hash{color:#1d9bf0;cursor:pointer}
 .post-actions{display:flex;gap:40px;color:var(--muted);font-size:13px;margin-top:8px}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
 .post-actions i{width:18px;height:18px}
-.like-btn.liked,.like-btn.liked svg{color:#f91880}
+.like-btn.liked,.like-btn.liked svg{color:#f91880 !important;fill:#f91880}
+@keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}
+.heart-pop{animation:heartPop .35s ease}
 
-/* Comments */
 .comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 .comment{padding:10px 0;display:flex;gap:10px}
 .comment-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
@@ -86,7 +83,6 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .comment-input-row{display:flex;gap:8px;margin-top:12px}
 .comment-input-row input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9999px;font-size:14px;outline:none}
 
-/* Post menu */
 .post-menu-container{position:relative;margin-left:auto}
 .menu-btn-icon{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px}
 .post-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:140px;z-index:50;display:none}
@@ -94,7 +90,6 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .post-menu button{width:100%;background:none;border:none;color:var(--text);padding:12px 16px;text-align:left;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px}
 .post-menu button:hover{background:var(--accent);color:#fff}
 
-/* Bottom Nav */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
 body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .nav-item{background:none;border:none;color:var(--muted);padding:8px 18px;cursor:pointer;position:relative}
@@ -102,7 +97,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .nav-item i{width:26px;height:26px}
 .nav-badge{position:absolute;top:6px;right:14px;width:9px;height:9px;background:var(--accent);border-radius:50%;display:none}
 
-/* Auth */
 .auth-container{text-align:center;padding:50px 24px}
 .auth-container h2{margin-bottom:8px;font-size:28px;font-weight:800}
 .auth-container .slogan{color:var(--muted);margin-bottom:32px}
@@ -110,7 +104,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .auth-container button{width:100%;max-width:340px;background:var(--accent);color:#fff;border:none;padding:14px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:15px;margin:8px 0}
 .auth-container .btn-o{background:transparent;border:1px solid var(--border);color:var(--text)}
 
-/* Profile */
 .profile{padding:20px}
 .profile-header{text-align:center;margin-bottom:20px}
 .profile-stats{display:flex;justify-content:center;gap:36px;margin:18px 0;color:var(--muted);font-size:14px}
@@ -127,16 +120,20 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
 .notif-item{padding:14px 16px;border-bottom:1px solid var(--border)}
 
-/* Image preview */
 .img-preview{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .img-preview img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
 .img-preview .remove-img{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer}
 
-/* Admin */
 .admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center}
 .stat-card b{display:block;font-size:28px;color:var(--accent);margin-bottom:4px}
 .stat-card span{color:var(--muted);font-size:13px}
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.lightbox.show{display:flex}
+.lightbox img{max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain}
+.lightbox-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -160,6 +157,12 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
     <a onclick="logout();closeSidebar()"><i data-lucide="log-out"></i> Logout</a>
   </nav>
 </aside>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
 
 <main class="app-container">
   <header class="main-header">
@@ -195,7 +198,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let user=null, tab='home', feedType='foryou', lang='en';
-let pendingImages = []; // μέχρι 2 φωτογραφίες
+let pendingImages = [];
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
@@ -212,9 +215,7 @@ function toggleTheme(){
   document.body.classList.toggle('light');
   localStorage.setItem('theme', document.body.classList.contains('light')?'light':'dark');
 }
-function loadTheme(){
-  if(localStorage.getItem('theme')==='light') document.body.classList.add('light');
-}
+function loadTheme(){if(localStorage.getItem('theme')==='light') document.body.classList.add('light')}
 
 function openSidebar(){document.getElementById('sidebar').classList.add('show');document.getElementById('overlay').classList.add('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').classList.remove('show')}
@@ -272,23 +273,33 @@ function saveUserToDb(u){
 }
 function logout(){auth.signOut()}
 
-/* ========== ΣΥΜΠΙΕΣΗ ΕΙΚΟΝΑΣ ========== */
-function compressImage(file, maxWidth=800, quality=0.7){
-  return new Promise(resolve=>{
+/* ========== ΒΕΛΤΙΩΜΕΝΗ ΣΥΜΠΙΕΣΗ (για κάμερα) ========== */
+function compressImage(file, maxWidth=900, quality=0.65){
+  return new Promise((resolve,reject)=>{
     const reader=new FileReader();
     reader.onload=e=>{
       const img=new Image();
       img.onload=()=>{
-        const canvas=document.createElement('canvas');
-        let w=img.width, h=img.height;
-        if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth}
-        canvas.width=w;canvas.height=h;
-        const ctx=canvas.getContext('2d');
-        ctx.drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL('image/jpeg',quality));
+        try{
+          const canvas=document.createElement('canvas');
+          let w=img.width, h=img.height;
+          if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth}
+          if(h>1200){w=Math.round(w*1200/h);h=1200}
+          canvas.width=w;canvas.height=h;
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,w,h);
+          let data=canvas.toDataURL('image/jpeg',quality);
+          // Αν ακόμα μεγάλη, μειώνουμε περισσότερο
+          if(data.length>450000){
+            data=canvas.toDataURL('image/jpeg',0.5);
+          }
+          resolve(data);
+        }catch(err){reject(err)}
       };
+      img.onerror=()=>reject(new Error('Δεν μπόρεσε να φορτωθεί η εικόνα'));
       img.src=e.target.result;
     };
+    reader.onerror=()=>reject(new Error('Σφάλμα ανάγνωσης αρχείου'));
     reader.readAsDataURL(file);
   });
 }
@@ -296,9 +307,14 @@ function compressImage(file, maxWidth=800, quality=0.7){
 async function handleImageSelect(e){
   const files=Array.from(e.target.files).slice(0,2-pendingImages.length);
   for(const file of files){
-    if(file.size>5*1024*1024){alert('Η φωτογραφία είναι πολύ μεγάλη');continue}
-    const compressed=await compressImage(file);
-    pendingImages.push(compressed);
+    try{
+      if(file.size>12*1024*1024){alert('Η φωτογραφία είναι πολύ μεγάλη (max 12MB)');continue}
+      const compressed=await compressImage(file);
+      pendingImages.push(compressed);
+    }catch(err){
+      alert(lang==='el'?'Πρόβλημα με τη φωτογραφία. Δοκίμασε άλλη.':'Problem with the photo. Try another one.');
+      console.error(err);
+    }
   }
   renderImagePreview();
   e.target.value='';
@@ -313,11 +329,7 @@ function renderImagePreview(){
       <button class="remove-img" onclick="removeImage(${i})">×</button>
     </div>`).join('');
 }
-
-function removeImage(i){
-  pendingImages.splice(i,1);
-  renderImagePreview();
-}
+function removeImage(i){pendingImages.splice(i,1);renderImagePreview()}
 
 function postContent(){
   const ta=document.getElementById('postText');
@@ -340,7 +352,25 @@ function postContent(){
   });
 }
 
-function likePost(id){
+/* ========== LIKE ΜΕ ΗΧΟ ========== */
+function playLikeSound(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(600,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(900,ctx.currentTime+0.08);
+    osc.frequency.exponentialRampToValueAtTime(400,ctx.currentTime+0.15);
+    gain.gain.setValueAtTime(0.35,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.2);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+0.2);
+  }catch(e){}
+}
+
+function likePost(id, el){
   const ref=db.collection('posts').doc(id);
   ref.get().then(doc=>{
     const p=doc.data();
@@ -349,6 +379,8 @@ function likePost(id){
       ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
     }else{
       ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+      playLikeSound();
+      if(el){el.classList.add('heart-pop');setTimeout(()=>el.classList.remove('heart-pop'),400)}
       if(p.uid!==user.uid){
         db.collection('notifications').add({
           userId:p.uid,senderId:user.uid,
@@ -413,6 +445,13 @@ function searchHashtag(tag){
   setTimeout(()=>{const inp=document.querySelector('#main input');if(inp){inp.value='#'+tag;inp.dispatchEvent(new Event('input'))}},100);
 }
 
+/* Lightbox */
+function openLightbox(src){
+  document.getElementById('lightboxImg').src=src;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
+
 function render(){
   const m=document.getElementById('main');
   if(!user){
@@ -450,7 +489,7 @@ function renderHome(m){
       <div id="imgPreview" class="img-preview"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div>
-          <input type="file" id="imgInput" accept="image/*" multiple style="display:none" onchange="handleImageSelect(event)">
+          <input type="file" id="imgInput" accept="image/*" capture="environment" multiple style="display:none" onchange="handleImageSelect(event)">
           <button onclick="document.getElementById('imgInput').click()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:6px">
             <i data-lucide="image" style="width:22px;height:22px"></i>
           </button>
@@ -491,7 +530,7 @@ function renderPosts(snap,f){
     const canDelete=(user.uid===p.uid)||isAdmin(user.email);
     const isLiked=(p.likedBy||[]).includes(user.uid);
     const images=p.images||[];
-    const imgHtml=images.length?`<div class="post-images ${images.length===1?'one':'two'}">${images.map(src=>`<img src="${src}" onclick="window.open('${src}')">`).join('')}</div>`:'';
+    const imgHtml=images.length?`<div class="post-images ${images.length===1?'one':'two'}">${images.map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')}</div>`:'';
     const comments=(p.comments||[]).map(c=>`
       <div class="comment">
         <div class="comment-avatar">👤</div>
@@ -514,7 +553,7 @@ function renderPosts(snap,f){
         <div class="post-content">${renderTextWithHashtags(p.text||'')}</div>
         ${imgHtml}
         <div class="post-actions">
-          <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${postId}')"><i data-lucide="heart"></i> ${p.likes||0}</span>
+          <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${postId}',this)"><i data-lucide="heart"></i> ${p.likes||0}</span>
           <span><i data-lucide="message-circle"></i> ${(p.comments||[]).length}</span>
           <span><i data-lucide="share-2"></i></span>
         </div>
@@ -584,6 +623,7 @@ function renderNotifs(m){
   });
 }
 
+/* ========== ΠΡΟΦΙΛ ΜΕ ΝΗΜΑ ========== */
 function renderProfile(m){
   db.collection('users').doc(user.uid).get().then(doc=>{
     const u=doc.data()||{};
@@ -615,11 +655,20 @@ function renderProfile(m){
           <button onclick="saveProfile()">${t('save')}</button>
         </div>
         <h3 style="margin:28px 0 12px;font-size:16px;font-weight:700">${t('myPosts')}</h3>
-        <div id="myPostsFeed"></div>
+        <div id="myPostsFeed"><div class="empty-state">Φόρτωση...</div></div>
       </div>`;
-    // Φόρτωση νήματος
-    db.collection('posts').where('uid','==',user.uid).orderBy('createdAt','desc').limit(20)
-      .onSnapshot(snap=>renderPosts(snap,document.getElementById('myPostsFeed')));
+
+    // Φόρτωση νήματος – χωρίς orderBy για να μην χρειάζεται index
+    db.collection('posts').where('uid','==',user.uid).limit(30).get().then(snap=>{
+      const docs=snap.docs.sort((a,b)=>(b.data().createdAt||0)-(a.data().createdAt||0));
+      // Δημιουργούμε ψεύτικο snapshot-like
+      const fakeSnap={empty:docs.length===0,docs:docs};
+      renderPosts(fakeSnap,document.getElementById('myPostsFeed'));
+    }).catch(err=>{
+      document.getElementById('myPostsFeed').innerHTML='<div class="empty-state">Σφάλμα φόρτωσης</div>';
+      console.error(err);
+    });
+
     if(typeof lucide!=='undefined')lucide.createIcons();
   });
 }
@@ -674,7 +723,7 @@ function uploadPhoto(event){
   if(!file) return;
   compressImage(file,400,0.7).then(data=>{
     db.collection('users').doc(user.uid).update({photo:data}).then(()=>{alert('OK!');render()});
-  });
+  }).catch(()=>alert('Σφάλμα ανεβάσματος φωτογραφίας'));
 }
 
 function saveProfile(){
