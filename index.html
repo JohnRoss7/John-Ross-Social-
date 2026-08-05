@@ -101,6 +101,7 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:9999px;cursor:pointer;font-size:14px}
 .btn-follow{background:var(--text);color:var(--bg);border:none;padding:8px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
 .btn-follow.following{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.profile-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
 
 .empty-state{padding:50px 20px;text-align:center;color:var(--muted);font-size:15px}
 .admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
@@ -131,7 +132,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .edit-actions{display:flex;gap:10px;margin-top:14px}
 .edit-actions button{flex:1;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;border:none}
 
-/* Single post view */
 .single-post-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
 .single-post-header button{background:none;border:none;color:var(--text);cursor:pointer}
 .cta-box{margin:20px 16px;padding:20px;background:var(--card);border-radius:16px;text-align:center;border:1px solid var(--border)}
@@ -219,12 +219,12 @@ let pendingImages = [];
 let viewingUid = null;
 let historyStack = [];
 let editingPostId = null;
-let singlePostId = null; // για shared post
+let singlePostId = null;
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register'},
-  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή'}
+  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register',mute:'Mute',unmute:'Unmute',block:'Block',unblock:'Unblock'},
+  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή',mute:'Σίγαση',unmute:'Άρση σίγασης',block:'Αποκλεισμός',unblock:'Άρση αποκλεισμού'}
 };
 
 function t(k){return T[lang][k]||k}
@@ -271,7 +271,6 @@ function setFeedType(type){
   if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
-/* ===== Έλεγχος για shared post από URL ===== */
 function checkSharedPost(){
   const params = new URLSearchParams(window.location.search);
   const postId = params.get('post');
@@ -287,7 +286,6 @@ auth.onAuthStateChanged(u=>{
   const adminItem=document.getElementById('adminMenuItem');
   if(adminItem) adminItem.style.display = (u && isAdmin(u.email)) ? 'block' : 'none';
   
-  // Αν υπάρχει shared post, δείχνουμε αυτό
   if(checkSharedPost()){
     renderSinglePost();
   } else {
@@ -303,7 +301,7 @@ function register(){
   const e=document.getElementById('le').value,p=document.getElementById('lp').value;
   if(!e||!p) return alert(lang==='el'?'Συμπλήρωσε email και κωδικό':'Fill email & password');
   auth.createUserWithEmailAndPassword(e,p).then(cred=>{
-    return db.collection('users').doc(cred.user.uid).set({email:e,name:e.split('@')[0],bio:'',photo:'',followers:[],following:[],createdAt:Date.now()});
+    return db.collection('users').doc(cred.user.uid).set({email:e,name:e.split('@')[0],bio:'',photo:'',followers:[],following:[],muted:[],blocked:[],createdAt:Date.now()});
   }).catch(err=>alert(err.message));
 }
 function googleLogin(){
@@ -313,7 +311,7 @@ function googleLogin(){
     else alert(err.message);
   });
 }
-function saveUserToDb(u){db.collection('users').doc(u.uid).set({email:u.email,name:u.displayName||u.email.split('@')[0],bio:'',photo:u.photoURL||'',followers:[],following:[],createdAt:Date.now()},{merge:true})}
+function saveUserToDb(u){db.collection('users').doc(u.uid).set({email:u.email,name:u.displayName||u.email.split('@')[0],bio:'',photo:u.photoURL||'',followers:[],following:[],muted:[],blocked:[],createdAt:Date.now()},{merge:true})}
 function logout(){auth.signOut();sessionStorage.removeItem('jrs_tab');historyStack=[];singlePostId=null}
 
 async function getUserName(uid){
@@ -425,7 +423,6 @@ async function likePost(id,el){
       });
     }
   }
-  // Αν είμαστε σε single post, ξαναφορτώνουμε
   if(singlePostId) renderSinglePost();
   else if(tab==='profile'){
     setTimeout(()=>{
@@ -530,6 +527,44 @@ async function toggleFollow(targetUid){
   else render();
 }
 
+async function toggleMute(targetUid){
+  if(!user || targetUid===user.uid) return;
+  const myRef = db.collection('users').doc(user.uid);
+  const myDoc = await myRef.get();
+  const muted = (myDoc.data()||{}).muted || [];
+  if(muted.includes(targetUid)){
+    await myRef.update({muted: firebase.firestore.FieldValue.arrayRemove(targetUid)});
+    alert(lang==='el'?'Άρση σίγασης':'Unmuted');
+  }else{
+    await myRef.update({muted: firebase.firestore.FieldValue.arrayUnion(targetUid)});
+    alert(lang==='el'?'Ο χρήστης τέθηκε σε σίγαση':'User muted');
+  }
+  if(tab==='profile') renderProfile(document.getElementById('main'));
+}
+
+async function toggleBlock(targetUid){
+  if(!user || targetUid===user.uid) return;
+  if(!confirm(lang==='el'?'Θέλεις να αποκλείσεις αυτόν τον χρήστη;':'Block this user?')) return;
+  const myRef = db.collection('users').doc(user.uid);
+  const myDoc = await myRef.get();
+  const blocked = (myDoc.data()||{}).blocked || [];
+  if(blocked.includes(targetUid)){
+    await myRef.update({blocked: firebase.firestore.FieldValue.arrayRemove(targetUid)});
+    alert(lang==='el'?'Άρση αποκλεισμού':'Unblocked');
+  }else{
+    await myRef.update({
+      blocked: firebase.firestore.FieldValue.arrayUnion(targetUid),
+      following: firebase.firestore.FieldValue.arrayRemove(targetUid)
+    });
+    // Επίσης αφαιρούμε από followers του άλλου
+    db.collection('users').doc(targetUid).update({
+      followers: firebase.firestore.FieldValue.arrayRemove(user.uid)
+    });
+    alert(lang==='el'?'Ο χρήστης αποκλείστηκε':'User blocked');
+  }
+  if(tab==='profile') renderProfile(document.getElementById('main'));
+}
+
 function renderTextWithHashtags(text){return esc(text).replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>')}
 function searchHashtag(tag){showTab('search'); setTimeout(()=>{const inp=document.querySelector('#main input'); if(inp){inp.value='#'+tag; inp.dispatchEvent(new Event('input'))}},80)}
 
@@ -537,7 +572,6 @@ function openLightbox(src){document.getElementById('lightboxImg').src=src; docum
 function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
 function openUserProfile(uid){if(!uid) return; viewingUid=uid; singlePostId=null; showTab('profile')}
 
-/* ===== SINGLE POST VIEW (μόνο το ποστ) ===== */
 function renderSinglePost(){
   const m = document.getElementById('main');
   document.getElementById('bottomNav').style.display = user ? 'flex' : 'none';
@@ -564,7 +598,6 @@ function renderSinglePost(){
       document.getElementById('singlePostContent').innerHTML = '<div class="empty-state">Το ποστ δεν βρέθηκε</div>';
       return;
     }
-    // Δημιουργούμε ένα fake snapshot για να χρησιμοποιήσουμε την υπάρχουσα renderPosts
     const fakeSnap = { empty: false, docs: [doc] };
     const container = document.getElementById('singlePostContent');
     renderPosts(fakeSnap, container);
@@ -576,7 +609,6 @@ function renderSinglePost(){
 }
 
 function render(){
-  // Αν έχουμε single post, μην κάνουμε κανονικό render
   if(singlePostId){
     renderSinglePost();
     return;
@@ -661,7 +693,12 @@ function renderPosts(snap,f){
     const p=d.data(), postId=d.id;
     const isPostAdmin=isAdmin(p.email);
     const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
-    const canDelete = user && ((user.uid===p.uid)||isAdmin(user.email));
+    
+    // Σωστά δικαιώματα
+    const isOwner = user && user.uid === p.uid;
+    const canEdit = isOwner;                           // Μόνο ο ιδιοκτήτης
+    const canDelete = isOwner || (user && isAdmin(user.email)); // Ιδιοκτήτης ή Admin
+    
     const isLiked = user && (p.likedBy||[]).includes(user.uid);
     const images=p.images||[];
     const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
@@ -672,16 +709,18 @@ function renderPosts(snap,f){
       ?`<div class="avatar" style="background-image:url('${p.photo}')" onclick="openUserProfile('${p.uid}')"></div>`
       :`<div class="avatar" onclick="openUserProfile('${p.uid}')">👤</div>`;
     
-    let menuHtml = `
+    let menuButtons = `<button onclick="copyPostLink('${postId}')"><i data-lucide="link"></i> ${t('copyLink')}</button>`;
+    if(canEdit){
+      menuButtons += `<button onclick="openEditPost('${postId}', \`${esc(p.text||'').replace(/`/g,'')}\`)"><i data-lucide="edit-3"></i> ${t('edit')}</button>`;
+    }
+    if(canDelete){
+      menuButtons += `<button onclick="deletePost('${postId}')"><i data-lucide="trash-2"></i> ${t('delete')}</button>`;
+    }
+    
+    const menuHtml = `
       <div class="post-menu-container">
         <button class="menu-btn-icon" onclick="togglePostMenu('${postId}')"><i data-lucide="more-horizontal"></i></button>
-        <div class="post-menu" id="pm_${postId}">
-          <button onclick="copyPostLink('${postId}')"><i data-lucide="link"></i> ${t('copyLink')}</button>
-          ${canDelete ? `
-            <button onclick="openEditPost('${postId}', \`${esc(p.text||'').replace(/`/g,'')}\`)"><i data-lucide="edit-3"></i> ${t('edit')}</button>
-            <button onclick="deletePost('${postId}')"><i data-lucide="trash-2"></i> ${t('delete')}</button>
-          ` : ''}
-        </div>
+        <div class="post-menu" id="pm_${postId}">${menuButtons}</div>
       </div>`;
 
     return `
@@ -832,12 +871,36 @@ function renderProfile(m){
     const admin = isAdmin(u.email);
     const following = (u.following||[]).length;
     const followers = (u.followers||[]).length;
+    
     db.collection('users').doc(user.uid).get().then(myDoc=>{
-      const myFollowing = (myDoc.data()||{}).following||[];
+      const myData = myDoc.data()||{};
+      const myFollowing = myData.following||[];
+      const myMuted = myData.muted||[];
+      const myBlocked = myData.blocked||[];
       const isFollowing = myFollowing.includes(targetUid);
+      const isMuted = myMuted.includes(targetUid);
+      const isBlocked = myBlocked.includes(targetUid);
+      
       const avatarContent = u.photo
         ? `<div class="avatar avatar-lg" style="background-image:url('${u.photo}');margin:0 auto;cursor:pointer" onclick="openLightbox('${u.photo}')"></div>`
         : `<div class="avatar avatar-lg" style="margin:0 auto">👤</div>`;
+      
+      let actionButtons = '';
+      if(!isOwn){
+        actionButtons = `
+          <div class="profile-actions">
+            <button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${targetUid}')">
+              ${isFollowing ? t('unfollow') : t('follow')}
+            </button>
+            <button class="btn-outline" onclick="toggleMute('${targetUid}')">
+              ${isMuted ? t('unmute') : t('mute')}
+            </button>
+            <button class="btn-outline" style="border-color:var(--accent);color:var(--accent)" onclick="toggleBlock('${targetUid}')">
+              ${isBlocked ? t('unblock') : t('block')}
+            </button>
+          </div>`;
+      }
+      
       m.innerHTML = `
         <div class="profile">
           <div class="profile-header">
@@ -849,7 +912,7 @@ function renderProfile(m){
               <span onclick="showUserList('${targetUid}','followers')"><b>${followers}</b> ${t('followers')}</span>
               <span onclick="showUserList('${targetUid}','following')"><b>${following}</b> ${t('following2')}</span>
             </div>
-            ${!isOwn ? `<button class="btn-follow ${isFollowing?'following':''}" style="margin-top:12px" onclick="toggleFollow('${targetUid}')">${isFollowing?t('unfollow'):t('follow')}</button>` : ''}
+            ${actionButtons}
           </div>
           <h3 style="margin:20px 0 12px;font-size:16px;font-weight:700">${t('myPosts')}</h3>
           <div id="myPostsFeed"><div class="empty-state">Φόρτωση...</div></div>
