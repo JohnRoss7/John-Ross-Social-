@@ -1,48 +1,57 @@
-async function likePost(id, el) {
-  if (!user) {
-    alert(lang === 'el' ? 'Πρέπει να συνδεθείς πρώτα' : 'Please sign in first');
-    return;
-  }
-  const ref = db.collection('posts').doc(id);
-  const doc = await ref.get();
-  const p = doc.data();
-  const liked = (p.likedBy || []).includes(user.uid);
+function renderNotifs(m) {
+  m.innerHTML = '<div class="empty-state">Φόρτωση...</div>';
 
-  if (liked) {
-    await ref.update({
-      likes: firebase.firestore.FieldValue.increment(-1),
-      likedBy: firebase.firestore.FieldValue.arrayRemove(user.uid)
-    });
-  } else {
-    await ref.update({
-      likes: firebase.firestore.FieldValue.increment(1),
-      likedBy: firebase.firestore.FieldValue.arrayUnion(user.uid)
-    });
-    playLikeSound();
-    if (el) {
-      el.classList.add('like-pop');
-      setTimeout(() => el.classList.remove('like-pop'), 350);
-    }
+  db.collection('notifications')
+    .where('userId', '==', user.uid)
+    .limit(50)
+    .get()
+    .then(async (snap) => {
+      if (snap.empty) {
+        m.innerHTML = '<div class="empty-state">' + t('noNotifs') + '</div>';
+        return;
+      }
 
-    if (p.uid !== user.uid) {
-      const myName = await getUserName(user.uid);
-      db.collection('notifications').add({
-        userId: p.uid,
-        senderId: user.uid,
-        postId: id,               // σημαντικό!
-        type: 'like',
-        text: myName + (lang === 'el' ? ' έκανε like στη δημοσίευσή σου.' : ' liked your post.'),
-        read: false,
-        timestamp: Date.now()
+      const docs = snap.docs.sort((a, b) => (b.data().timestamp || 0) - (a.data().timestamp || 0));
+
+      // Μαρκάρουμε ως διαβασμένες
+      docs.forEach(doc => {
+        if (!doc.data().read) {
+          db.collection('notifications').doc(doc.id).update({ read: true }).catch(() => {});
+        }
       });
-    }
-  }
 
-  if (singlePostId) renderSinglePost();
-  else if (tab === 'profile') {
-    setTimeout(() => {
-      const feed = document.getElementById('myPostsFeed');
-      if (feed) loadProfilePosts(viewingUid || user.uid, feed);
-    }, 280);
-  }
+      // Φέρνουμε ονόματα για καλύτερη εμφάνιση
+      let html = '';
+      for (const d of docs) {
+        const n = d.data();
+        let displayText = n.text || '';
+
+        // Αν υπάρχει senderId, προσπαθούμε να βάλουμε το πραγματικό όνομα
+        if (n.senderId) {
+          try {
+            const realName = await getUserName(n.senderId);
+            // Αντικαθιστούμε το παλιό "email" style όνομα με το πραγματικό
+            displayText = displayText.replace(/^[^ ]+/, realName);
+          } catch (e) {}
+        }
+
+        let clickAction = '';
+        if (n.postId) {
+          clickAction = `onclick="openSharedPost('${n.postId}')"`;
+        } else if (n.senderId) {
+          clickAction = `onclick="openUserProfile('${n.senderId}')"`;
+        }
+
+        html += `
+          <div class="notif-item" ${clickAction}>
+            <div style="font-size:15px;margin-bottom:4px">${esc(displayText)}</div>
+            <div class="handle">${new Date(n.timestamp || Date.now()).toLocaleString()}</div>
+          </div>`;
+      }
+
+      m.innerHTML = html;
+    })
+    .catch(() => {
+      m.innerHTML = '<div class="empty-state">Σφάλμα</div>';
+    });
 }
