@@ -7,27 +7,11 @@
 <meta name="theme-color" content="#000000">
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
-:root {
-  --bg: #000;
-  --text: #e7e9ea;
-  --muted: #71767b;
-  --border: #2f3336;
-  --card: #16181c;
-  --accent: #dc2626;
-  --hover: rgba(255,255,255,.03);
-}
-body.light {
-  --bg: #fff;
-  --text: #0f1419;
-  --muted: #536471;
-  --border: #eff3f4;
-  --card: #f7f9f9;
-  --accent: #dc2626;
-  --hover: rgba(0,0,0,.03);
-}
+:root{--bg:#000;--text:#e7e9ea;--muted:#71767b;--border:#2f3336;--card:#16181c;--accent:#dc2626;--hover:rgba(255,255,255,.03)}
+body.light{--bg:#fff;--text:#0f1419;--muted:#536471;--border:#eff3f4;--card:#f7f9f9;--accent:#dc2626;--hover:rgba(0,0,0,.03)}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
-.app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:var(--bg);position:relative;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:var(--bg);border-left:1px solid var(--border);border-right:1px solid var(--border)}
 
 .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:var(--bg);border-right:1px solid var(--border);z-index:1000;transition:left .3s;display:flex;flex-direction:column}
 .sidebar.show{left:0}
@@ -67,12 +51,13 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .post-images.two{grid-template-columns:1fr 1fr}
 .post-images img{width:100%;max-height:340px;object-fit:cover;border-radius:12px;cursor:pointer}
 .hash{color:#1d9bf0;cursor:pointer}
-.post-actions{display:flex;gap:40px;color:var(--muted);font-size:13px;margin-top:8px}
+.post-actions{display:flex;gap:28px;color:var(--muted);font-size:13px;margin-top:10px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
-.post-actions i{width:18px;height:18px}
-.like-btn.liked,.like-btn.liked svg{color:#f91880 !important;fill:#f91880}
-@keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.45)}100%{transform:scale(1)}}
-.heart-pop{animation:heartPop .35s ease}
+.like-btn{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;border:1.5px solid transparent;transition:all .2s}
+.like-btn.liked{background:var(--accent);border-color:var(--accent);color:#fff !important}
+.like-btn.liked svg{color:#fff !important;fill:#fff}
+@keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.like-pop{animation:likePop .3s ease}
 
 .comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 .comment{padding:10px 0;display:flex;gap:10px}
@@ -113,8 +98,9 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .profile-form button{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;margin-top:12px}
 
 .btn-full{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);width:100%;padding:10px;border-radius:9999px;cursor:pointer;margin-top:8px}
-.btn-follow{background:var(--text);color:var(--bg);border:none;padding:6px 18px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:13px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:9999px;cursor:pointer;font-size:14px}
+.btn-follow{background:var(--text);color:var(--bg);border:none;padding:8px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
+.btn-follow.following{background:transparent;border:1.5px solid var(--border);color:var(--text)}
 
 .empty-state{padding:50px 20px;text-align:center;color:var(--muted);font-size:15px}
 .admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
@@ -129,7 +115,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .stat-card b{display:block;font-size:28px;color:var(--accent);margin-bottom:4px}
 .stat-card span{color:var(--muted);font-size:13px}
 
-/* Lightbox */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
 .lightbox.show{display:flex}
 .lightbox img{max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain}
@@ -147,6 +132,7 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
   <nav class="sidebar-nav" id="sideNav">
     <a onclick="goHome();closeSidebar()" class="active"><i data-lucide="home"></i> Home</a>
     <a onclick="goProfile();closeSidebar()"><i data-lucide="user"></i> Profile</a>
+    <a onclick="showEditProfile();closeSidebar()"><i data-lucide="edit-3"></i> Edit Profile</a>
     <a onclick="aiAssistant();closeSidebar()"><i data-lucide="bot"></i> AI Assistant</a>
     <a onclick="settings();closeSidebar()"><i data-lucide="settings"></i> Settings</a>
     <div id="adminMenuItem" style="display:none">
@@ -158,7 +144,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
   </nav>
 </aside>
 
-<!-- Lightbox -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
   <img id="lightboxImg" src="" alt="">
@@ -171,7 +156,7 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
   </header>
   <div id="main"></div>
   <nav class="bottom-nav" id="bottomNav" style="display:none">
-    <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
+    <button class="nav-item" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
     <button class="nav-item" data-tab="notif" onclick="showTab('notif')">
       <i data-lucide="bell"></i>
@@ -197,20 +182,29 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let user=null, tab='home', feedType='foryou', lang='en';
+let user = null;
+let tab = sessionStorage.getItem('jrs_tab') || 'home';
+let feedType = 'foryou';
+let lang = localStorage.getItem('jrs_lang') || 'en';
 let pendingImages = [];
+let viewingUid = null; // για προβολή άλλου προφίλ
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'My Posts'},
-  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Οι δημοσιεύσεις μου'}
+  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile'},
+  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ'}
 };
 
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-function toggleLang(){lang=lang==='en'?'el':'en';render();if(typeof lucide!=='undefined')lucide.createIcons()}
+function toggleLang(){
+  lang = lang==='en'?'el':'en';
+  localStorage.setItem('jrs_lang', lang);
+  render();
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
 function toggleTheme(){
   document.body.classList.toggle('light');
   localStorage.setItem('theme', document.body.classList.contains('light')?'light':'dark');
@@ -220,122 +214,118 @@ function loadTheme(){if(localStorage.getItem('theme')==='light') document.body.c
 function openSidebar(){document.getElementById('sidebar').classList.add('show');document.getElementById('overlay').classList.add('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').classList.remove('show')}
 function goHome(){showTab('home')}
-function goProfile(){showTab('profile')}
+function goProfile(){viewingUid=null;showTab('profile')}
 function aiAssistant(){alert(t('comingSoon'))}
 function settings(){showSettings()}
 
 function showTab(name){
-  tab=name;
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  tab = name;
+  sessionStorage.setItem('jrs_tab', name);
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab===name));
   render();
-  if(typeof lucide!=='undefined')lucide.createIcons();
+  if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
 function setFeedType(type){
   feedType=type;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.feed===type));
   renderHome(document.getElementById('main'));
-  if(typeof lucide!=='undefined')lucide.createIcons();
+  if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
 auth.onAuthStateChanged(u=>{
-  user=u;
-  const adminItem=document.getElementById('adminMenuItem');
-  if(adminItem) adminItem.style.display=(u&&isAdmin(u.email))?'block':'none';
+  user = u;
+  const adminItem = document.getElementById('adminMenuItem');
+  if(adminItem) adminItem.style.display = (u && isAdmin(u.email)) ? 'block' : 'none';
   render();
   if(u) listenUnreadNotifs(u.uid);
-  if(typeof lucide!=='undefined')lucide.createIcons();
+  if(typeof lucide!=='undefined') lucide.createIcons();
 });
 
 function login(){
-  const e=document.getElementById('le').value,p=document.getElementById('lp').value;
+  const e=document.getElementById('le').value, p=document.getElementById('lp').value;
   auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message));
 }
 function register(){
-  const e=document.getElementById('le').value,p=document.getElementById('lp').value;
+  const e=document.getElementById('le').value, p=document.getElementById('lp').value;
   if(!e||!p) return alert(lang==='el'?'Συμπλήρωσε email και κωδικό':'Fill email & password');
   auth.createUserWithEmailAndPassword(e,p).then(cred=>{
     return db.collection('users').doc(cred.user.uid).set({
-      email:e,name:e.split('@')[0],bio:'',photo:'',followers:[],following:[],likedPosts:[],createdAt:Date.now()
+      email:e, name:e.split('@')[0], bio:'', photo:'', followers:[], following:[], createdAt:Date.now()
     });
   }).catch(err=>alert(err.message));
 }
 function googleLogin(){
-  const provider=new firebase.auth.GoogleAuthProvider();
+  const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(cred=>saveUserToDb(cred.user))
-  .catch(err=>{if(err.code==='auth/popup-blocked')auth.signInWithRedirect(provider);else alert(err.message)});
+  .catch(err=>{if(err.code==='auth/popup-blocked') auth.signInWithRedirect(provider); else alert(err.message)});
 }
 function saveUserToDb(u){
   db.collection('users').doc(u.uid).set({
-    email:u.email,name:u.displayName||u.email.split('@')[0],bio:'',photo:u.photoURL||'',
-    followers:[],following:[],likedPosts:[],createdAt:Date.now()
+    email:u.email, name:u.displayName||u.email.split('@')[0], bio:'', photo:u.photoURL||'',
+    followers:[], following:[], createdAt:Date.now()
   },{merge:true});
 }
-function logout(){auth.signOut()}
+function logout(){auth.signOut(); sessionStorage.removeItem('jrs_tab')}
 
-/* ========== ΒΕΛΤΙΩΜΕΝΗ ΣΥΜΠΙΕΣΗ (για κάμερα) ========== */
-function compressImage(file, maxWidth=900, quality=0.65){
+/* Συμπίεση εικόνας */
+function compressImage(file, maxWidth=900, quality=0.6){
   return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      const img=new Image();
-      img.onload=()=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
         try{
-          const canvas=document.createElement('canvas');
+          const canvas = document.createElement('canvas');
           let w=img.width, h=img.height;
-          if(w>maxWidth){h=Math.round(h*maxWidth/w);w=maxWidth}
-          if(h>1200){w=Math.round(w*1200/h);h=1200}
-          canvas.width=w;canvas.height=h;
-          const ctx=canvas.getContext('2d');
+          if(w>maxWidth){h=Math.round(h*maxWidth/w); w=maxWidth}
+          if(h>1100){w=Math.round(w*1100/h); h=1100}
+          canvas.width=w; canvas.height=h;
+          const ctx = canvas.getContext('2d');
           ctx.drawImage(img,0,0,w,h);
-          let data=canvas.toDataURL('image/jpeg',quality);
-          // Αν ακόμα μεγάλη, μειώνουμε περισσότερο
-          if(data.length>450000){
-            data=canvas.toDataURL('image/jpeg',0.5);
-          }
+          let data = canvas.toDataURL('image/jpeg', quality);
+          if(data.length > 400000) data = canvas.toDataURL('image/jpeg', 0.45);
           resolve(data);
         }catch(err){reject(err)}
       };
-      img.onerror=()=>reject(new Error('Δεν μπόρεσε να φορτωθεί η εικόνα'));
-      img.src=e.target.result;
+      img.onerror = () => reject(new Error('image load failed'));
+      img.src = e.target.result;
     };
-    reader.onerror=()=>reject(new Error('Σφάλμα ανάγνωσης αρχείου'));
+    reader.onerror = () => reject(new Error('file read failed'));
     reader.readAsDataURL(file);
   });
 }
 
 async function handleImageSelect(e){
-  const files=Array.from(e.target.files).slice(0,2-pendingImages.length);
+  const files = Array.from(e.target.files).slice(0, 2 - pendingImages.length);
   for(const file of files){
     try{
-      if(file.size>12*1024*1024){alert('Η φωτογραφία είναι πολύ μεγάλη (max 12MB)');continue}
-      const compressed=await compressImage(file);
+      if(file.size > 15*1024*1024){alert('Max 15MB'); continue}
+      const compressed = await compressImage(file);
       pendingImages.push(compressed);
     }catch(err){
-      alert(lang==='el'?'Πρόβλημα με τη φωτογραφία. Δοκίμασε άλλη.':'Problem with the photo. Try another one.');
-      console.error(err);
+      alert(lang==='el'?'Πρόβλημα με τη φωτογραφία':'Problem with photo');
     }
   }
   renderImagePreview();
-  e.target.value='';
+  e.target.value = '';
 }
-
 function renderImagePreview(){
-  const box=document.getElementById('imgPreview');
+  const box = document.getElementById('imgPreview');
   if(!box) return;
-  box.innerHTML=pendingImages.map((src,i)=>`
+  box.innerHTML = pendingImages.map((src,i)=>`
     <div style="position:relative">
       <img src="${src}">
       <button class="remove-img" onclick="removeImage(${i})">×</button>
     </div>`).join('');
 }
-function removeImage(i){pendingImages.splice(i,1);renderImagePreview()}
+function removeImage(i){pendingImages.splice(i,1); renderImagePreview()}
 
 function postContent(){
-  const ta=document.getElementById('postText');
+  const ta = document.getElementById('postText');
   if(!ta.value.trim() && pendingImages.length===0) return;
   db.collection('users').doc(user.uid).get().then(doc=>{
-    const u=doc.data()||{};
+    const u = doc.data()||{};
     db.collection('posts').add({
       uid:user.uid,
       name:u.name||user.displayName||user.email.split('@')[0],
@@ -343,7 +333,7 @@ function postContent(){
       photo:u.photo||user.photoURL||'',
       text:ta.value,
       images:pendingImages.slice(0,2),
-      likes:0,likedBy:[],comments:[],
+      likes:0, likedBy:[], comments:[],
       createdAt:Date.now()
     });
     ta.value='';
@@ -352,40 +342,46 @@ function postContent(){
   });
 }
 
-/* ========== LIKE ΜΕ ΗΧΟ ========== */
+/* ===== LIKE με αντίχειρα + ήχο ===== */
 function playLikeSound(){
   try{
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(600,ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(900,ctx.currentTime+0.08);
-    osc.frequency.exponentialRampToValueAtTime(400,ctx.currentTime+0.15);
-    gain.gain.setValueAtTime(0.35,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.2);
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(520, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(780, ctx.currentTime+0.07);
+    osc.frequency.exponentialRampToValueAtTime(380, ctx.currentTime+0.14);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.18);
     osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime+0.2);
+    osc.stop(ctx.currentTime+0.18);
   }catch(e){}
 }
 
 function likePost(id, el){
-  const ref=db.collection('posts').doc(id);
+  const ref = db.collection('posts').doc(id);
   ref.get().then(doc=>{
-    const p=doc.data();
-    const liked=(p.likedBy||[]).includes(user.uid);
+    const p = doc.data();
+    const liked = (p.likedBy||[]).includes(user.uid);
     if(liked){
-      ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+      ref.update({
+        likes: firebase.firestore.FieldValue.increment(-1),
+        likedBy: firebase.firestore.FieldValue.arrayRemove(user.uid)
+      });
     }else{
-      ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+      ref.update({
+        likes: firebase.firestore.FieldValue.increment(1),
+        likedBy: firebase.firestore.FieldValue.arrayUnion(user.uid)
+      });
       playLikeSound();
-      if(el){el.classList.add('heart-pop');setTimeout(()=>el.classList.remove('heart-pop'),400)}
-      if(p.uid!==user.uid){
+      if(el){el.classList.add('like-pop'); setTimeout(()=>el.classList.remove('like-pop'),350)}
+      if(p.uid !== user.uid){
         db.collection('notifications').add({
-          userId:p.uid,senderId:user.uid,
-          text:(user.displayName||user.email.split('@')[0])+(lang==='el'?' έκανε like στη δημοσίευσή σου.':' liked your post.'),
-          read:false,timestamp:Date.now()
+          userId:p.uid, senderId:user.uid,
+          text:(user.displayName||user.email.split('@')[0]) + (lang==='el'?' έκανε like στη δημοσίευσή σου.':' liked your post.'),
+          read:false, timestamp:Date.now()
         });
       }
     }
@@ -393,48 +389,52 @@ function likePost(id, el){
 }
 
 function addComment(postId){
-  const inp=document.getElementById('c_'+postId);
-  if(!inp.value.trim()) return;
+  const inp = document.getElementById('c_'+postId);
+  if(!inp || !inp.value.trim()) return;
   db.collection('posts').doc(postId).get().then(doc=>{
-    const p=doc.data();
+    const p = doc.data();
     db.collection('posts').doc(postId).update({
-      comments:firebase.firestore.FieldValue.arrayUnion({
-        name:user.displayName||user.email.split('@')[0],email:user.email,text:inp.value,time:Date.now()
+      comments: firebase.firestore.FieldValue.arrayUnion({
+        name:user.displayName||user.email.split('@')[0], email:user.email, text:inp.value, time:Date.now()
       })
     });
-    if(p.uid!==user.uid){
+    if(p.uid !== user.uid){
       db.collection('notifications').add({
-        userId:p.uid,senderId:user.uid,
-        text:(user.displayName||user.email.split('@')[0])+(lang==='el'?' σχολίασε τη δημοσίευσή σου.':' commented on your post.'),
-        read:false,timestamp:Date.now()
+        userId:p.uid, senderId:user.uid,
+        text:(user.displayName||user.email.split('@')[0]) + (lang==='el'?' σχολίασε τη δημοσίευσή σου.':' commented on your post.'),
+        read:false, timestamp:Date.now()
       });
     }
   });
   inp.value='';
 }
 
-function deletePost(id){if(!confirm(t('delete')+'?'))return;db.collection('posts').doc(id).delete()}
-function togglePostMenu(id){event.stopPropagation();const m=document.getElementById('pm_'+id);if(m)m.classList.toggle('show')}
+function deletePost(id){if(!confirm(t('delete')+'?'))return; db.collection('posts').doc(id).delete()}
+function togglePostMenu(id){event.stopPropagation(); const m=document.getElementById('pm_'+id); if(m) m.classList.toggle('show')}
 
 function toggleFollow(targetUid){
-  const myRef=db.collection('users').doc(user.uid);
-  const hisRef=db.collection('users').doc(targetUid);
-  Promise.all([myRef.get(),hisRef.get()]).then(([myDoc])=>{
-    const myData=myDoc.data()||{};
-    const following=myData.following||[];
+  if(targetUid === user.uid) return;
+  const myRef = db.collection('users').doc(user.uid);
+  const hisRef = db.collection('users').doc(targetUid);
+  Promise.all([myRef.get(), hisRef.get()]).then(([myDoc, hisDoc])=>{
+    const myData = myDoc.data()||{};
+    const following = myData.following||[];
     if(following.includes(targetUid)){
-      myRef.update({following:firebase.firestore.FieldValue.arrayRemove(targetUid)});
-      hisRef.update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+      myRef.update({following: firebase.firestore.FieldValue.arrayRemove(targetUid)});
+      hisRef.update({followers: firebase.firestore.FieldValue.arrayRemove(user.uid)});
     }else{
-      myRef.update({following:firebase.firestore.FieldValue.arrayUnion(targetUid)});
-      hisRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+      myRef.update({following: firebase.firestore.FieldValue.arrayUnion(targetUid)});
+      hisRef.update({followers: firebase.firestore.FieldValue.arrayUnion(user.uid)});
       db.collection('notifications').add({
-        userId:targetUid,senderId:user.uid,
-        text:(myData.name||user.email.split('@')[0])+(lang==='el'?' άρχισε να σε ακολουθεί.':' started following you.'),
-        read:false,timestamp:Date.now()
+        userId:targetUid, senderId:user.uid,
+        text:(myData.name||user.email.split('@')[0]) + (lang==='el'?' άρχισε να σε ακολουθεί.':' started following you.'),
+        read:false, timestamp:Date.now()
       });
     }
-  }).then(()=>render());
+  }).then(()=>{
+    if(tab==='profile') renderProfile(document.getElementById('main'));
+    else render();
+  });
 }
 
 function renderTextWithHashtags(text){
@@ -442,18 +442,17 @@ function renderTextWithHashtags(text){
 }
 function searchHashtag(tag){
   showTab('search');
-  setTimeout(()=>{const inp=document.querySelector('#main input');if(inp){inp.value='#'+tag;inp.dispatchEvent(new Event('input'))}},100);
+  setTimeout(()=>{const inp=document.querySelector('#main input'); if(inp){inp.value='#'+tag; inp.dispatchEvent(new Event('input'))}},80);
 }
 
-/* Lightbox */
 function openLightbox(src){
-  document.getElementById('lightboxImg').src=src;
+  document.getElementById('lightboxImg').src = src;
   document.getElementById('lightbox').classList.add('show');
 }
 function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
 
 function render(){
-  const m=document.getElementById('main');
+  const m = document.getElementById('main');
   if(!user){
     document.getElementById('bottomNav').style.display='none';
     m.innerHTML=`
@@ -469,16 +468,19 @@ function render(){
           <button class="btn-o" onclick="googleLogin()"><i data-lucide="chrome" style="width:16px;height:16px;vertical-align:middle"></i> ${t('google')}</button>
         </div>
       </div>`;
-    if(typeof lucide!=='undefined')lucide.createIcons();
+    if(typeof lucide!=='undefined') lucide.createIcons();
     return;
   }
   document.getElementById('bottomNav').style.display='flex';
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+
   if(tab==='home') renderHome(m);
   else if(tab==='search') renderSearch(m);
   else if(tab==='notif') renderNotifs(m);
   else if(tab==='profile') renderProfile(m);
+  else if(tab==='edit') showEditProfile();
   else if(tab==='admin') showAdminPanel();
-  if(typeof lucide!=='undefined')lucide.createIcons();
+  if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
 function renderHome(m){
@@ -489,7 +491,7 @@ function renderHome(m){
       <div id="imgPreview" class="img-preview"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div>
-          <input type="file" id="imgInput" accept="image/*" capture="environment" multiple style="display:none" onchange="handleImageSelect(event)">
+          <input type="file" id="imgInput" accept="image/*" multiple style="display:none" onchange="handleImageSelect(event)">
           <button onclick="document.getElementById('imgInput').click()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:6px">
             <i data-lucide="image" style="width:22px;height:22px"></i>
           </button>
@@ -503,15 +505,15 @@ function renderHome(m){
     </div>
     <div id="feed"></div>`;
   loadFeed();
-  if(typeof lucide!=='undefined')lucide.createIcons();
+  if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
 function loadFeed(){
-  const f=document.getElementById('feed');
+  const f = document.getElementById('feed');
   if(!f) return;
   if(feedType==='following'){
     db.collection('users').doc(user.uid).get().then(doc=>{
-      const following=(doc.data()||{}).following||[];
+      const following = (doc.data()||{}).following||[];
       if(following.length===0){f.innerHTML='<div class="empty-state">'+t('noFollowing')+'</div>';return}
       db.collection('posts').where('uid','in',following.slice(0,10)).orderBy('createdAt','desc').limit(40).onSnapshot(snap=>renderPosts(snap,f));
     });
@@ -520,23 +522,23 @@ function loadFeed(){
   }
 }
 
-function renderPosts(snap,f){
+function renderPosts(snap, f){
   if(!f) return;
   if(snap.empty){f.innerHTML='<div class="empty-state">'+t('noPosts')+'</div>';return}
-  f.innerHTML=snap.docs.map(d=>{
-    const p=d.data(), postId=d.id;
-    const isPostAdmin=isAdmin(p.email);
-    const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
-    const canDelete=(user.uid===p.uid)||isAdmin(user.email);
-    const isLiked=(p.likedBy||[]).includes(user.uid);
-    const images=p.images||[];
-    const imgHtml=images.length?`<div class="post-images ${images.length===1?'one':'two'}">${images.map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')}</div>`:'';
-    const comments=(p.comments||[]).map(c=>`
+  f.innerHTML = snap.docs.map(d=>{
+    const p = d.data(), postId = d.id;
+    const isPostAdmin = isAdmin(p.email);
+    const adminBadge = isPostAdmin ? '<span class="admin-badge">👑 Admin</span>' : '';
+    const canDelete = (user.uid===p.uid) || isAdmin(user.email);
+    const isLiked = (p.likedBy||[]).includes(user.uid);
+    const images = p.images||[];
+    const imgHtml = images.length ? `<div class="post-images ${images.length===1?'one':'two'}">${images.map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')}</div>` : '';
+    const comments = (p.comments||[]).map(c=>`
       <div class="comment">
         <div class="comment-avatar">👤</div>
         <div class="comment-info"><div class="comment-name">${esc(c.name)}</div><div class="comment-text">${esc(c.text)}</div></div>
       </div>`).join('');
-    const avatar=p.photo?`<div class="avatar" style="background-image:url('${p.photo}')"></div>`:`<div class="avatar">👤</div>`;
+    const avatar = p.photo ? `<div class="avatar" style="background-image:url('${p.photo}')"></div>` : `<div class="avatar">👤</div>`;
     return `
       <div class="post">
         <div class="post-header">
@@ -553,7 +555,9 @@ function renderPosts(snap,f){
         <div class="post-content">${renderTextWithHashtags(p.text||'')}</div>
         ${imgHtml}
         <div class="post-actions">
-          <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${postId}',this)"><i data-lucide="heart"></i> ${p.likes||0}</span>
+          <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${postId}',this)">
+            <i data-lucide="thumbs-up" style="width:16px;height:16px"></i> ${p.likes||0}
+          </span>
           <span><i data-lucide="message-circle"></i> ${(p.comments||[]).length}</span>
           <span><i data-lucide="share-2"></i></span>
         </div>
@@ -566,7 +570,7 @@ function renderPosts(snap,f){
         </div>
       </div>`;
   }).join('');
-  if(typeof lucide!=='undefined')lucide.createIcons();
+  if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
 function renderSearch(m){
@@ -579,35 +583,46 @@ function renderSearch(m){
 }
 
 function searchUsers(q){
-  const out=document.getElementById('searchRes');
+  const out = document.getElementById('searchRes');
   if(!q){out.innerHTML='';return}
   if(q.startsWith('#')){
-    const tag=q.substring(1).toLowerCase();
+    const tag = q.substring(1).toLowerCase();
     db.collection('posts').where('text','>=','#'+tag).where('text','<','#'+tag+'\uf8ff').limit(15).get().then(snap=>{
-      out.innerHTML=snap.docs.map(d=>{
-        const p=d.data();
+      out.innerHTML = snap.docs.map(d=>{
+        const p = d.data();
         return `<div class="post"><div class="post-content">${renderTextWithHashtags(p.text)}</div><div class="handle">${esc(p.name)}</div></div>`;
-      }).join('')||'<div class="empty-state">-</div>';
+      }).join('') || '<div class="empty-state">-</div>';
     });
     return;
   }
   db.collection('users').where('name','>=',q).where('name','<=',q+'\uf8ff').limit(15).get().then(snap=>{
-    out.innerHTML=snap.docs.map(d=>{
-      const u=d.data(),uId=d.id;
-      const adminBadge=isAdmin(u.email)?'<span class="admin-badge">👑 Admin</span>':'';
-      const avatar=u.photo?`<div class="avatar" style="background-image:url('${u.photo}')"></div>`:`<div class="avatar">👤</div>`;
-      return `<div class="post"><div class="post-header">${avatar}<div class="post-info"><div class="username">${esc(u.name)} ${adminBadge}</div><div class="handle">${esc(u.bio||'')}</div></div>
-        ${uId!==user.uid?`<button class="btn-follow" onclick="toggleFollow('${uId}')">${t('follow')}</button>`:''}</div></div>`;
-    }).join('')||'<div class="empty-state">-</div>';
-    if(typeof lucide!=='undefined')lucide.createIcons();
+    out.innerHTML = snap.docs.map(d=>{
+      const u = d.data(), uId = d.id;
+      const adminBadge = isAdmin(u.email)?'<span class="admin-badge">👑 Admin</span>':'';
+      const avatar = u.photo?`<div class="avatar" style="background-image:url('${u.photo}')"></div>`:`<div class="avatar">👤</div>`;
+      return `<div class="post" onclick="openUserProfile('${uId}')" style="cursor:pointer">
+        <div class="post-header">${avatar}
+          <div class="post-info">
+            <div class="username">${esc(u.name)} ${adminBadge}</div>
+            <div class="handle">${esc(u.bio||'')}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('') || '<div class="empty-state">-</div>';
+    if(typeof lucide!=='undefined') lucide.createIcons();
   });
+}
+
+function openUserProfile(uid){
+  viewingUid = uid;
+  showTab('profile');
 }
 
 function listenUnreadNotifs(userId){
   db.collection('notifications').where('userId','==',userId).where('read','==',false)
     .onSnapshot(snap=>{
-      const badge=document.getElementById('notifBadge');
-      if(badge) badge.style.display=snap.empty?'none':'block';
+      const badge = document.getElementById('notifBadge');
+      if(badge) badge.style.display = snap.empty ? 'none' : 'block';
     });
 }
 
@@ -615,68 +630,103 @@ function renderNotifs(m){
   db.collection('notifications').where('userId','==',user.uid).orderBy('timestamp','desc').limit(25).get().then(snap=>{
     if(snap.empty){m.innerHTML='<div class="empty-state">'+t('noNotifs')+'</div>';return}
     snap.docs.forEach(doc=>{if(!doc.data().read) db.collection('notifications').doc(doc.id).update({read:true})});
-    m.innerHTML=snap.docs.map(d=>{
-      const n=d.data();
-      return `<div class="notif-item"><div><div style="font-size:15px;margin-bottom:4px">${esc(n.text)}</div><div class="handle">${new Date(n.timestamp).toLocaleString()}</div></div>
-        ${n.senderId?`<button class="btn-follow" onclick="toggleFollow('${n.senderId}')">${t('follow')}</button>`:''}</div>`;
+    m.innerHTML = snap.docs.map(d=>{
+      const n = d.data();
+      return `<div class="notif-item">
+        <div>
+          <div style="font-size:15px;margin-bottom:4px">${esc(n.text)}</div>
+          <div class="handle">${new Date(n.timestamp).toLocaleString()}</div>
+        </div>
+        ${n.senderId && n.senderId!==user.uid ? `<button class="btn-follow" onclick="toggleFollow('${n.senderId}')">${t('follow')}</button>` : ''}
+      </div>`;
     }).join('');
   });
 }
 
-/* ========== ΠΡΟΦΙΛ ΜΕ ΝΗΜΑ ========== */
+/* ===== ΠΡΟΦΙΛ (καθαρό + Follow) ===== */
 function renderProfile(m){
+  const targetUid = viewingUid || user.uid;
+  const isOwn = targetUid === user.uid;
+
+  db.collection('users').doc(targetUid).get().then(doc=>{
+    const u = doc.data()||{};
+    const admin = isAdmin(u.email);
+    const following = (u.following||[]).length;
+    const followers = (u.followers||[]).length;
+
+    // Ελέγχουμε αν τον ακολουθούμε
+    db.collection('users').doc(user.uid).get().then(myDoc=>{
+      const myFollowing = (myDoc.data()||{}).following||[];
+      const isFollowing = myFollowing.includes(targetUid);
+
+      const avatarContent = u.photo
+        ? `<div class="avatar avatar-lg" style="background-image:url('${u.photo}')"></div>`
+        : `<div class="avatar avatar-lg">👤</div>`;
+
+      m.innerHTML = `
+        <div class="profile">
+          <div class="profile-header">
+            ${avatarContent}
+            <h2 style="font-size:20px;margin-top:14px;font-weight:800">${esc(u.name||'User')} ${admin?'<span class="admin-badge">👑 Admin</span>':''}</h2>
+            <div class="handle">@${esc((u.name||'user').toLowerCase().replace(/\s+/g,''))}</div>
+            <p style="color:var(--muted);margin:10px 0;font-size:15px">${esc(u.bio||'')}</p>
+            <div class="profile-stats">
+              <span><b>${followers}</b> ${t('followers')}</span>
+              <span><b>${following}</b> ${t('following2')}</span>
+            </div>
+            ${!isOwn ? `
+              <button class="btn-follow ${isFollowing?'following':''}" style="margin-top:12px" onclick="toggleFollow('${targetUid}')">
+                ${isFollowing ? t('unfollow') : t('follow')}
+              </button>` : ''}
+          </div>
+          <h3 style="margin:20px 0 12px;font-size:16px;font-weight:700">${t('myPosts')}</h3>
+          <div id="myPostsFeed"><div class="empty-state">Φόρτωση...</div></div>
+        </div>`;
+
+      // Φόρτωση νήματος
+      db.collection('posts').where('uid','==',targetUid).limit(30).get().then(snap=>{
+        const docs = snap.docs.sort((a,b)=>(b.data().createdAt||0)-(a.data().createdAt||0));
+        const fakeSnap = {empty: docs.length===0, docs: docs};
+        renderPosts(fakeSnap, document.getElementById('myPostsFeed'));
+      });
+
+      if(typeof lucide!=='undefined') lucide.createIcons();
+    });
+  });
+}
+
+/* ===== EDIT PROFILE (στο πλαϊνό) ===== */
+function showEditProfile(){
+  tab = 'edit';
+  sessionStorage.setItem('jrs_tab','edit');
+  const m = document.getElementById('main');
   db.collection('users').doc(user.uid).get().then(doc=>{
-    const u=doc.data()||{};
-    const admin=isAdmin(user.email);
-    const following=(u.following||[]).length;
-    const followers=(u.followers||[]).length;
-    const avatarContent=u.photo
-      ?`<div class="avatar avatar-lg" style="background-image:url('${u.photo}');cursor:pointer" onclick="document.getElementById('photoInput').click()"></div>`
-      :`<div class="avatar avatar-lg" style="cursor:pointer" onclick="document.getElementById('photoInput').click()">👤</div>`;
-    m.innerHTML=`
+    const u = doc.data()||{};
+    m.innerHTML = `
       <div class="profile">
-        <div class="profile-header">
-          ${avatarContent}
+        <h2 style="margin-bottom:20px;font-weight:800">${t('editProfile')}</h2>
+        <div style="text-align:center;margin-bottom:20px">
+          ${u.photo ? `<div class="avatar avatar-lg" style="background-image:url('${u.photo}');margin:0 auto;cursor:pointer" onclick="document.getElementById('photoInput').click()"></div>`
+                    : `<div class="avatar avatar-lg" style="margin:0 auto;cursor:pointer" onclick="document.getElementById('photoInput').click()">👤</div>`}
           <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="uploadPhoto(event)">
-          <button class="btn-outline" style="width:auto;padding:6px 14px;font-size:13px;border-radius:9999px;display:inline-block;margin-top:10px" onclick="document.getElementById('photoInput').click()">
+          <button class="btn-outline" style="margin-top:10px" onclick="document.getElementById('photoInput').click()">
             <i data-lucide="camera" style="width:14px;height:14px;vertical-align:middle"></i> ${t('changePic')}
           </button>
-          <h2 style="font-size:20px;margin-top:14px;font-weight:800">${esc(u.name||user.email)} ${admin?'<span class="admin-badge">👑 Admin</span>':''}</h2>
-          <div class="handle">@${esc((u.name||user.email.split('@')[0]).toLowerCase().replace(/\s+/g,''))}</div>
-          <p style="color:var(--muted);margin:10px 0;font-size:15px">${esc(u.bio||t('bio'))}</p>
-          <div class="profile-stats">
-            <span><b>${followers}</b> ${t('followers')}</span>
-            <span><b>${following}</b> ${t('following2')}</span>
-          </div>
         </div>
         <div class="profile-form">
           <input id="newName" placeholder="${t('profile')}" value="${esc(u.name||'')}">
           <textarea id="newBio" placeholder="${t('bio')}">${esc(u.bio||'')}</textarea>
           <button onclick="saveProfile()">${t('save')}</button>
         </div>
-        <h3 style="margin:28px 0 12px;font-size:16px;font-weight:700">${t('myPosts')}</h3>
-        <div id="myPostsFeed"><div class="empty-state">Φόρτωση...</div></div>
       </div>`;
-
-    // Φόρτωση νήματος – χωρίς orderBy για να μην χρειάζεται index
-    db.collection('posts').where('uid','==',user.uid).limit(30).get().then(snap=>{
-      const docs=snap.docs.sort((a,b)=>(b.data().createdAt||0)-(a.data().createdAt||0));
-      // Δημιουργούμε ψεύτικο snapshot-like
-      const fakeSnap={empty:docs.length===0,docs:docs};
-      renderPosts(fakeSnap,document.getElementById('myPostsFeed'));
-    }).catch(err=>{
-      document.getElementById('myPostsFeed').innerHTML='<div class="empty-state">Σφάλμα φόρτωσης</div>';
-      console.error(err);
-    });
-
-    if(typeof lucide!=='undefined')lucide.createIcons();
+    if(typeof lucide!=='undefined') lucide.createIcons();
   });
 }
 
 function showSettings(){
-  const m=document.getElementById('main');
-  const isLight=document.body.classList.contains('light');
-  m.innerHTML=`
+  const m = document.getElementById('main');
+  const isLight = document.body.classList.contains('light');
+  m.innerHTML = `
     <div class="profile">
       <h2 style="margin-bottom:20px;font-weight:800">${t('settings')}</h2>
       <div class="profile-form">
@@ -689,13 +739,14 @@ function showSettings(){
 }
 
 function showAdminPanel(){
-  if(!user||!isAdmin(user.email)) return;
+  if(!user || !isAdmin(user.email)) return;
   tab='admin';
-  const m=document.getElementById('main');
-  m.innerHTML=`
+  sessionStorage.setItem('jrs_tab','admin');
+  const m = document.getElementById('main');
+  m.innerHTML = `
     <div class="profile">
       <h2 style="margin-bottom:8px;font-weight:800">🛡️ ${t('adminPanel')}</h2>
-      <p style="color:var(--muted);margin-bottom:20px">John Ross Social – Διαχείριση</p>
+      <p style="color:var(--muted);margin-bottom:20px">John Ross Social</p>
       <div class="admin-stats" id="adminStats">
         <div class="stat-card"><b>...</b><span>${t('totalUsers')}</span></div>
         <div class="stat-card"><b>...</b><span>${t('totalPosts')}</span></div>
@@ -703,36 +754,40 @@ function showAdminPanel(){
       <h3 style="margin:24px 0 12px;font-size:16px">${t('recentActivity')}</h3>
       <div id="adminActivity" class="empty-state">Φόρτωση...</div>
     </div>`;
-  Promise.all([db.collection('users').get(),db.collection('posts').get()]).then(([u,p])=>{
-    document.getElementById('adminStats').innerHTML=`
+  Promise.all([db.collection('users').get(), db.collection('posts').get()]).then(([u,p])=>{
+    document.getElementById('adminStats').innerHTML = `
       <div class="stat-card"><b>${u.size}</b><span>${t('totalUsers')}</span></div>
       <div class="stat-card"><b>${p.size}</b><span>${t('totalPosts')}</span></div>`;
   });
   db.collection('notifications').orderBy('timestamp','desc').limit(12).get().then(snap=>{
-    const act=document.getElementById('adminActivity');
-    if(snap.empty){act.innerHTML='<div class="empty-state">Δεν υπάρχουν ακόμα</div>';return}
-    act.innerHTML=snap.docs.map(d=>{
-      const n=d.data();
+    const act = document.getElementById('adminActivity');
+    if(snap.empty){act.innerHTML='<div class="empty-state">-</div>';return}
+    act.innerHTML = snap.docs.map(d=>{
+      const n = d.data();
       return `<div class="notif-item"><div style="font-size:14px">${esc(n.text)}</div><div class="handle">${new Date(n.timestamp).toLocaleString()}</div></div>`;
     }).join('');
   });
 }
 
 function uploadPhoto(event){
-  const file=event.target.files[0];
+  const file = event.target.files[0];
   if(!file) return;
-  compressImage(file,400,0.7).then(data=>{
-    db.collection('users').doc(user.uid).update({photo:data}).then(()=>{alert('OK!');render()});
-  }).catch(()=>alert('Σφάλμα ανεβάσματος φωτογραφίας'));
+  compressImage(file, 500, 0.65).then(data=>{
+    db.collection('users').doc(user.uid).update({photo:data}).then(()=>{alert('OK!'); showEditProfile()});
+  }).catch(()=>alert('Σφάλμα'));
 }
 
 function saveProfile(){
-  const name=document.getElementById('newName').value;
-  const bio=document.getElementById('newBio').value;
-  db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>{alert(lang==='el'?'Αποθηκεύτηκε!':'Saved!');render()});
+  const name = document.getElementById('newName').value;
+  const bio = document.getElementById('newBio').value;
+  db.collection('users').doc(user.uid).set({name,bio},{merge:true}).then(()=>{
+    alert(lang==='el'?'Αποθηκεύτηκε!':'Saved!');
+    viewingUid = null;
+    showTab('profile');
+  });
 }
 
-document.addEventListener('click',e=>{
+document.addEventListener('click', e=>{
   if(!e.target.closest('.post-menu-container')){
     document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
   }
