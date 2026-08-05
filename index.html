@@ -7,9 +7,7 @@
 <meta property="og:title" content="John Ross Social">
 <meta property="og:description" content="Your space. Your voice. Free expression.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://johnross7.github.io/John-Ross-Social-/">
-<meta property="og:image" content="https://johnross7.github.io/John-Ross-Social-/og-image.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:url" content="https://hnross7.github.io/">
 <meta name="theme-color" content="#000000">
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
@@ -58,8 +56,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .post-actions span{display:flex;align-items:center;gap:5px;cursor:pointer}
 .post-actions i{width:18px;height:18px}
 .like-btn.liked svg,.like-btn.liked{color:#dc2626}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
-.pop{animation:pop .3s}
 
 /* Comments */
 .comments-section{margin-top:10px;padding-top:10px;border-top:1px solid #222}
@@ -83,9 +79,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 
 /* Bottom Nav */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.95);backdrop-filter:blur(10px);border-top:1px solid #333;display:flex;justify-content:space-around;padding:8px 0;max-width:600px;margin:0 auto;z-index:100}
-.nav-item{background:none;border:none;color:#999;padding:8px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nav-item{background:none;border:none;color:#999;padding:8px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
 .nav-item.active{color:#dc2626}
 .nav-item i{width:24px;height:24px}
+
+/* Notif Badge */
+.nav-badge{position:absolute;top:6px;right:14px;width:8px;height:8px;background:#dc2626;border-radius:50%;display:none}
+.notif-item{padding:12px 16px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:between;gap:12px}
 
 /* Auth */
 .auth-container{text-align:center;padding:60px 24px}
@@ -107,7 +107,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 /* Buttons */
 .btn-full{width:100%;background:#dc2626;color:#fff;border:none;padding:10px 18px;border-radius:20px;font-weight:600;cursor:pointer;font-size:14px;margin-top:10px}
 .btn-outline{background:transparent;border:1px solid #444;color:#fff;width:100%;padding:10px;border-radius:20px;cursor:pointer;margin-top:8px}
-.btn-follow{background:#dc2626;color:#fff;border:none;padding:8px 24px;border-radius:20px;font-weight:600;cursor:pointer;font-size:14px;margin:10px 0}
+.btn-follow{background:#dc2626;color:#fff;border:none;padding:6px 16px;border-radius:20px;font-weight:600;cursor:pointer;font-size:12px}
 .btn-follow.following{background:transparent;border:1px solid #444;color:#fff}
 
 .center{text-align:center;padding:40px 20px;color:#666}
@@ -130,8 +130,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     <a onclick="goSearch();closeSidebar()"><i data-lucide="search"></i> Search</a>
     <a onclick="goNotif();closeSidebar()"><i data-lucide="bell"></i> Notifications</a>
     <a onclick="goProfile();closeSidebar()"><i data-lucide="user"></i> Profile</a>
-    <a onclick="aiAssistant();closeSidebar()"><i data-lucide="bot"></i> AI Assistant</a>
-    <a onclick="settings();closeSidebar()"><i data-lucide="settings"></i> Settings</a>
     <hr>
     <a onclick="logout();closeSidebar()"><i data-lucide="log-out"></i> Logout</a>
   </nav>
@@ -150,7 +148,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
   <nav class="bottom-nav" id="bottomNav" style="display:none">
     <button class="nav-item active" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
     <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
-    <button class="nav-item" data-tab="notif" onclick="showTab('notif')"><i data-lucide="bell"></i></button>
+    <button class="nav-item" data-tab="notif" onclick="showTab('notif')">
+      <i data-lucide="bell"></i>
+      <span class="nav-badge" id="notifBadge"></span>
+    </button>
     <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
   </nav>
 </main>
@@ -171,12 +172,14 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let user=null,tab='home',feedType='foryou',lang='en',likedPosts=new Set();
+let user=null,tab='home',feedType='foryou',lang='en';
+
+// Αποκλειστικά εσύ (Admin)
 const adminEmails=['rossrossg7@gmail.com'];
 
 const T={
-en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo',slogan:'Your space. Your voice.',reply:'Reply',send:'Send',aiTitle:'AI Assistant',aiSubtitle:'Ask me anything about the app',aiPlaceholder:'Type your question...',settings:'Settings',language:'Language',comingSoon:'Coming soon'},
-el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',reply:'Απάντηση',send:'Αποστολή',aiTitle:'Βοηθός AI',aiSubtitle:'Ρώτα με οτιδήποτε για την εφαρμογή',aiPlaceholder:'Γράψε την ερώτησή σου...',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα'}
+en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's on your mind?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Unfollow',changePic:'Change photo',slogan:'Your space. Your voice.',reply:'Reply',send:'Send'},
+el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:"Τι σκέφτεσαι;",like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',reply:'Απάντηση',send:'Αποστολή'}
 };
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
@@ -194,8 +197,6 @@ function goHome(){showTab('home')}
 function goSearch(){showTab('search')}
 function goNotif(){showTab('notif')}
 function goProfile(){showTab('profile')}
-function aiAssistant(){alert(t('aiTitle')+' - '+t('comingSoon'));}
-function settings(){showSettings()}
 
 function showTab(name){
   tab=name;
@@ -215,7 +216,12 @@ function setFeedType(type){
   if(typeof lucide!=='undefined')lucide.createIcons();
 }
 
-auth.onAuthStateChanged(u=>{user=u;render();if(typeof lucide!=='undefined')lucide.createIcons();});
+auth.onAuthStateChanged(u=>{
+  user=u;
+  render();
+  if(u) listenUnreadNotifs(u.uid);
+  if(typeof lucide!=='undefined')lucide.createIcons();
+});
 
 function login(){
   const e=document.getElementById('le').value;
@@ -232,15 +238,26 @@ function register(){
   }).catch(err=>alert(err.message));
 }
 
+// Διόρθωση Sign In για Υπολογιστή (Χρήση Redirect αν αποτύχει το Popup)
 function googleLogin(){
   const provider=new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(cred=>{
-    return db.collection('users').doc(cred.user.uid).set({
-      email:cred.user.email,
-      name:cred.user.displayName||cred.user.email.split('@')[0],
-      bio:'',photo:cred.user.photoURL||'',followers:[],following:[],likedPosts:[],createdAt:Date.now()
-    },{merge:true});
-  }).catch(err=>alert(err.message));
+    saveUserToDb(cred.user);
+  }).catch(err=>{
+    if(err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+      auth.signInWithRedirect(provider);
+    } else {
+      alert(err.message);
+    }
+  });
+}
+
+function saveUserToDb(u){
+  db.collection('users').doc(u.uid).set({
+    email:u.email,
+    name:u.displayName||u.email.split('@')[0],
+    bio:'',photo:u.photoURL||'',followers:[],following:[],likedPosts:[],createdAt:Date.now()
+  },{merge:true});
 }
 
 function logout(){auth.signOut()}
@@ -265,11 +282,22 @@ function postContent(){
 function likePost(id){
   const ref=db.collection('posts').doc(id);
   ref.get().then(doc=>{
-    const likedBy=doc.data().likedBy||[];
+    const postData = doc.data();
+    const likedBy=postData.likedBy||[];
     if(likedBy.includes(user.uid)){
       ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
     } else {
       ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+      // Δημιουργία ειδοποίησης Like αν δεν είναι δικό σου ποστ
+      if(postData.uid !== user.uid) {
+        db.collection('notifications').add({
+          userId: postData.uid,
+          senderId: user.uid,
+          text: (user.displayName || user.email.split('@')[0]) + ' έκανε like στη δημοσίευσή σου.',
+          read: false,
+          timestamp: Date.now()
+        });
+      }
     }
   });
 }
@@ -277,10 +305,22 @@ function likePost(id){
 function addComment(postId){
   const inp=document.getElementById('c_'+postId);
   if(!inp.value.trim())return;
-  db.collection('posts').doc(postId).update({
-    comments:firebase.firestore.FieldValue.arrayUnion({
-      name:user.displayName||user.email.split('@')[0],email:user.email,text:inp.value,time:Date.now()
-    })
+  db.collection('posts').doc(postId).get().then(doc=>{
+    const postData = doc.data();
+    db.collection('posts').doc(postId).update({
+      comments:firebase.firestore.FieldValue.arrayUnion({
+        name:user.displayName||user.email.split('@')[0],email:user.email,text:inp.value,time:Date.now()
+      })
+    });
+    if(postData.uid !== user.uid) {
+      db.collection('notifications').add({
+        userId: postData.uid,
+        senderId: user.uid,
+        text: (user.displayName || user.email.split('@')[0]) + ' σχολίασε τη δημοσίευσή σου.',
+        read: false,
+        timestamp: Date.now()
+      });
+    }
   });
   inp.value='';
 }
@@ -290,15 +330,27 @@ function togglePostMenu(id){event.stopPropagation();const m=document.getElementB
 
 function toggleFollow(targetUid){
   const myRef=db.collection('users').doc(user.uid);
-  const theirRef=db.collection('users').doc(targetUid);
-  myRef.get().then(doc=>{
-    const following=doc.data().following||[];
+  const hisRef=db.collection('users').doc(targetUid);
+  
+  Promise.all([myRef.get(), hisRef.get()]).then(([myDoc, hisDoc])=>{
+    const myData = myDoc.data()||{};
+    const following=myData.following||[];
+    
     if(following.includes(targetUid)){
       myRef.update({following:firebase.firestore.FieldValue.arrayRemove(targetUid)});
-      theirRef.update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+      hisRef.update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
     } else {
       myRef.update({following:firebase.firestore.FieldValue.arrayUnion(targetUid)});
-      theirRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+      hisRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+      
+      // Προσθήκη ειδοποίησης Follow
+      db.collection('notifications').add({
+        userId: targetUid,
+        senderId: user.uid,
+        text: (myData.name || user.email.split('@')[0]) + ' άρχισε να σε ακολουθεί.',
+        read: false,
+        timestamp: Date.now()
+      });
     }
   }).then(()=>render());
 }
@@ -364,7 +416,7 @@ function loadFeed(){
   if(!f)return;
   if(feedType==='following'){
     db.collection('users').doc(user.uid).get().then(doc=>{
-      const following=doc.data().following||[];
+      const following=(doc.data()||{}).following||[];
       if(following.length===0){f.innerHTML='<div class="empty-state">Δεν ακολουθείς κανέναν ακόμα</div>';return;}
       db.collection('posts').where('uid','in',following.slice(0,10)).orderBy('createdAt','desc').limit(50).onSnapshot(snap=>renderPosts(snap,f));
     });
@@ -379,6 +431,7 @@ function renderPosts(snap,f){
   f.innerHTML=snap.docs.map(d=>{
     const p=d.data();
     const postId=d.id;
+    // ADMIN ΕΛΕΓΧΟΣ: Εμφανίζεται MONO αν το email ανήκει στη λίστα adminEmails σου
     const isPostAdmin=isAdmin(p.email);
     const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
     const canDelete=(user.uid===p.uid)||isAdmin(user.email);
@@ -431,15 +484,70 @@ function searchUsers(q){
   db.collection('users').where('name','>=',q).where('name','<=',q+'\uf8ff').limit(20).get().then(snap=>{
     out.innerHTML=snap.docs.map(d=>{
       const u=d.data();
+      const uId=d.id;
       const isPostAdmin=isAdmin(u.email);
       const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
       const avatar=u.photo?`<div class="avatar" style="background-image:url('${u.photo}');background-size:cover"></div>`:`<div class="avatar">👤</div>`;
-      return `<div class="post"><div class="post-header">${avatar}<div class="post-info"><div class="username">${esc(u.name)}${adminBadge}</div><div class="handle">${esc(u.bio||'')}</div></div></div></div>`;
+      return `<div class="post">
+        <div class="post-header">
+          ${avatar}
+          <div class="post-info">
+            <div class="username">${esc(u.name)}${adminBadge}</div>
+            <div class="handle">${esc(u.bio||'')}</div>
+          </div>
+          ${uId !== user.uid ? `<button class="btn-follow" onclick="toggleFollow('${uId}')">${t('follow')}</button>` : ''}
+        </div>
+      </div>`;
     }).join('')||'<div class="empty-state">-</div>';
+    if(typeof lucide!=='undefined')lucide.createIcons();
   });
 }
 
-function renderNotifs(m){m.innerHTML='<div class="empty-state">'+t('noNotifs')+'</div>';}
+// ΕΙΔΟΠΟΙΗΣΕΙΣ & ΚΟΚΚΙΝΟ ΣΗΜΑ
+function listenUnreadNotifs(userId){
+  db.collection('notifications')
+    .where('userId','==',userId)
+    .where('read','==',false)
+    .onSnapshot(snap=>{
+      const badge=document.getElementById('notifBadge');
+      if(badge){
+        badge.style.display = snap.empty ? 'none' : 'block';
+      }
+    });
+}
+
+function renderNotifs(m){
+  db.collection('notifications')
+    .where('userId','==',user.uid)
+    .orderBy('timestamp','desc')
+    .limit(30)
+    .get()
+    .then(snap=>{
+      if(snap.empty){
+        m.innerHTML='<div class="empty-state">'+t('noNotifs')+'</div>';
+        return;
+      }
+      
+      // Σήμανση ως αναγνωσμένες
+      snap.docs.forEach(doc=>{
+        if(!doc.data().read) {
+          db.collection('notifications').doc(doc.id).update({read:true});
+        }
+      });
+
+      m.innerHTML=`<div style="padding:10px 0">` + snap.docs.map(d=>{
+        const notif=d.data();
+        return `<div class="notif-item">
+          <div>
+            <div style="font-size:14px;margin-bottom:4px">${esc(notif.text)}</div>
+            <div class="handle">${new Date(notif.timestamp).toLocaleString()}</div>
+          </div>
+          ${notif.senderId ? `<button class="btn-follow" onclick="toggleFollow('${notif.senderId}')">${t('follow')}</button>` : ''}
+        </div>`;
+      }).join('') + `</div>`;
+      if(typeof lucide!=='undefined')lucide.createIcons();
+    });
+}
 
 function renderProfile(m){
   db.collection('users').doc(user.uid).get().then(doc=>{
@@ -447,7 +555,6 @@ function renderProfile(m){
     const admin=isAdmin(user.email);
     const following=(u.following||[]).length;
     const followers=(u.followers||[]).length;
-    const isFollowing=(u.followers||[]).includes(user.uid);
     const avatarContent=u.photo?`<div class="avatar avatar-lg" style="background-image:url('${u.photo}');background-size:cover;cursor:pointer" onclick="document.getElementById('photoInput').click()"></div>`:`<div class="avatar avatar-lg" style="cursor:pointer" onclick="document.getElementById('photoInput').click()">👤</div>`;
     m.innerHTML=`
       <div class="profile">
@@ -462,9 +569,6 @@ function renderProfile(m){
             <span><b>${followers}</b>${t('followers')}</span>
             <span><b>${following}</b>${t('following2')}</span>
           </div>
-          <div class="follow-btn-wrap">
-            <button class="btn-follow ${isFollowing?'following':''}" onclick="toggleFollow('${user.uid}')">${isFollowing?t('unfollow'):t('follow')}</button>
-          </div>
         </div>
         <div class="profile-form">
           <input id="newName" placeholder="${t('profile')}" value="${esc(u.name||'')}">
@@ -475,18 +579,6 @@ function renderProfile(m){
       </div>`;
     if(typeof lucide!=='undefined')lucide.createIcons();
   });
-}
-
-function showSettings(){
-  const m=document.getElementById('main');
-  m.innerHTML=`
-    <div class="profile">
-      <h2 style="margin-bottom:20px">${t('settings')}</h2>
-      <div class="profile-form">
-        <label style="display:block;margin:10px 0;color:#999">${t('language')}</label>
-        <button onclick="toggleLang();showSettings()">${lang==='en'?'🇬🇧 English':'🇬🇷 Ελληνικά'} → ${lang==='en'?'Ελληνικά':'English'}</button>
-      </div>
-    </div>`;
 }
 
 function uploadPhoto(event){
