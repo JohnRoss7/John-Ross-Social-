@@ -1,5 +1,583 @@
-function openSharedPost(postId) {
-  singlePostId = postId;
-  history.replaceState({}, '', window.location.pathname);
-  renderSinglePost();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>John Ross Social</title>
+<meta name="theme-color" content="#000000">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root{--bg:#000;--text:#e7e9ea;--muted:#71767b;--border:#2f3336;--card:#16181c;--accent:#dc2626;--hover:rgba(255,255,255,.03)}
+body.light{--bg:#fff;--text:#0f1419;--muted:#536471;--border:#eff3f4;--card:#f7f9f9;--accent:#dc2626;--hover:rgba(0,0,0,.03)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overscroll-behavior:none}
+.app-container{max-width:600px;margin:0 auto;min-height:100vh;padding-bottom:70px;background:var(--bg);border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;background:var(--bg);border-right:1px solid var(--border);z-index:1000;transition:left .3s;display:flex;flex-direction:column}
+.sidebar.show{left:0}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
+.logo-box{background:var(--accent);color:#fff;padding:8px 14px;border-radius:20px;font-weight:700;font-size:14px}
+#close-sidebar{background:none;border:none;color:var(--text);font-size:28px;cursor:pointer}
+.sidebar-nav{flex:1;padding:12px;overflow-y:auto}
+.sidebar-nav a{display:flex;align-items:center;gap:14px;padding:14px 16px;color:var(--text);text-decoration:none;border-radius:9999px;font-size:17px;font-weight:500;cursor:pointer;margin-bottom:4px}
+.sidebar-nav a:hover,.sidebar-nav a.active{background:var(--card)}
+.sidebar-nav a i{width:22px;height:22px}
+.sidebar-nav hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.admin-link{background:var(--card)!important;border:1px solid var(--accent)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:none}
+.overlay.show{display:block}
+.main-header{position:sticky;top:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 16px;z-index:100;display:flex;align-items:center;gap:12px}
+body.light .main-header{background:rgba(255,255,255,.85)}
+.menu-btn{background:none;border:none;color:var(--text);cursor:pointer;padding:6px}
+.menu-btn i{width:24px;height:24px}
+.logo-text{font-weight:700;font-size:18px;flex:1}
+.top-tabs{display:flex;border-bottom:1px solid var(--border)}
+.tab-btn{flex:1;padding:16px;background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;border-bottom:3px solid transparent;font-weight:500}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent);font-weight:700}
+.post{border-bottom:1px solid var(--border);padding:14px 16px}
+.post:hover{background:var(--hover)}
+.post-header{display:flex;gap:12px;margin-bottom:6px;align-items:flex-start}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center;color:#fff;cursor:pointer}
+.avatar-lg{width:110px;height:110px;font-size:48px;border-radius:16px}
+.post-info{flex:1;min-width:0}
+.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;cursor:pointer}
+.handle{color:var(--muted);font-size:14px}
+.post-content{font-size:15px;line-height:1.5;margin:4px 0 10px;word-wrap:break-word;white-space:pre-wrap}
+.post-images{margin:10px 0;border-radius:12px;overflow:hidden}
+.post-images img{width:100%;max-height:380px;object-fit:cover;border-radius:12px;cursor:pointer}
+.hash{color:#1d9bf0;cursor:pointer}
+.post-actions{display:flex;gap:28px;color:var(--muted);font-size:13px;margin-top:10px;align-items:center}
+.post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
+.like-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid transparent;transition:all .2s}
+.like-btn.liked{background:var(--accent);border-color:var(--accent);color:#fff !important}
+.like-btn.liked svg{color:#fff !important;fill:#fff}
+@keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.like-pop{animation:likePop .3s ease}
+.comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.comment{padding:10px 0;display:flex;gap:10px}
+.comment-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.comment-info{flex:1}
+.comment-name{font-weight:700;font-size:13px}
+.comment-text{font-size:14px;margin-top:2px}
+.comment-input-row{display:flex;gap:8px;margin-top:12px}
+.comment-input-row input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9999px;font-size:14px;outline:none}
+.post-menu-container{position:relative;margin-left:auto}
+.menu-btn-icon{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px}
+.post-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:170px;z-index:50;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.post-menu.show{display:block}
+.post-menu button{width:100%;background:none;border:none;color:var(--text);padding:12px 16px;text-align:left;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px}
+.post-menu button:hover{background:var(--accent);color:#fff}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
+body.light .bottom-nav{background:rgba(255,255,255,.92)}
+.nav-item{background:none;border:none;color:var(--muted);padding:8px 18px;cursor:pointer;position:relative}
+.nav-item.active{color:var(--accent)}
+.nav-item i{width:26px;height:26px}
+.nav-badge{position:absolute;top:6px;right:14px;width:9px;height:9px;background:var(--accent);border-radius:50%;display:none}
+.auth-container{text-align:center;padding:50px 24px}
+.auth-container h2{margin-bottom:8px;font-size:28px;font-weight:800}
+.auth-container .slogan{color:var(--muted);margin-bottom:32px}
+.auth-container input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:14px 18px;border-radius:9999px;margin:8px 0;font-size:15px;max-width:340px;outline:none}
+.auth-container button{width:100%;max-width:340px;background:var(--accent);color:#fff;border:none;padding:14px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:15px;margin:8px 0}
+.auth-container .btn-o{background:transparent;border:1px solid var(--border);color:var(--text)}
+.profile{padding:20px}
+.profile-header{text-align:center;margin-bottom:20px}
+.profile-stats{display:flex;justify-content:center;gap:36px;margin:18px 0;color:var(--muted);font-size:14px}
+.profile-stats b{color:var(--text);font-size:20px;display:block}
+.profile-stats span{cursor:pointer}
+.profile-form input,.profile-form textarea{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:16px;margin:8px 0;font-size:15px;font-family:inherit;outline:none}
+.profile-form textarea{border-radius:12px;min-height:70px;resize:vertical}
+.profile-form button{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;margin-top:12px}
+.btn-full{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:9999px;cursor:pointer;font-size:14px}
+.btn-follow{background:var(--text);color:var(--bg);border:none;padding:8px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
+.btn-follow.following{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.profile-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.empty-state{padding:50px 20px;text-align:center;color:var(--muted);font-size:15px}
+.admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
+.notif-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.notif-item:hover{background:var(--hover)}
+.img-preview{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.img-preview img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
+.img-preview .remove-img{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer}
+.admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center}
+.stat-card b{display:block;font-size:28px;color:var(--accent);margin-bottom:4px}
+.stat-card span{color:var(--muted);font-size:13px}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.lightbox.show{display:flex}
+.lightbox img{max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain}
+.lightbox-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer}
+.user-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.edit-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1500;display:none;align-items:center;justify-content:center;padding:20px}
+.edit-modal.show{display:flex}
+.edit-box{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:400px}
+.edit-box textarea{width:100%;min-height:100px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:12px;font-size:15px;font-family:inherit;resize:vertical;outline:none}
+.edit-actions{display:flex;gap:10px;margin-top:14px}
+.edit-actions button{flex:1;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;border:none}
+.single-post-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.single-post-header button{background:none;border:none;color:var(--text);cursor:pointer}
+.cta-box{margin:20px 16px;padding:20px;background:var(--card);border-radius:16px;text-align:center;border:1px solid var(--border)}
+.cta-box h3{margin-bottom:8px;font-size:18px}
+.cta-box p{color:var(--muted);margin-bottom:16px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<aside id="sidebar" class="sidebar">
+ <div class="sidebar-header">
+ <div class="logo-box">John Ross Social</div>
+ <button id="close-sidebar" onclick="closeSidebar()">&times;</button>
+ </div>
+ <nav class="sidebar-nav">
+ <a onclick="goHome();closeSidebar()"><i data-lucide="home"></i> Home</a>
+ <a onclick="goProfile();closeSidebar()"><i data-lucide="user"></i> Profile</a>
+ <a onclick="showEditProfile();closeSidebar()"><i data-lucide ="edit-3"></i> Edit Profile</a>
+ <a onclick="aiAssistant();closeSidebar()"><i data-lucide="bot"></i> AI Assistant</a>
+ <a onclick="settings();closeSidebar()"><i data-lucide="settings"></i> Settings</a>
+ <div id="adminMenuItem" style="display:none">
+ <hr>
+ <a class="admin-link" onclick="showAdminPanel();closeSidebar()"><i data-lucide="shield"></i> Admin Panel</a>
+ </div>
+ <hr>
+ <a onclick="logout();closeSidebar()"><i data-lucide="log-out"></i> Logout</a>
+ </nav>
+</aside>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+ <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+ <img id="lightboxImg" src="" alt="">
+</div>
+
+<div class="edit-modal" id="editModal">
+ <div class="edit-box">
+ <h3 style="margin-bottom:12px;font-weight:700">Επεξεργασία</h3>
+ <textarea id="editText"></textarea>
+ <div class="edit-actions">
+ <button style="background:var(--border);color:var(--text)" onclick="closeEditModal()">Ακύρωση</button>
+ <button style="background:var(--accent);color:#fff" onclick="saveEditPost()">Αποθήκευση</button>
+ </div>
+ </div>
+</div>
+
+<main class="app-container">
+ <header class="main-header">
+ <button class="menu-btn" onclick="openSidebar()"><i data-lucide="menu"></i></button>
+ <div class="logo-text">John Ross Social</div>
+ </header>
+ <div id="main"></div>
+ <nav class="bottom-nav" id="bottomNav" style="display:none">
+ <button class="nav-item" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
+ <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
+ <button class="nav-item" data-tab="notif" onclick="showTab('notif')">
+ <i data-lucide="bell"></i>
+ <span class="nav-badge" id="notifBadge"></span>
+ </button>
+ <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
+ </nav>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+ apiKey: "AIzaSyCPIg-aoWUhqOqO5hyHUd66HLcHPyC6e70",
+ authDomain: "studio-386569156-384ec.firebaseapp.com",
+ projectId: "studio-386569156-384ec",
+ storageBucket: "studio-386569156-384ec.firebasestorage.app",
+ messagingSenderId: "976658898078",
+ appId: "1:976658898078:web:6209be10508924e2116f8f"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let user = null;
+let tab = sessionStorage.getItem('jrs_tab') || 'home';
+let feedType = 'foryou';
+let lang = localStorage.getItem('jrs_lang') || 'en';
+let pendingImages = [];
+let viewingUid = null;
+let historyStack = [];
+let editingPostId = null;
+let singlePostId = null;
+const adminEmails = ['rossrossg7@gmail.com'];
+
+const T = {
+ en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register',mute:'Mute',unmute:'Unmute',block:'Block',unblock:'Unblock'},
+ el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή',mute:'Σίγαση',unmute:'Άρση σίγασης',block:'Αποκλεισμός',unblock:'Άρση αποκλεισμού'}
+};
+
+function t(k){return T[lang][k]||k}
+function isAdmin(email){return adminEmails.includes(email)}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function toggleLang(){lang=lang==='en'?'el':'en';localStorage.setItem('jrs_lang',lang);render()}
+function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark')}
+function loadTheme(){if(localStorage.getItem('theme')==='light')document.body.classList.add('light')}
+
+function openSidebar(){document.getElementById('sidebar').classList.add('show');document.getElementById('overlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').classList.remove('show')}
+function goHome(){singlePostId=null;showTab('home')}
+function goProfile(){viewingUid=null;singlePostId=null;showTab('profile')}
+function aiAssistant(){alert(t('comingSoon'))}
+function settings(){showSettings()}
+
+function showTab(name, fromBack){
+ if(!fromBack && tab !== name){
+ historyStack.push(tab);
+ if(historyStack.length > 8) historyStack.shift();
+ try{history.pushState({tab:name},'');}catch(e){}
+ }
+ tab = name;
+ sessionStorage.setItem('jrs_tab', name);
+ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+ render();
+ if(typeof lucide!=='undefined') lucide.createIcons();
 }
+
+window.addEventListener('popstate',()=>{
+ if(historyStack.length>0){const prev=historyStack.pop();showTab(prev,true);}
+ else showTab('home',true);
+});
+
+function setFeedType(type){
+ feedType=type;
+ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.feed===type));
+ renderHome(document.getElementById('main'));
+ if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function checkSharedPost(){
+ const params = new URLSearchParams(window.location.search);
+ const postId = params.get('post');
+ if(postId){singlePostId=postId;return true;}
+ return false;
+}
+
+auth.onAuthStateChanged(u=>{
+ user=u;
+ const adminItem=document.getElementById('adminMenuItem');
+ if(adminItem) adminItem.style.display=(u&&isAdmin(u.email))?'block':'none';
+ if(checkSharedPost()) renderSinglePost();
+ else render();
+ if(u) listenUnreadNotifs(u.uid);
+ if(typeof lucide!=='undefined') lucide.createIcons();
+});
+
+function login(){const e=document.getElementById('le').value,p=document.getElementById('lp').value;auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message))}
+function register(){
+ const e=document.getElementById('le').value,p=document.getElementById('lp').value;
+ if(!e||!p) return alert(lang==='el'?'Συμπλήρωσε email και κωδικό':'Fill email & password');
+ auth.createUserWithEmailAndPassword(e,p).then(cred=>{
+ return db.collection('users').doc(cred.user.uid).set({email:e,name:e.split('@')[0],bio:'',photo:'',followers:[],following:[],muted:[],blocked:[],createdAt:Date.now()});
+ }).catch(err=>alert(err.message));
+}
+function googleLogin(){
+ const provider=new firebase.auth.GoogleAuthProvider();
+ auth.signInWithPopup(provider).then(cred=>saveUserToDb(cred.user)).catch(err=>{
+ if(err.code==='auth/popup-blocked') auth.signInWithRedirect(provider);
+ else alert(err.message);
+ });
+}
+function saveUserToDb(u){db.collection('users').doc(u.uid).set({email:u.email,name:u.displayName||u.email.split('@')[0],bio:'',photo:u.photoURL||'',followers:[],following:[],muted:[],blocked:[],createdAt:Date.now()},{merge:true})}
+function logout(){auth.signOut();sessionStorage.removeItem('jrs_tab');historyStack=[];singlePostId=null}
+
+async function getUserName(uid){
+ try{const doc=await db.collection('users').doc(uid).get();if(doc.exists) return doc.data().name||'User';}catch(e){}
+ return 'User';
+}
+
+function compressImage(file){
+ return new Promise((resolve,reject)=>{
+ const reader=new FileReader();
+ reader.onload=e=>{
+ const img=new Image();
+ img.onload=()=>{
+ try{
+ const MAX=600;let w=img.width,h=img.height;
+ if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX}}
+ const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+ canvas.getContext('2d').drawImage(img,0,0,w,h);
+ let data=canvas.toDataURL('image/jpeg',0.42);
+ if(data.length>280000) data=canvas.toDataURL('image/jpeg',0.30);
+ resolve(data);
+ }catch(err){reject(err)}
+ };
+ img.onerror=()=>reject(new Error('load fail'));
+ img.src=e.target.result;
+ };
+ reader.onerror=()=>reject(new Error('read fail'));
+ reader.readAsDataURL(file);
+ });
+}
+
+async function handleImageSelect(e){
+ const file=e.target.files[0];if(!file) return;
+ pendingImages=[];
+ try{
+ if(file.size>25*1024*1024){alert(lang==='el'?'Πολύ μεγάλη':'Too large');return}
+ const compressed=await compressImage(file);
+ pendingImages=[compressed];
+ renderImagePreview();
+ }catch(err){alert(lang==='el'?'Δεν μπόρεσε να επεξεργαστεί.':'Could not process photo.');}
+ e.target.value='';
+}
+function renderImagePreview(){
+ const box=document.getElementById('imgPreview');if(!box) return;
+ box.innerHTML=pendingImages.map(src=>`<div style="position:relative;display:inline-block"><img src="${src}"><button class="remove-img" onclick="removeImage()">×</button></div>`).join('');
+}
+function removeImage(){pendingImages=[];renderImagePreview()}
+
+function postContent(){
+ const ta=document.getElementById('postText');
+ if(!ta.value.trim()&&pending Images.length===0) return;
+ db.collection('users').doc(user.uid).get().then(doc=>{
+ const u=doc.data()||{};
+ db.collection('posts').add({
+ uid:user.uid,name:u.name||user.displayName||user.email.split('@')[0],email:user.email,
+ photo:u.photo||user.photoURL||'',text:ta.value,images:pendingImages,
+ likes:0,likedBy:[],comments:[],createdAt:Date.now()
+ });
+ ta.value='';pendingImages=[];renderImagePreview();
+ });
+}
+
+function playLikeSound(){
+ try{
+ const ctx=new(window.AudioContext||window.webkitAudioContext)();
+ const osc=ctx.createOscillator();const gain=ctx.createGain();
+ osc.connect(gain);gain.connect(ctx.destination);osc.type='square';
+ osc.frequency.setValueAtTime(520,ctx.currentTime);
+ osc.frequency.exponentialRampToValueAtTime(780,ctx.currentTime+0.07);
+ osc.frequency.exponentialRampToValueAtTime(380,ctx.currentTime+0.14);
+ gain.gain.setValueAtTime(0.4,ctx.currentTime);
+ gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.18);
+ osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.18);
+ }catch(e){}
+}
+
+async function likePost(id,el){
+ if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
+ const ref=db.collection('posts').doc(id);
+ const doc=await ref.get();
+ const p=doc.data();
+ const liked=(p.likedBy||[]).includes(user.uid);
+ if(liked){
+ await ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+ }else{
+ await ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+ playLikeSound();
+ if(el){el.classList.add('like-pop');setTimeout(()=>el.classList.remove('like-pop'),350);}
+ if(p.uid!==user.uid){
+ const myName=await getUserName(user.uid);
+ db.collection('notifications').add({
+ userId:p.uid,senderId:user.uid,postId:id,type:'like',
+ text:myName+(lang==='el'?' έκανε like στη δημοσίευσή σου.':' liked your post.'),
+ read:false,timestamp:Date.now()
+ });
+ }
+ }
+ if(singlePostId) renderSinglePost();
+ else if(tab==='profile'){
+ setTimeout(()=>{const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);},280);
+ }
+}
+
+async function addComment(postId){
+ if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
+ const inp=document.getElementById('c_'+postId);if(!inp||!inp.value.trim()) return;
+ const doc=await db.collection('posts').doc(postId).get();
+ const p=doc.data();
+ await db.collection('posts').doc(postId).update({
+ comments:firebase.firestore.FieldValue.arrayUnion({name:user.displayName||user.email.split('@')[0],email:user.email,text:inp.value,time:Date.now()})
+ });
+ if(p.uid!==user.uid){
+ const myName=await getUserName(user.uid);
+ db.collection('notifications').add({
+ userId:p.uid,senderId:user.uid,postId:postId,type:'comment',
+ text:myName+(lang==='el'?' σχολίασε τη δημοσίευσή σου.':' commented on your post.'),
+ read:false,timestamp:Date.now()
+ });
+ }
+ inp.value='';
+ if(singlePostId) renderSinglePost();
+}
+
+function deletePost(id){
+ if(!confirm(t('delete')+'?')) return;
+ db.collection('posts').doc(id).delete();
+ document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+ if(singlePostId){singlePostId=null;goHome();}
+}
+
+function togglePostMenu(id){
+ event.stopPropagation();
+ document.querySelectorAll('.post-menu.show').forEach(m=>{if(m.id!=='pm_'+id) m.classList.remove('show');});
+ const m=document.getElementById('pm_'+id);if(m) m.classList.toggle('show');
+}
+
+function copyPostLink(postId){
+ const url=window.location.origin+window.location.pathname+'?post='+postId;
+ if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>alert(lang==='el'?'Ο σύνδεσμος αντιγράφηκε!':'Link copied!'));
+ else prompt('Copy:',url);
+ document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+}
+
+function openEditPost(postId,currentText){
+ editingPostId=postId;
+ document.getElementById('editText').value=currentText||'';
+ document.getElementById('editModal').classList.add('show');
+ document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');editingPostId=null;}
+function saveEditPost(){
+ const newText=document.getElementById('editText').value.trim();
+ if(!editingPostId) return;
+ db.collection('posts').doc(editingPostId).update({text:newText}).then(()=>{
+ closeEditModal();
+ if(singlePostId) renderSinglePost();
+ else if(tab==='home') loadFeed();
+ else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
+ });
+}
+
+async function toggleFollow(targetUid){
+ if(!user||targetUid===user.uid) return;
+ const myRef=db.collection('users').doc(user.uid);
+ const hisRef=db.collection('users').doc(targetUid);
+ const myDoc=await myRef.get();
+ const myData=myDoc.data()||{};
+ const following=myData.following||[];
+ if(following.includes(targetUid)){
+ await myRef.update({following:firebase.firestore.FieldValue.arrayRemove(targetUid)});
+ await hisRef.update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+ }else{
+ await myRef.update({following:firebase.firestore.FieldValue.arrayUnion(targetUid)});
+ await hisRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+ const myName=await getUserName(user.uid);
+ db.collection('notifications').add({
+ userId:targetUid,senderId:user.uid,type:'follow',
+ text:myName+(lang==='el'?' άρχισε να σε ακολουθεί.':' started following you.'),
+ read:false,timestamp:Date.now()
+ });
+ }
+ if(tab==='profile') renderProfile(document.getElementById('main'));
+ else render();
+}
+
+async function toggleMute(targetUid){
+ if(!user||targetUid===user.uid) return;
+ const myRef=db.collection('users').doc(user.uid);
+ const myDoc=await myRef.get();
+ const muted=(myDoc.data()||{}).muted||[];
+ if(muted.includes(targetUid)){
+ await myRef.update({muted:firebase.firestore.FieldValue.arrayRemove(targetUid)});
+ alert(lang==='el'?'Άρση σίγασης':'Unmuted');
+ }else{
+ await myRef.update({muted:firebase.firestore.FieldValue.arrayUnion(targetUid)});
+ alert(lang==='el'?'Ο χρήστης τέθηκε σε σίγαση':'User muted');
+ }
+ document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+ if(tab==='profile') renderProfile(document.getElementById('main'));
+}
+
+async function toggleBlock(targetUid){
+ if(!user||targetUid===user.uid) return;
+ if(!confirm(lang==='el'?'Θέλεις να αποκλείσεις αυτόν τον χρήστη;':'Block this user?')) return;
+ const myRef=db.collection('users').doc(user.uid);
+ const myDoc=await myRef.get();
+ const blocked=(myDoc.data()||{}).blocked||[];
+ if(blocked.includes(targetUid)){
+ await myRef.update({blocked:firebase.firestore.FieldValue.arrayRemove(targetUid)});
+ alert(lang==='el'?'Άρση αποκλεισμού':'Unblocked');
+ }else{
+ await myRef.update({
+ blocked:firebase.firestore.FieldValue.arrayUnion(targetUid),
+ following:firebase.firestore.FieldValue.arrayRemove(targetUid)
+ });
+ db.collection('users').doc(targetUid).update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+ alert(lang==='el'?'Ο χρήστης αποκλείστηκε':'User blocked');
+ }
+ document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+ if(tab==='profile') renderProfile(document.getElementById('main'));
+}
+
+function renderTextWithHashtags(text){return esc(text).replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>')}
+function searchHashtag(tag){showTab('search');setTimeout(()=>{const inp=document.querySelector('#main input');if(inp){inp.value='#'+tag;inp.dispatchEvent(new Event('input'));}},80)}
+function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('show')}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
+function openUserProfile(uid){if(!uid) return;viewingUid=uid;singlePostId=null;showTab('profile')}
+function openSharedPost(postId){singlePostId=postId;history.replaceState({},'',window.location.pathname);renderSinglePost()}
+
+function renderSinglePost(){
+ const m=document.getElementById('main');
+ document.getElementById('bottomNav').style.display=user?'flex':'none';
+ m.innerHTML=`
+ <div class="single-post-header">
+ <button onclick="singlePostId=null;history.replaceState({},'');goHome()"><i data-lucide="arrow-left" style="width:22px;height:22px"></i></button>
+ <div style="font-weight:700;font-size:17px">Post</div>
+ </div>
+ <div id="singlePostContent"><div class="empty-state">Φόρτωση...</div></div>
+ ${!user?`<div class="cta-box"><h3>${t('joinUs')}</h3><p>${t('joinDesc')}</p><button class="btn-full" style="width:100%" onclick="singlePostId=null;history.replaceState({},'');showTab('home')">${t('signIn')}</button></div>`:''}`;
+ db.collection('posts').doc(singlePostId).get().then(doc=>{
+ if(!doc.exists){document.getElementById('singlePostContent').innerHTML='<div class="empty-state">Το ποστ δεν βρέθηκε</div>';return;}
+ renderPosts({empty:false,docs:[doc]},document.getElementById('singlePostContent'));
+ }).catch(()=>{document.getElementById('singlePostContent').innerHTML='<div class="empty-state">Σφάλμα</div>';});
+ if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function render(){
+ if(singlePostId){renderSinglePost();return;}
+ const m=document.getElementById('main');
+ if(!user){
+ document.getElementById('bottomNav').style.display='none';
+ m.innerHTML=`<div class="auth-container"><div style="font-size:64px;margin-bottom:16px">👋</div><h2>John Ross Social</h2><p class="slogan">${t('slogan')}</p><div style="max-width:340px;margin:0 auto"><input id="le" placeholder="${t('email')}" type="email"><input id="lp" placeholder="${t('password')}" type="password"><button onclick="login()">${t('login')}</button><button class="btn-o" onclick="register()">${t('register')}</button><button class="btn-o" onclick="googleLogin()"><i data-lucide="chrome" style="width:16px;height:16px;vertical-align:middle"></i> ${t('google')}</button></div></div>`;
+ if(typeof lucide!=='undefined') lucide.createIcons();return;
+ }
+ document.getElementById('bottomNav').style.display='flex';
+ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+ if(tab==='home') renderHome(m);
+ else if(tab==='search') renderSearch(m);
+ else if(tab==='notif') renderNotifs(m);
+ else if(tab==='profile') renderProfile(m);
+ else if(tab==='edit') showEditProfile();
+ else if(tab==='admin') showAdminPanel();
+ else renderHome(m);
+ if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function renderHome(m){
+ pendingImages=[];
+ m.innerHTML=`<div style="padding:14px 16px;border-bottom:1px solid var(--border)"><textarea id="postText" placeholder="${t('placeholder')}" style="width:100%;background:transparent;border:none;color:var(--text);font-size:17px;resize:none;min-height:60px;font-family:inherit;outline:none"></textarea><div id="imgPreview" class="img-preview"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div><input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)"><button onclick="document.getElementById('imgInput').click()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:6px"><i data-lucide="image" style="width:22px;height:22px"></i></button></div><button class="btn-full" style="width:auto;padding:8px 22px;margin:0" onclick="postContent()">${t('post')}</button></div></div><div class="top-tabs"><button class="tab-btn ${feedType==='foryou'?'active':''}" data-feed="foryou" onclick="setFeedType('foryou')">${t('forYou')}</button><button class="tab-btn ${feedType==='following'?'active':''}" data-feed="following" onclick="setFeedType('following')">${t('following')}</button></div><div id="feed"></div>`;
+ loadFeed();
+ if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function loadFeed(){
+ const f=document.getElementById('feed');if(!f) return;
+ if(feedType==='following'){
+ db.collection('users').doc(user.uid).get().then(doc=>{
+ const following=(doc.data()||{}).following||[];
+ if(following.length===0){f.innerHTML='<div class="empty-state">'+t('noFollowing')+'</div>';return;}
+ db.collection('posts').where('uid','in',following.slice(0,10)).orderBy('createdAt','desc').limit(40).onSnapshot(snap=>renderPosts(snap,f));
+ });
+ }else{
+ db.collection('posts').orderBy('createdAt','desc').limit(40).onSnapshot(snap=>renderPosts(snap,f));
+ }
+}
+
+function renderPosts(snap,f){
+ if(!f) return;
+ if(snap.empty){f.innerHTML='<div class="empty-state">'+t('noPosts')+'</div>';return;}
+ f.innerHTML=snap.docs.map(d=>{
+ const p=d.data(),postId=d.id;
+ const isPostAdmin=isAdmin(p.email);
+ const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
+ const isOwner=user&&user.uid===p.uid;
+ const canEdit=isOwner;
+ const canDelete=isOwner||(user&&isAdmin(user.email));
+ const isLiked=user&&(p.likedBy||[]).includes(user.uid);
+ const images=p.images||[];
+ const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
+ const comments=(p.comments||[]).map(c=>`<div class="comment"><div class="comment-avatar">👤</div><div class="comment-info"><div class="comment-name">${esc(c.name)}</div><div class="comment-text">${esc(c.text)}</div></div></div>`).join('');
+ const avatar=p.photo?`<div class="avatar" style="background-image:url('${p.photo}')" onclick="openUserProfile('${p.uid}')"></div>`:`< 
