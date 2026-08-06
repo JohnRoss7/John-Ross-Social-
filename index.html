@@ -94,11 +94,11 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .profile-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
 .empty-state{padding:50px 20px;text-align:center;color:var(--muted);font-size:15px}
 .admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
-.notif-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:10px}
+.notif-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:10px;transition:background .2s}
 .notif-item:hover{background:var(--hover)}
-.notif-item.unread{background:rgba(29,155,240,0.12);border-left:3px solid var(--blue)}
+.notif-item.unread{background:rgba(29,155,240,0.15)!important;border-left:4px solid var(--blue)}
 .notif-content{flex:1}
-.notif-dot{font-size:12px;margin-top:3px;flex-shrink:0}
+.notif-dot{font-size:13px;margin-top:2px;flex-shrink:0}
 .img-preview{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .img-preview img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
 .img-preview .remove-img{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer}
@@ -137,6 +137,7 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
     <a onclick="showEditProfile();closeSidebar()"><i data-lucide="edit-3"></i> Edit Profile</a>
     <a onclick="aiAssistant();closeSidebar()"><i data-lucide="bot"></i> AI Assistant</a>
     <a onclick="settings();closeSidebar()"><i data-lucide="settings"></i> Settings</a>
+    <a onclick="clearCache();closeSidebar()"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</a>
     <div id="adminMenuItem" style="display:none">
       <hr>
       <a class="admin-link" onclick="showAdminPanel();closeSidebar()"><i data-lucide="shield"></i> Admin Panel</a>
@@ -226,6 +227,14 @@ function goHome(){singlePostId=null;showTab('home')}
 function goProfile(){viewingUid=null;singlePostId=null;showTab('profile')}
 function aiAssistant(){alert(t('comingSoon'))}
 function settings(){showSettings()}
+
+function clearCache(){
+  if(confirm(lang==='el'?'Θέλεις να καθαρίσεις την προσωρινή μνήμη; Η εφαρμογή θα επανεκκινήσει.':'Clear cache? The app will reload.')){
+    localStorage.clear();
+    sessionStorage.clear();
+    location.reload(true);
+  }
+}
 
 function showTab(name, fromBack){
   if(!fromBack && tab !== name){
@@ -664,7 +673,7 @@ function renderNotifs(m){
       if(n.postId) clickAction += `openSharedPost('${n.postId}')`;
       else if(n.senderId) clickAction += `openUserProfile('${n.senderId}')`;
       
-      const isUnread = n.read === false;
+      const isUnread = (n.read === false || n.read === undefined);
       const unreadClass = isUnread ? 'unread' : '';
       const dot = isUnread ? '<span class="notif-dot">🔴</span>' : '';
 
@@ -774,7 +783,7 @@ function showAdminPanel(){
       let click='';
       if(n.postId) click=`onclick="openSharedPost('${n.postId}')"`;
       else if(n.senderId) click=`onclick="openUserProfile('${n.senderId}')"`;
-      const isUnread = n.read === false;
+      const isUnread = (n.read === false || n.read === undefined);
       const unreadClass = isUnread ? 'unread' : '';
       const dot = isUnread ? '<span class="notif-dot">🔴</span>' : '';
       html+=`
