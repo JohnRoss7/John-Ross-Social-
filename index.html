@@ -95,6 +95,8 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
 .notif-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer}
 .notif-item:hover{background:var(--hover)}
+.notif-item.unread{background:rgba(220,38,38,0.13);border-left:4px solid var(--accent)}
+.notif-item.unread .handle{color:var(--accent)}
 .img-preview{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
 .img-preview img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
 .img-preview .remove-img{position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:14px;cursor:pointer}
@@ -640,24 +642,26 @@ function renderNotifs(m){
   db.collection('notifications').where('userId','==',user.uid).limit(50).get().then(async snap=>{
     if(snap.empty){m.innerHTML='<div class="empty-state">'+t('noNotifs')+'</div>';return;}
     const docs=snap.docs.sort((a,b)=>(b.data().timestamp||0)-(a.data().timestamp||0));
-    docs.forEach(doc=>{if(!doc.data().read) db.collection('notifications').doc(doc.id).update({read:true}).catch(()=>{});});
 
     let html='';
     for(const d of docs){
       const n=d.data();
       let displayText=n.text||'';
       if(n.senderId){
-        try{
-          const realName=await getUserName(n.senderId);
-          displayText=displayText.replace(/^[^ ]+/,realName);
-        }catch(e){}
+        try{const realName=await getUserName(n.senderId);displayText=displayText.replace(/^[^ ]+/,realName);}catch(e){}
       }
       let click='';
       if(n.postId) click=`onclick="openSharedPost('${n.postId}')"`;
       else if(n.senderId) click=`onclick="openUserProfile('${n.senderId}')"`;
-      html+=`<div class="notif-item" ${click}><div style="font-size:15px;margin-bottom:4px">${esc(displayText)}</div><div class="handle">${new Date(n.timestamp||Date.now()).toLocaleString()}</div></div>`;
+      const unreadClass = n.read === false ? 'unread' : '';
+      html+=`<div class="notif-item ${unreadClass}" ${click}><div style="font-size:15px;margin-bottom:4px">${esc(displayText)}</div><div class="handle">${new Date(n.timestamp||Date.now()).toLocaleString()}</div></div>`;
     }
     m.innerHTML=html;
+
+    // Μαρκάρουμε ως διαβασμένες
+    docs.forEach(doc=>{
+      if(!doc.data().read) db.collection('notifications').doc(doc.id).update({read:true}).catch(()=>{});
+    });
   }).catch(()=>{m.innerHTML='<div class="empty-state">Σφάλμα</div>';});
 }
 
@@ -754,7 +758,8 @@ function showAdminPanel(){
       let click='';
       if(n.postId) click=`onclick="openSharedPost('${n.postId}')"`;
       else if(n.senderId) click=`onclick="openUserProfile('${n.senderId}')"`;
-      html+=`<div class="notif-item" ${click}><div style="font-size:14px">${esc(displayText)}</div><div class="handle">${new Date(n.timestamp).toLocaleString()}</div></div>`;
+      const unreadClass = n.read === false ? 'unread' : '';
+      html+=`<div class="notif-item ${unreadClass}" ${click}><div style="font-size:14px">${esc(displayText)}</div><div class="handle">${new Date(n.timestamp).toLocaleString()}</div></div>`;
     }
     act.innerHTML=html;
   });
