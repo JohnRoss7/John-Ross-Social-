@@ -58,12 +58,14 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .comment{padding:12px 0;display:flex;gap:10px;position:relative}
 .comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .comment-info{flex:1;min-width:0}
-.comment-name{font-weight:700;font-size:13px}
+.comment-name{font-weight:700;font-size:13px;cursor:pointer}
+.comment-name:hover{text-decoration:underline}
 .comment-text{font-size:14px;margin-top:2px;line-height:1.4;word-wrap:break-word}
-.comment-actions{display:flex;align-items:center;gap:16px;margin-top:8px;color:var(--muted);font-size:12px}
-.comment-actions span{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
-.comment-like.liked{color:var(--accent)!important}
-.comment-like.liked svg{fill:var(--accent)!important;color:var(--accent)!important;stroke:var(--accent)!important}
+.comment-actions{display:flex;align-items:center;gap:12px;margin-top:8px;color:var(--muted);font-size:12px}
+.comment-actions span,.comment-actions button{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.comment-like-btn{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s}
+.comment-like-btn.liked{background:rgba(220,38,38,.15);border-color:var(--accent);color:var(--accent)!important}
+.comment-like-btn.liked svg{fill:var(--accent)!important;color:var(--accent)!important;stroke:var(--accent)!important}
 .comment-menu-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;margin-left:auto}
 .comment-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:140px;z-index:40;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 .comment-menu.show{display:block}
@@ -134,7 +136,11 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .cta-box p{color:var(--muted);margin-bottom:16px;font-size:14px}
 .repost-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;font-weight:500}
 .repost-label i{width:14px;height:14px}
-#mentionDropdown{display:none;position:absolute;left:0;right:0;bottom:100%;margin-bottom:6px;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:180px;overflow-y:auto;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.quoted-box{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;background:var(--hover)}
+.quoted-box .q-name{font-weight:700;font-size:13px;cursor:pointer}
+.quoted-box .q-text{font-size:14px;margin-top:4px;color:var(--text)}
+.quoted-box img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer}
+#mentionDropdown{display:none;position:fixed;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:180px;overflow-y:auto;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 #mentionDropdown .mention-item{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border)}
 #mentionDropdown .mention-item:hover{background:var(--hover)}
 #mentionDropdown .mention-item:last-child{border-bottom:none}
@@ -243,6 +249,7 @@ let tab = sessionStorage.getItem('jrs_tab') || 'home';
 let feedType = 'foryou';
 let lang = localStorage.getItem('jrs_lang') || 'en';
 let pendingImages = [];
+let pendingQuote = null; // για παράθεση με φωτογραφία
 let viewingUid = null;
 let historyStack = [];
 let editingPostId = null;
@@ -296,26 +303,22 @@ function showTab(name, fromBack){
 }
 
 window.addEventListener('popstate', (e) => {
-  // Κλείσιμο share modal
   const shareModal = document.getElementById('shareModal');
   if(shareModal && shareModal.classList.contains('show')){
     closeShareModal();
     try{history.pushState({tab, single:singlePostId},'');}catch(err){}
     return;
   }
-  // Single post → πίσω στο feed
   if(singlePostId){
     singlePostId = null;
     try{history.replaceState({tab},'');}catch(err){}
     render();
     return;
   }
-  // Tab history
   if(historyStack.length > 0){
     const prev = historyStack.pop();
     showTab(prev, true);
   } else {
-    // Αποφυγή εξόδου από την εφαρμογή
     try{history.pushState({tab:'home'},'');}catch(err){}
     showTab('home', true);
   }
@@ -433,18 +436,35 @@ async function notifyMentions(text, fromUid, fromName, postId){
 
 function postContent(){
   const ta=document.getElementById('postText');
-  if(!ta.value.trim()&&pendingImages.length===0) return;
+  if(!ta.value.trim()&&pendingImages.length===0 && !pendingQuote) return;
   db.collection('users').doc(user.uid).get().then(doc=>{
     const u=doc.data()||{};
     const name = u.name||user.displayName||user.email.split('@')[0];
-    db.collection('posts').add({
+    const postData = {
       uid:user.uid,name:name,email:user.email,
       photo:u.photo||user.photoURL||'',text:ta.value,images:pendingImages,
-      likes:0,likedBy:[],comments:[],createdAt:Date.now(),isRepost:false
-    }).then(ref=>{
+      likes:0,likedBy:[],comments:[],createdAt:Date.now(),isRepost:false,isQuote:false
+    };
+    // Αν είναι παράθεση
+    if(pendingQuote){
+      postData.isQuote = true;
+      postData.originalPostId = pendingQuote.originalPostId;
+      postData.original = pendingQuote.original;
+    }
+    db.collection('posts').add(postData).then(ref=>{
       notifyMentions(ta.value, user.uid, name, ref.id);
+      if(pendingQuote && pendingQuote.original && pendingQuote.original.uid && pendingQuote.original.uid !== user.uid){
+        db.collection('notifications').add({
+          userId: pendingQuote.original.uid, senderId: user.uid, postId: ref.id, type:'quote',
+          text: name + (lang==='el'?' παρέθεσε τη δημοσίευσή σου.':' quoted your post.'),
+          read:false, timestamp:Date.now()
+        });
+      }
     });
-    ta.value='';pendingImages=[];renderImagePreview();
+    ta.value='';pendingImages=[];pendingQuote=null;renderImagePreview();
+    // Καθαρισμός quote preview αν υπάρχει
+    const qp = document.getElementById('quotePreview');
+    if(qp) qp.innerHTML='';
   });
 }
 
@@ -495,7 +515,6 @@ async function addComment(postId){
   const text = inp.value.trim();
   const doc=await db.collection('posts').doc(postId).get();
   const p=doc.data();
-  // Πάντα παίρνουμε το όνομα από το users collection
   const myDoc = await db.collection('users').doc(user.uid).get();
   const myName = (myDoc.data()||{}).name || user.displayName || user.email.split('@')[0];
   const commentObj = {
@@ -527,6 +546,8 @@ async function addComment(postId){
 
 async function likeComment(postId, commentId, el){
   if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
+  event && event.preventDefault();
+  event && event.stopPropagation();
   const ref = db.collection('posts').doc(postId);
   const doc = await ref.get();
   if(!doc.exists) return;
@@ -545,10 +566,7 @@ async function likeComment(postId, commentId, el){
     c.likedBy = [...likedBy, user.uid];
     c.likes = (c.likes||0) + 1;
     playLikeSound();
-    if(el){
-      el.classList.add('liked','like-pop');
-      setTimeout(()=>el.classList.remove('like-pop'),350);
-    }
+    if(el){el.classList.add('like-pop');setTimeout(()=>el.classList.remove('like-pop'),350);}
     if(c.uid && c.uid !== user.uid){
       const myName = await getUserName(user.uid);
       db.collection('notifications').add({
@@ -560,15 +578,13 @@ async function likeComment(postId, commentId, el){
   }
   comments[idx] = c;
   await ref.update({comments: comments});
-  // Άμεσο visual update
   if(el){
     el.classList.toggle('liked', !isLiked);
-    const countSpan = el.childNodes[el.childNodes.length-1];
-    // ανανεώνουμε τον αριθμό
+    const num = el.querySelector('.like-count');
+    if(num) num.textContent = c.likes;
   }
   if(singlePostId) renderSinglePost();
   else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
-  // Στο home το onSnapshot θα ανανεώσει
 }
 
 async function deleteComment(postId, commentId){
@@ -643,7 +659,7 @@ function focusComment(postId){
   if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
 }
 
-/* ===== MENTION AUTOCOMPLETE ===== */
+/* ===== MENTION AUTOCOMPLETE + OPEN PROFILE ===== */
 function hideMentionDropdown(){
   const dd = document.getElementById('mentionDropdown');
   if(dd) dd.style.display = 'none';
@@ -665,9 +681,7 @@ function showMentionDropdown(input, users){
       <div><div style="font-weight:700;font-size:13px">${esc(u.name)}</div><div class="handle" style="font-size:12px">@${esc(handle)}</div></div>
     </div>`;
   }).join('');
-  // Τοποθέτηση πάνω από το input
   const rect = input.getBoundingClientRect();
-  dd.style.position = 'fixed';
   dd.style.left = Math.max(8, rect.left) + 'px';
   dd.style.width = Math.min(300, rect.width) + 'px';
   dd.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
@@ -681,7 +695,6 @@ function insertMention(handle){
   const inp = activeMentionInput;
   const val = inp.value;
   const cursor = inp.selectionStart || val.length;
-  // Βρίσκουμε το τελευταίο @ πριν τον κέρσορα
   const before = val.substring(0, cursor);
   const after = val.substring(cursor);
   const atIdx = before.lastIndexOf('@');
@@ -710,7 +723,22 @@ function handleMentionInput(inp){
   }).catch(()=>hideMentionDropdown());
 }
 
-// Event delegation για mention
+function openMentionProfile(handle){
+  if(!handle) return;
+  const h = handle.toLowerCase().replace(/\s+/g,'');
+  db.collection('users').limit(40).get().then(snap=>{
+    for(const d of snap.docs){
+      const u = d.data();
+      const n = (u.name||'').toLowerCase().replace(/\s+/g,'');
+      if(n === h){
+        openUserProfile(d.id);
+        return;
+      }
+    }
+    alert(lang==='el'?'Ο χρήστης δεν βρέθηκε':'User not found');
+  });
+}
+
 document.addEventListener('input', e=>{
   const t = e.target;
   if(t && (t.id === 'postText' || (t.id && t.id.startsWith('c_')))){
@@ -814,19 +842,38 @@ async function doRepost(){
 
 function quoteFromShare(){
   closeShareModal();
-  singlePostId=null;
-  showTab('home');
-  setTimeout(()=>{
-    const ta=document.getElementById('postText');
-    if(ta){
-      const q = lang==='el'
-        ? `Παράθεση από @${(sharePostName||'user').toLowerCase().replace(/\s+/g,'')}:\n« ${sharePostText} »\n\n`
-        : `Quote from @${(sharePostName||'user').toLowerCase().replace(/\s+/g,'')}:\n« ${sharePostText} »\n\n`;
-      ta.value=q;
-      ta.focus();
-      ta.setSelectionRange(ta.value.length,ta.value.length);
-    }
-  },350);
+  if(!sharePostId) return;
+  db.collection('posts').doc(sharePostId).get().then(doc=>{
+    if(!doc.exists) return;
+    const p = doc.data();
+    const original = (p.isRepost && p.original) ? p.original : {
+      uid: p.uid, name: p.name, photo: p.photo||'', text: p.text||'', images: p.images||[], createdAt: p.createdAt
+    };
+    const originalPostId = p.isRepost ? (p.originalPostId||sharePostId) : sharePostId;
+    pendingQuote = { originalPostId, original };
+    singlePostId = null;
+    showTab('home');
+    setTimeout(()=>{
+      const ta = document.getElementById('postText');
+      if(ta){
+        ta.value = '';
+        ta.placeholder = lang==='el' ? 'Πρόσθεσε ένα σχόλιο στην παράθεση...' : 'Add a comment to your quote...';
+        ta.focus();
+      }
+      // Εμφάνιση preview της παράθεσης (κείμενο + φωτογραφία)
+      const box = document.getElementById('imgPreview');
+      if(box){
+        let html = `<div id="quotePreview" class="quoted-box" style="width:100%;margin-bottom:8px">
+          <div class="q-name">@${esc((original.name||'user').toLowerCase().replace(/\s+/g,''))}</div>
+          <div class="q-text">${esc((original.text||'').substring(0,180))}${(original.text||'').length>180?'...':''}</div>`;
+        if(original.images && original.images[0]){
+          html += `<img src="${original.images[0]}" style="max-height:120px">`;
+        }
+        html += `</div>`;
+        box.innerHTML = html;
+      }
+    }, 350);
+  });
 }
 
 function sharePost(postId){openShareModal(postId);}
@@ -895,7 +942,7 @@ async function toggleBlock(targetUid){
 function renderTextWithHashtags(text){
   return esc(text)
     .replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>')
-    .replace(/@(\w+)/g,'<span class="mention">@$1</span>');
+    .replace(/@(\w+)/g,'<span class="mention" onclick="openMentionProfile(\'$1\')">@$1</span>');
 }
 function searchHashtag(tag){showTab('search');setTimeout(()=>{const inp=document.querySelector('#main input');if(inp){inp.value='#'+tag;inp.dispatchEvent(new Event('input'));}},80)}
 function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('show')}
@@ -971,38 +1018,56 @@ function renderPosts(snap,f){
   f.innerHTML=snap.docs.map(d=>{
     const p=d.data(),postId=d.id;
     const isRepost = !!p.isRepost && p.original;
-    const display = isRepost ? p.original : p;
+    const isQuote = !!p.isQuote && p.original;
+    const display = (isRepost || isQuote) ? p.original : p;
     const isPostAdmin=isAdmin(display.email || p.email);
     const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
     const isOwner=user&&user.uid===p.uid;
     const canEdit=isOwner && !isRepost;
     const canDelete=isOwner||(user&&isAdmin(user.email));
     const isLiked=user&&(p.likedBy||[]).includes(user.uid);
-    const images=display.images||[];
+    const images = (!isRepost && !isQuote) ? (p.images||[]) : [];
     const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
-    
+
+    // Quote box (κείμενο + φωτογραφία)
+    let quoteHtml = '';
+    if(isQuote && p.original){
+      const o = p.original;
+      const oImg = (o.images && o.images[0]) ? `<img src="${o.images[0]}" onclick="openLightbox('${o.images[0]}')">` : '';
+      quoteHtml = `<div class="quoted-box">
+        <div class="q-name" onclick="openUserProfile('${o.uid||''}')">@${esc((o.name||'user').toLowerCase().replace(/\s+/g,''))}</div>
+        <div class="q-text">${renderTextWithHashtags(o.text||'')}</div>
+        ${oImg}
+      </div>`;
+    }
+
+    // Repost images
+    let repostImgHtml = '';
+    if(isRepost && p.original && p.original.images && p.original.images[0]){
+      repostImgHtml = `<div class="post-images"><img src="${p.original.images[0]}" onclick="openLightbox('${p.original.images[0]}')"></div>`;
+    }
+
     const commentsHtml = (p.comments||[]).map(c=>{
       const cid = c.id || ('old_'+ (c.time||0));
       const cLiked = user && (c.likedBy||[]).includes(user.uid);
       const canDelComment = user && (user.uid === c.uid || user.uid === p.uid || isAdmin(user.email));
-      // Εμφάνιση ονόματος – αν είναι email, δείχνουμε μόνο το μέρος πριν το @
       let displayName = c.name || 'User';
       if(displayName.includes('@') && displayName.includes('.')) displayName = displayName.split('@')[0];
       return `<div class="comment">
         <div class="comment-avatar">👤</div>
         <div class="comment-info">
-          <div class="comment-name">${esc(displayName)}</div>
+          <div class="comment-name" onclick="openUserProfile('${c.uid||''}')">${esc(displayName)}</div>
           <div class="comment-text">${renderTextWithHashtags(c.text||'')}</div>
           <div class="comment-actions">
             <span onclick="replyToComment('${postId}','${esc(displayName)}')"><i data-lucide="message-circle" style="width:13px;height:13px"></i> ${t('reply')}</span>
-            <span class="comment-like ${cLiked?'liked':''}" onclick="likeComment('${postId}','${cid}',this)">
-              <i data-lucide="heart" style="width:13px;height:13px"></i> <span>${c.likes||0}</span>
-            </span>
+            <button type="button" class="comment-like-btn ${cLiked?'liked':''}" onclick="likeComment('${postId}','${cid}',this)">
+              <i data-lucide="heart" style="width:13px;height:13px"></i> <span class="like-count">${c.likes||0}</span>
+            </button>
             ${canDelComment ? `
             <div style="position:relative;margin-left:auto">
-              <button class="comment-menu-btn" onclick="toggleCommentMenu('${cid}')"><i data-lucide="more-horizontal" style="width:14px;height:14px"></i></button>
+              <button type="button" class="comment-menu-btn" onclick="toggleCommentMenu('${cid}')"><i data-lucide="more-horizontal" style="width:14px;height:14px"></i></button>
               <div class="comment-menu" id="cm_${cid}">
-                <button onclick="deleteComment('${postId}','${cid}')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> ${t('delete')}</button>
+                <button type="button" onclick="deleteComment('${postId}','${cid}')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> ${t('delete')}</button>
               </div>
             </div>` : ''}
           </div>
@@ -1027,11 +1092,21 @@ function renderPosts(snap,f){
       ? `<div class="repost-label"><i data-lucide="repeat-2"></i> ${esc(p.name||'User')} ${t('reposted')}</div>` 
       : '';
 
+    // Για κανονικό ποστ / quote δείχνουμε το όνομα του συγγραφέα του post (όχι του original)
+    const headerName = isRepost ? (display.name||'User') : (p.name||'User');
+    const headerUid = isRepost ? (display.uid||p.uid) : p.uid;
+    const headerPhoto = isRepost ? (display.photo||'') : (p.photo||'');
+    const headerAvatar = headerPhoto
+      ? `<div class="avatar" style="background-image:url('${headerPhoto}')" onclick="openUserProfile('${headerUid}')"></div>`
+      : `<div class="avatar" onclick="openUserProfile('${headerUid}')">👤</div>`;
+
     return `<div class="post">
       ${repostLabel}
-      <div class="post-header">${avatar}<div class="post-info"><div class="username" onclick="openUserProfile('${display.uid||p.uid}')">${esc(display.name||'User')} ${adminBadge}</div><div class="handle">@${esc((display.name||'user').toLowerCase().replace(/\s+/g,''))} · ${new Date(display.createdAt||p.createdAt).toLocaleString()}</div></div>
+      <div class="post-header">${isRepost ? avatar : headerAvatar}<div class="post-info"><div class="username" onclick="openUserProfile('${isRepost ? (display.uid||p.uid) : p.uid}')">${esc(isRepost ? (display.name||'User') : (p.name||'User'))} ${adminBadge}</div><div class="handle">@${esc(((isRepost?display.name:p.name)||'user').toLowerCase().replace(/\s+/g,''))} · ${new Date((isRepost?display.createdAt:p.createdAt)||Date.now()).toLocaleString()}</div></div>
       <div class="post-menu-container"><button class="menu-btn-icon" onclick="togglePostMenu('${postId}')"><i data-lucide="more-horizontal"></i></button><div class="post-menu" id="pm_${postId}">${menuButtons}</div></div></div>
-      <div class="post-content">${renderTextWithHashtags(display.text||'')}</div>${imgHtml}
+      <div class="post-content">${renderTextWithHashtags(isRepost ? (display.text||'') : (p.text||''))}</div>
+      ${isRepost ? repostImgHtml : imgHtml}
+      ${quoteHtml}
       <div class="post-actions">
         <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${postId}',this)"><i data-lucide="thumbs-up" style="width:16px;height:16px"></i> ${p.likes||0}</span>
         <span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="focusComment('${postId}')"><i data-lucide="message-circle" style="width:16px;height:16px"></i> ${(p.comments||[]).length}</span>
