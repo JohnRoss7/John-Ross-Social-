@@ -46,6 +46,7 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .post-images{margin:10px 0;border-radius:12px;overflow:hidden}
 .post-images img{width:100%;max-height:380px;object-fit:cover;border-radius:12px;cursor:pointer}
 .hash{color:#1d9bf0;cursor:pointer}
+.mention{color:var(--accent)!important;font-weight:600;cursor:pointer}
 .post-actions{display:flex;gap:28px;color:var(--muted);font-size:13px;margin-top:10px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
 .like-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid transparent;transition:all .2s}
@@ -55,20 +56,20 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .like-pop{animation:likePop .3s ease}
 .comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 .comment{padding:12px 0;display:flex;gap:10px;position:relative}
-.comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center}
+.comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .comment-info{flex:1;min-width:0}
 .comment-name{font-weight:700;font-size:13px}
 .comment-text{font-size:14px;margin-top:2px;line-height:1.4;word-wrap:break-word}
 .comment-actions{display:flex;align-items:center;gap:16px;margin-top:8px;color:var(--muted);font-size:12px}
 .comment-actions span{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
-.comment-like.liked{color:var(--accent)}
-.comment-like.liked svg{fill:var(--accent);color:var(--accent)}
+.comment-like.liked{color:var(--accent)!important}
+.comment-like.liked svg{fill:var(--accent)!important;color:var(--accent)!important;stroke:var(--accent)!important}
 .comment-menu-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;margin-left:auto}
 .comment-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:140px;z-index:40;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 .comment-menu.show{display:block}
 .comment-menu button{width:100%;background:none;border:none;color:var(--text);padding:11px 14px;text-align:left;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
 .comment-menu button:hover{background:var(--accent);color:#fff}
-.comment-input-row{display:flex;gap:8px;margin-top:12px}
+.comment-input-row{display:flex;gap:8px;margin-top:12px;position:relative}
 .comment-input-row input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9999px;font-size:14px;outline:none}
 .post-menu-container{position:relative;margin-left:auto}
 .menu-btn-icon{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px}
@@ -133,6 +134,10 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .cta-box p{color:var(--muted);margin-bottom:16px;font-size:14px}
 .repost-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;font-weight:500}
 .repost-label i{width:14px;height:14px}
+#mentionDropdown{display:none;position:absolute;left:0;right:0;bottom:100%;margin-bottom:6px;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:180px;overflow-y:auto;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+#mentionDropdown .mention-item{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border)}
+#mentionDropdown .mention-item:hover{background:var(--hover)}
+#mentionDropdown .mention-item:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -246,6 +251,7 @@ let sharePostId = null;
 let sharePostUrl = '';
 let sharePostText = '';
 let sharePostName = '';
+let activeMentionInput = null;
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
@@ -279,18 +285,40 @@ function showTab(name, fromBack){
   if(!fromBack && tab !== name){
     historyStack.push(tab);
     if(historyStack.length > 8) historyStack.shift();
-    try{history.pushState({tab:name},'');}catch(e){}
+    try{history.pushState({tab:name, single:null},'');}catch(e){}
   }
   tab = name;
+  singlePostId = null;
   sessionStorage.setItem('jrs_tab', name);
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   render();
   if(typeof lucide!=='undefined') lucide.createIcons();
 }
 
-window.addEventListener('popstate',()=>{
-  if(historyStack.length>0){const prev=historyStack.pop();showTab(prev,true);}
-  else showTab('home',true);
+window.addEventListener('popstate', (e) => {
+  // Κλείσιμο share modal
+  const shareModal = document.getElementById('shareModal');
+  if(shareModal && shareModal.classList.contains('show')){
+    closeShareModal();
+    try{history.pushState({tab, single:singlePostId},'');}catch(err){}
+    return;
+  }
+  // Single post → πίσω στο feed
+  if(singlePostId){
+    singlePostId = null;
+    try{history.replaceState({tab},'');}catch(err){}
+    render();
+    return;
+  }
+  // Tab history
+  if(historyStack.length > 0){
+    const prev = historyStack.pop();
+    showTab(prev, true);
+  } else {
+    // Αποφυγή εξόδου από την εφαρμογή
+    try{history.pushState({tab:'home'},'');}catch(err){}
+    showTab('home', true);
+  }
 });
 
 function setFeedType(type){
@@ -428,7 +456,7 @@ function playLikeSound(){
     osc.frequency.setValueAtTime(520,ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(780,ctx.currentTime+0.07);
     osc.frequency.exponentialRampToValueAtTime(380,ctx.currentTime+0.14);
-    gain.gain.setValueAtTime(0.4,ctx.currentTime);
+    gain.gain.setValueAtTime(0.35,ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.18);
     osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.18);
   }catch(e){}
@@ -467,7 +495,9 @@ async function addComment(postId){
   const text = inp.value.trim();
   const doc=await db.collection('posts').doc(postId).get();
   const p=doc.data();
-  const myName = user.displayName || user.email.split('@')[0];
+  // Πάντα παίρνουμε το όνομα από το users collection
+  const myDoc = await db.collection('users').doc(user.uid).get();
+  const myName = (myDoc.data()||{}).name || user.displayName || user.email.split('@')[0];
   const commentObj = {
     id: genId(),
     uid: user.uid,
@@ -490,8 +520,8 @@ async function addComment(postId){
   }
   notifyMentions(text, user.uid, myName, postId);
   inp.value='';
+  hideMentionDropdown();
   if(singlePostId) renderSinglePost();
-  else if(tab==='home') loadFeed();
   else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
 }
 
@@ -501,10 +531,11 @@ async function likeComment(postId, commentId, el){
   const doc = await ref.get();
   if(!doc.exists) return;
   const p = doc.data();
-  let comments = p.comments || [];
-  const idx = comments.findIndex(c => (c.id || '') === commentId);
+  let comments = [...(p.comments || [])];
+  const idx = comments.findIndex(c => (c.id || ('old_'+c.time)) === commentId);
   if(idx === -1) return;
-  const c = comments[idx];
+  const c = {...comments[idx]};
+  if(!c.id) c.id = commentId;
   const likedBy = c.likedBy || [];
   const isLiked = likedBy.includes(user.uid);
   if(isLiked){
@@ -514,7 +545,10 @@ async function likeComment(postId, commentId, el){
     c.likedBy = [...likedBy, user.uid];
     c.likes = (c.likes||0) + 1;
     playLikeSound();
-    if(el){el.classList.add('like-pop');setTimeout(()=>el.classList.remove('like-pop'),350);}
+    if(el){
+      el.classList.add('liked','like-pop');
+      setTimeout(()=>el.classList.remove('like-pop'),350);
+    }
     if(c.uid && c.uid !== user.uid){
       const myName = await getUserName(user.uid);
       db.collection('notifications').add({
@@ -526,9 +560,15 @@ async function likeComment(postId, commentId, el){
   }
   comments[idx] = c;
   await ref.update({comments: comments});
+  // Άμεσο visual update
+  if(el){
+    el.classList.toggle('liked', !isLiked);
+    const countSpan = el.childNodes[el.childNodes.length-1];
+    // ανανεώνουμε τον αριθμό
+  }
   if(singlePostId) renderSinglePost();
-  else if(tab==='home') loadFeed();
   else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
+  // Στο home το onSnapshot θα ανανεώσει
 }
 
 async function deleteComment(postId, commentId){
@@ -537,11 +577,10 @@ async function deleteComment(postId, commentId){
   const doc = await ref.get();
   if(!doc.exists) return;
   const p = doc.data();
-  const comments = (p.comments || []).filter(c => (c.id || '') !== commentId);
+  const comments = (p.comments || []).filter(c => (c.id || ('old_'+c.time)) !== commentId);
   await ref.update({comments: comments});
   document.querySelectorAll('.comment-menu.show').forEach(m => m.classList.remove('show'));
   if(singlePostId) renderSinglePost();
-  else if(tab==='home') loadFeed();
   else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
 }
 
@@ -604,6 +643,84 @@ function focusComment(postId){
   if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
 }
 
+/* ===== MENTION AUTOCOMPLETE ===== */
+function hideMentionDropdown(){
+  const dd = document.getElementById('mentionDropdown');
+  if(dd) dd.style.display = 'none';
+  activeMentionInput = null;
+}
+
+function showMentionDropdown(input, users){
+  let dd = document.getElementById('mentionDropdown');
+  if(!dd){
+    dd = document.createElement('div');
+    dd.id = 'mentionDropdown';
+    document.body.appendChild(dd);
+  }
+  if(!users.length){dd.style.display='none';return;}
+  dd.innerHTML = users.map(u => {
+    const handle = (u.name||'user').toLowerCase().replace(/\s+/g,'');
+    return `<div class="mention-item" onclick="insertMention('${handle}')">
+      <div class="avatar" style="width:28px;height:28px;font-size:12px;${u.photo?`background-image:url('${u.photo}')`:''}">${u.photo?'':'👤'}</div>
+      <div><div style="font-weight:700;font-size:13px">${esc(u.name)}</div><div class="handle" style="font-size:12px">@${esc(handle)}</div></div>
+    </div>`;
+  }).join('');
+  // Τοποθέτηση πάνω από το input
+  const rect = input.getBoundingClientRect();
+  dd.style.position = 'fixed';
+  dd.style.left = Math.max(8, rect.left) + 'px';
+  dd.style.width = Math.min(300, rect.width) + 'px';
+  dd.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+  dd.style.top = 'auto';
+  dd.style.display = 'block';
+  activeMentionInput = input;
+}
+
+function insertMention(handle){
+  if(!activeMentionInput) return;
+  const inp = activeMentionInput;
+  const val = inp.value;
+  const cursor = inp.selectionStart || val.length;
+  // Βρίσκουμε το τελευταίο @ πριν τον κέρσορα
+  const before = val.substring(0, cursor);
+  const after = val.substring(cursor);
+  const atIdx = before.lastIndexOf('@');
+  if(atIdx === -1) return;
+  const newVal = before.substring(0, atIdx) + '@' + handle + ' ' + after;
+  inp.value = newVal;
+  inp.focus();
+  const newPos = atIdx + handle.length + 2;
+  inp.setSelectionRange(newPos, newPos);
+  hideMentionDropdown();
+}
+
+function handleMentionInput(inp){
+  const val = inp.value;
+  const cursor = inp.selectionStart || val.length;
+  const before = val.substring(0, cursor);
+  const match = before.match(/@(\w*)$/);
+  if(!match){hideMentionDropdown();return;}
+  const query = match[1].toLowerCase();
+  db.collection('users').orderBy('name').limit(30).get().then(snap=>{
+    const users = snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>{
+      const n = (u.name||'').toLowerCase().replace(/\s+/g,'');
+      return n.includes(query) || (u.name||'').toLowerCase().includes(query);
+    }).slice(0,6);
+    showMentionDropdown(inp, users);
+  }).catch(()=>hideMentionDropdown());
+}
+
+// Event delegation για mention
+document.addEventListener('input', e=>{
+  const t = e.target;
+  if(t && (t.id === 'postText' || (t.id && t.id.startsWith('c_')))){
+    handleMentionInput(t);
+  }
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#mentionDropdown') && !e.target.closest('input')) hideMentionDropdown();
+});
+
 function openShareModal(postId){
   if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
   sharePostId=postId;
@@ -614,6 +731,7 @@ function openShareModal(postId){
   document.getElementById('shareRepostText').textContent=lang==='el'?'Αναδημοσίευση':'Repost';
   document.getElementById('shareQuoteText').textContent=lang==='el'?'Παράθεση':'Quote';
   document.getElementById('shareCloseText').textContent=lang==='el'?'Κλείσιμο':'Close';
+  try{history.pushState({share:true},'');}catch(e){}
   db.collection('posts').doc(postId).get().then(doc=>{
     if(doc.exists){
       const p=doc.data();
@@ -692,7 +810,6 @@ async function doRepost(){
   }
   closeShareModal();
   alert(lang==='el'?'Αναδημοσιεύτηκε!':'Reposted!');
-  if(tab==='home') loadFeed();
 }
 
 function quoteFromShare(){
@@ -775,12 +892,21 @@ async function toggleBlock(targetUid){
   if(tab==='profile') renderProfile(document.getElementById('main'));
 }
 
-function renderTextWithHashtags(text){return esc(text).replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>').replace(/@(\w+)/g,'<span class="hash">@$1</span>')}
+function renderTextWithHashtags(text){
+  return esc(text)
+    .replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>')
+    .replace(/@(\w+)/g,'<span class="mention">@$1</span>');
+}
 function searchHashtag(tag){showTab('search');setTimeout(()=>{const inp=document.querySelector('#main input');if(inp){inp.value='#'+tag;inp.dispatchEvent(new Event('input'));}},80)}
 function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('show')}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
 function openUserProfile(uid){if(!uid) return;viewingUid=uid;singlePostId=null;showTab('profile')}
-function openSharedPost(postId){singlePostId=postId;history.replaceState({},'',window.location.pathname);renderSinglePost()}
+function openSharedPost(postId){
+  singlePostId=postId;
+  try{history.pushState({single:postId},'');}catch(e){}
+  history.replaceState({},'',window.location.pathname);
+  renderSinglePost();
+}
 
 function renderSinglePost(){
   const m=document.getElementById('main');
@@ -856,18 +982,21 @@ function renderPosts(snap,f){
     const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
     
     const commentsHtml = (p.comments||[]).map(c=>{
-      const cid = c.id || ('old_'+c.time);
+      const cid = c.id || ('old_'+ (c.time||0));
       const cLiked = user && (c.likedBy||[]).includes(user.uid);
       const canDelComment = user && (user.uid === c.uid || user.uid === p.uid || isAdmin(user.email));
+      // Εμφάνιση ονόματος – αν είναι email, δείχνουμε μόνο το μέρος πριν το @
+      let displayName = c.name || 'User';
+      if(displayName.includes('@') && displayName.includes('.')) displayName = displayName.split('@')[0];
       return `<div class="comment">
         <div class="comment-avatar">👤</div>
         <div class="comment-info">
-          <div class="comment-name">${esc(c.name||'User')}</div>
-          <div class="comment-text">${esc(c.text||'')}</div>
+          <div class="comment-name">${esc(displayName)}</div>
+          <div class="comment-text">${renderTextWithHashtags(c.text||'')}</div>
           <div class="comment-actions">
-            <span onclick="replyToComment('${postId}','${esc(c.name||'')}')"><i data-lucide="message-circle" style="width:13px;height:13px"></i> ${t('reply')}</span>
+            <span onclick="replyToComment('${postId}','${esc(displayName)}')"><i data-lucide="message-circle" style="width:13px;height:13px"></i> ${t('reply')}</span>
             <span class="comment-like ${cLiked?'liked':''}" onclick="likeComment('${postId}','${cid}',this)">
-              <i data-lucide="heart" style="width:13px;height:13px"></i> ${c.likes||0}
+              <i data-lucide="heart" style="width:13px;height:13px"></i> <span>${c.likes||0}</span>
             </span>
             ${canDelComment ? `
             <div style="position:relative;margin-left:auto">
@@ -909,7 +1038,7 @@ function renderPosts(snap,f){
         <span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="sharePost('${postId}')"><i data-lucide="share-2" style="width:16px;height:16px"></i></span>
       </div>
       ${commentsHtml?`<div class="comments-section">${commentsHtml}</div>`:''}
-      ${user?`<div class="comment-input-row"><input id="c_${postId}" placeholder="${t('comment')}..."><button onclick="addComment('${postId}')" style="background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:9999px;cursor:pointer"><i data-lucide="send" style="width:16px;height:16px"></i></button></div>`:''}
+      ${user?`<div class="comment-input-row"><input id="c_${postId}" placeholder="${t('comment')}..." autocomplete="off"><button onclick="addComment('${postId}')" style="background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:9999px;cursor:pointer"><i data-lucide="send" style="width:16px;height:16px"></i></button></div>`:''}
     </div>`;
   }).join('');
   if(typeof lucide!=='undefined') lucide.createIcons();
