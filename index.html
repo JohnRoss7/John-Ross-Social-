@@ -46,7 +46,7 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .post-images{margin:10px 0;border-radius:12px;overflow:hidden}
 .post-images img{width:100%;max-height:380px;object-fit:cover;border-radius:12px;cursor:pointer}
 .hash{color:#1d9bf0;cursor:pointer}
-.mention{color:var(--accent)!important;font-weight:600;cursor:pointer}
+.mention{color:var(--accent)!important;font-weight:600;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .post-actions{display:flex;gap:28px;color:var(--muted);font-size:13px;margin-top:10px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
 .like-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid transparent;transition:all .2s}
@@ -56,14 +56,14 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .like-pop{animation:likePop .3s ease}
 .comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
 .comment{padding:12px 0;display:flex;gap:10px;position:relative}
-.comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center;cursor:pointer}
 .comment-info{flex:1;min-width:0}
 .comment-name{font-weight:700;font-size:13px;cursor:pointer}
 .comment-name:hover{text-decoration:underline}
 .comment-text{font-size:14px;margin-top:2px;line-height:1.4;word-wrap:break-word}
 .comment-actions{display:flex;align-items:center;gap:12px;margin-top:8px;color:var(--muted);font-size:12px}
 .comment-actions span,.comment-actions button{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
-.comment-like-btn{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s}
+.comment-like-btn{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .comment-like-btn.liked{background:rgba(220,38,38,.15);border-color:var(--accent);color:var(--accent)!important}
 .comment-like-btn.liked svg{fill:var(--accent)!important;color:var(--accent)!important;stroke:var(--accent)!important}
 .comment-menu-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;margin-left:auto}
@@ -137,7 +137,7 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .repost-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;font-weight:500}
 .repost-label i{width:14px;height:14px}
 .quoted-box{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;background:var(--hover)}
-.quoted-box .q-name{font-weight:700;font-size:13px;cursor:pointer}
+.quoted-box .q-name{font-weight:700;font-size:13px;cursor:pointer;color:var(--accent)}
 .quoted-box .q-text{font-size:14px;margin-top:4px;color:var(--text)}
 .quoted-box img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer}
 #mentionDropdown{display:none;position:fixed;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:180px;overflow-y:auto;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.5)}
@@ -249,7 +249,7 @@ let tab = sessionStorage.getItem('jrs_tab') || 'home';
 let feedType = 'foryou';
 let lang = localStorage.getItem('jrs_lang') || 'en';
 let pendingImages = [];
-let pendingQuote = null; // για παράθεση με φωτογραφία
+let pendingQuote = null;
 let viewingUid = null;
 let historyStack = [];
 let editingPostId = null;
@@ -270,6 +270,7 @@ function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,6)}
+function norm(s){return String(s||'').toLowerCase().replace(/\s+/g,'')}
 
 function toggleLang(){lang=lang==='en'?'el':'en';localStorage.setItem('jrs_lang',lang);render()}
 function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark')}
@@ -408,6 +409,7 @@ async function handleImageSelect(e){
 }
 function renderImagePreview(){
   const box=document.getElementById('imgPreview');if(!box) return;
+  if(pendingQuote) return; // μην σβήνεις το quote preview
   box.innerHTML=pendingImages.map(src=>`<div style="position:relative;display:inline-block"><img src="${src}"><button class="remove-img" onclick="removeImage()">×</button></div>`).join('');
 }
 function removeImage(){pendingImages=[];renderImagePreview()}
@@ -418,11 +420,10 @@ async function notifyMentions(text, fromUid, fromName, postId){
   const unique = [...new Set(mentions.map(m => m.substring(1).toLowerCase()))];
   for(const handle of unique){
     try{
-      const snap = await db.collection('users').where('name','>=',handle).where('name','<=',handle+'\uf8ff').limit(5).get();
+      const snap = await db.collection('users').limit(40).get();
       for(const d of snap.docs){
         const u = d.data();
-        const uname = (u.name||'').toLowerCase().replace(/\s+/g,'');
-        if(uname === handle && d.id !== fromUid){
+        if(norm(u.name) === handle && d.id !== fromUid){
           db.collection('notifications').add({
             userId: d.id, senderId: fromUid, postId: postId||null, type:'mention',
             text: fromName + (lang==='el' ? ' σε ανέφερε.' : ' mentioned you.'),
@@ -445,7 +446,6 @@ function postContent(){
       photo:u.photo||user.photoURL||'',text:ta.value,images:pendingImages,
       likes:0,likedBy:[],comments:[],createdAt:Date.now(),isRepost:false,isQuote:false
     };
-    // Αν είναι παράθεση
     if(pendingQuote){
       postData.isQuote = true;
       postData.originalPostId = pendingQuote.originalPostId;
@@ -461,10 +461,12 @@ function postContent(){
         });
       }
     });
-    ta.value='';pendingImages=[];pendingQuote=null;renderImagePreview();
-    // Καθαρισμός quote preview αν υπάρχει
-    const qp = document.getElementById('quotePreview');
-    if(qp) qp.innerHTML='';
+    ta.value='';
+    ta.placeholder = t('placeholder');
+    pendingImages=[];
+    pendingQuote=null;
+    const box=document.getElementById('imgPreview');
+    if(box) box.innerHTML='';
   });
 }
 
@@ -516,11 +518,14 @@ async function addComment(postId){
   const doc=await db.collection('posts').doc(postId).get();
   const p=doc.data();
   const myDoc = await db.collection('users').doc(user.uid).get();
-  const myName = (myDoc.data()||{}).name || user.displayName || user.email.split('@')[0];
+  const ud = myDoc.data()||{};
+  const myName = ud.name || user.displayName || user.email.split('@')[0];
+  const myPhoto = ud.photo || '';
   const commentObj = {
     id: genId(),
     uid: user.uid,
     name: myName,
+    photo: myPhoto,
     email: user.email,
     text: text,
     time: Date.now(),
@@ -546,8 +551,7 @@ async function addComment(postId){
 
 async function likeComment(postId, commentId, el){
   if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
-  event && event.preventDefault();
-  event && event.stopPropagation();
+  if(event){event.preventDefault();event.stopPropagation();}
   const ref = db.collection('posts').doc(postId);
   const doc = await ref.get();
   if(!doc.exists) return;
@@ -603,7 +607,7 @@ async function deleteComment(postId, commentId){
 function replyToComment(postId, name){
   const inp = document.getElementById('c_' + postId);
   if(inp){
-    const handle = '@' + (name||'user').toLowerCase().replace(/\s+/g,'') + ' ';
+    const handle = '@' + norm(name) + ' ';
     inp.value = handle;
     inp.focus();
     inp.scrollIntoView({behavior:'smooth',block:'center'});
@@ -659,7 +663,7 @@ function focusComment(postId){
   if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
 }
 
-/* ===== MENTION AUTOCOMPLETE + OPEN PROFILE ===== */
+/* ===== MENTION ===== */
 function hideMentionDropdown(){
   const dd = document.getElementById('mentionDropdown');
   if(dd) dd.style.display = 'none';
@@ -675,7 +679,7 @@ function showMentionDropdown(input, users){
   }
   if(!users.length){dd.style.display='none';return;}
   dd.innerHTML = users.map(u => {
-    const handle = (u.name||'user').toLowerCase().replace(/\s+/g,'');
+    const handle = norm(u.name);
     return `<div class="mention-item" onclick="insertMention('${handle}')">
       <div class="avatar" style="width:28px;height:28px;font-size:12px;${u.photo?`background-image:url('${u.photo}')`:''}">${u.photo?'':'👤'}</div>
       <div><div style="font-weight:700;font-size:13px">${esc(u.name)}</div><div class="handle" style="font-size:12px">@${esc(handle)}</div></div>
@@ -714,9 +718,9 @@ function handleMentionInput(inp){
   const match = before.match(/@(\w*)$/);
   if(!match){hideMentionDropdown();return;}
   const query = match[1].toLowerCase();
-  db.collection('users').orderBy('name').limit(30).get().then(snap=>{
+  db.collection('users').limit(40).get().then(snap=>{
     const users = snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>{
-      const n = (u.name||'').toLowerCase().replace(/\s+/g,'');
+      const n = norm(u.name);
       return n.includes(query) || (u.name||'').toLowerCase().includes(query);
     }).slice(0,6);
     showMentionDropdown(inp, users);
@@ -725,12 +729,13 @@ function handleMentionInput(inp){
 
 function openMentionProfile(handle){
   if(!handle) return;
-  const h = handle.toLowerCase().replace(/\s+/g,'');
-  db.collection('users').limit(40).get().then(snap=>{
+  if(event){event.preventDefault();event.stopPropagation();}
+  const h = norm(handle);
+  db.collection('users').limit(50).get().then(snap=>{
     for(const d of snap.docs){
       const u = d.data();
-      const n = (u.name||'').toLowerCase().replace(/\s+/g,'');
-      if(n === h){
+      const n = norm(u.name);
+      if(n === h || n.includes(h) || h.includes(n)){
         openUserProfile(d.id);
         return;
       }
@@ -765,7 +770,7 @@ function openShareModal(postId){
       const p=doc.data();
       sharePostText=p.text||'';
       sharePostName=p.name||'User';
-      if(p.isRepost && p.original){
+      if((p.isRepost||p.isQuote) && p.original){
         sharePostText=p.original.text||'';
         sharePostName=p.original.name||'User';
       }
@@ -810,10 +815,10 @@ async function doRepost(){
   const doc=await db.collection('posts').doc(sharePostId).get();
   if(!doc.exists){closeShareModal();return;}
   const p=doc.data();
-  const original = (p.isRepost && p.original) ? p.original : {
+  const original = ((p.isRepost||p.isQuote) && p.original) ? p.original : {
     uid:p.uid, name:p.name, photo:p.photo||'', text:p.text||'', images:p.images||[], createdAt:p.createdAt
   };
-  const originalPostId = p.isRepost ? (p.originalPostId||sharePostId) : sharePostId;
+  const originalPostId = (p.isRepost||p.isQuote) ? (p.originalPostId||sharePostId) : sharePostId;
   const myDoc=await db.collection('users').doc(user.uid).get();
   const u=myDoc.data()||{};
   await db.collection('posts').add({
@@ -846,10 +851,10 @@ function quoteFromShare(){
   db.collection('posts').doc(sharePostId).get().then(doc=>{
     if(!doc.exists) return;
     const p = doc.data();
-    const original = (p.isRepost && p.original) ? p.original : {
+    const original = ((p.isRepost||p.isQuote) && p.original) ? p.original : {
       uid: p.uid, name: p.name, photo: p.photo||'', text: p.text||'', images: p.images||[], createdAt: p.createdAt
     };
-    const originalPostId = p.isRepost ? (p.originalPostId||sharePostId) : sharePostId;
+    const originalPostId = (p.isRepost||p.isQuote) ? (p.originalPostId||sharePostId) : sharePostId;
     pendingQuote = { originalPostId, original };
     singlePostId = null;
     showTab('home');
@@ -857,17 +862,16 @@ function quoteFromShare(){
       const ta = document.getElementById('postText');
       if(ta){
         ta.value = '';
-        ta.placeholder = lang==='el' ? 'Πρόσθεσε ένα σχόλιο στην παράθεση...' : 'Add a comment to your quote...';
+        ta.placeholder = lang==='el' ? 'Γράψε το σχόλιό σου στην παράθεση...' : 'Write your comment on the quote...';
         ta.focus();
       }
-      // Εμφάνιση preview της παράθεσης (κείμενο + φωτογραφία)
       const box = document.getElementById('imgPreview');
       if(box){
-        let html = `<div id="quotePreview" class="quoted-box" style="width:100%;margin-bottom:8px">
-          <div class="q-name">@${esc((original.name||'user').toLowerCase().replace(/\s+/g,''))}</div>
-          <div class="q-text">${esc((original.text||'').substring(0,180))}${(original.text||'').length>180?'...':''}</div>`;
+        let html = `<div class="quoted-box" style="width:100%;margin-bottom:8px">
+          <div class="q-name">@${esc(norm(original.name))}</div>
+          <div class="q-text">${esc((original.text||'').substring(0,160))}${(original.text||'').length>160?'...':''}</div>`;
         if(original.images && original.images[0]){
-          html += `<img src="${original.images[0]}" style="max-height:120px">`;
+          html += `<img src="${original.images[0]}" style="max-height:140px;border-radius:8px;margin-top:8px">`;
         }
         html += `</div>`;
         box.innerHTML = html;
@@ -994,6 +998,7 @@ function render(){
 
 function renderHome(m){
   pendingImages=[];
+  // μην καθαρίζουμε το pendingQuote αν υπάρχει
   m.innerHTML=`<div style="padding:14px 16px;border-bottom:1px solid var(--border)"><textarea id="postText" placeholder="${t('placeholder')}" style="width:100%;background:transparent;border:none;color:var(--text);font-size:17px;resize:none;min-height:60px;font-family:inherit;outline:none"></textarea><div id="imgPreview" class="img-preview"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div><input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)"><button onclick="document.getElementById('imgInput').click()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:6px"><i data-lucide="image" style="width:22px;height:22px"></i></button></div><button class="btn-full" style="width:auto;padding:8px 22px;margin:0" onclick="postContent()">${t('post')}</button></div></div><div class="top-tabs"><button class="tab-btn ${feedType==='foryou'?'active':''}" data-feed="foryou" onclick="setFeedType('foryou')">${t('forYou')}</button><button class="tab-btn ${feedType==='following'?'active':''}" data-feed="following" onclick="setFeedType('following')">${t('following')}</button></div><div id="feed"></div>`;
   loadFeed();
   if(typeof lucide!=='undefined') lucide.createIcons();
@@ -1019,32 +1024,33 @@ function renderPosts(snap,f){
     const p=d.data(),postId=d.id;
     const isRepost = !!p.isRepost && p.original;
     const isQuote = !!p.isQuote && p.original;
-    const display = (isRepost || isQuote) ? p.original : p;
-    const isPostAdmin=isAdmin(display.email || p.email);
+    const display = (isRepost) ? p.original : p;
+    const isPostAdmin=isAdmin(p.email);
     const adminBadge=isPostAdmin?'<span class="admin-badge">👑 Admin</span>':'';
     const isOwner=user&&user.uid===p.uid;
     const canEdit=isOwner && !isRepost;
     const canDelete=isOwner||(user&&isAdmin(user.email));
     const isLiked=user&&(p.likedBy||[]).includes(user.uid);
-    const images = (!isRepost && !isQuote) ? (p.images||[]) : [];
-    const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
 
-    // Quote box (κείμενο + φωτογραφία)
+    // εικόνες
+    let imgHtml = '';
+    if(!isRepost && !isQuote && p.images && p.images[0]){
+      imgHtml = `<div class="post-images"><img src="${p.images[0]}" onclick="openLightbox('${p.images[0]}')"></div>`;
+    }
+    if(isRepost && p.original && p.original.images && p.original.images[0]){
+      imgHtml = `<div class="post-images"><img src="${p.original.images[0]}" onclick="openLightbox('${p.original.images[0]}')"></div>`;
+    }
+
+    // Quote box
     let quoteHtml = '';
     if(isQuote && p.original){
       const o = p.original;
       const oImg = (o.images && o.images[0]) ? `<img src="${o.images[0]}" onclick="openLightbox('${o.images[0]}')">` : '';
       quoteHtml = `<div class="quoted-box">
-        <div class="q-name" onclick="openUserProfile('${o.uid||''}')">@${esc((o.name||'user').toLowerCase().replace(/\s+/g,''))}</div>
+        <div class="q-name" onclick="openUserProfile('${o.uid||''}')">@${esc(norm(o.name))}</div>
         <div class="q-text">${renderTextWithHashtags(o.text||'')}</div>
         ${oImg}
       </div>`;
-    }
-
-    // Repost images
-    let repostImgHtml = '';
-    if(isRepost && p.original && p.original.images && p.original.images[0]){
-      repostImgHtml = `<div class="post-images"><img src="${p.original.images[0]}" onclick="openLightbox('${p.original.images[0]}')"></div>`;
     }
 
     const commentsHtml = (p.comments||[]).map(c=>{
@@ -1053,8 +1059,11 @@ function renderPosts(snap,f){
       const canDelComment = user && (user.uid === c.uid || user.uid === p.uid || isAdmin(user.email));
       let displayName = c.name || 'User';
       if(displayName.includes('@') && displayName.includes('.')) displayName = displayName.split('@')[0];
+      const avHtml = c.photo
+        ? `<div class="comment-avatar" style="background-image:url('${c.photo}')" onclick="openUserProfile('${c.uid||''}')"></div>`
+        : `<div class="comment-avatar" onclick="openUserProfile('${c.uid||''}')">👤</div>`;
       return `<div class="comment">
-        <div class="comment-avatar">👤</div>
+        ${avHtml}
         <div class="comment-info">
           <div class="comment-name" onclick="openUserProfile('${c.uid||''}')">${esc(displayName)}</div>
           <div class="comment-text">${renderTextWithHashtags(c.text||'')}</div>
@@ -1075,10 +1084,12 @@ function renderPosts(snap,f){
       </div>`;
     }).join('');
 
-    const avatarPhoto = display.photo || '';
-    const avatar=avatarPhoto
-      ?`<div class="avatar" style="background-image:url('${avatarPhoto}')" onclick="openUserProfile('${display.uid||p.uid}')"></div>`
-      :`<div class="avatar" onclick="openUserProfile('${display.uid||p.uid}')">👤</div>`;
+    const headerUid = isRepost ? (p.original?.uid || p.uid) : p.uid;
+    const headerName = isRepost ? (p.original?.name || p.name) : p.name;
+    const headerPhoto = isRepost ? (p.original?.photo || '') : (p.photo || '');
+    const headerAvatar = headerPhoto
+      ? `<div class="avatar" style="background-image:url('${headerPhoto}')" onclick="openUserProfile('${headerUid}')"></div>`
+      : `<div class="avatar" onclick="openUserProfile('${headerUid}')">👤</div>`;
 
     let menuButtons=`<button onclick="copyPostLink('${postId}')"><i data-lucide="link"></i> ${t('copyLink')}</button>`;
     if(canEdit) menuButtons+=`<button onclick="openEditPost('${postId}',\`${esc(p.text||'').replace(/`/g,'')}\`)"><i data-lucide="edit-3"></i> ${t('edit')}</button>`;
@@ -1092,20 +1103,14 @@ function renderPosts(snap,f){
       ? `<div class="repost-label"><i data-lucide="repeat-2"></i> ${esc(p.name||'User')} ${t('reposted')}</div>` 
       : '';
 
-    // Για κανονικό ποστ / quote δείχνουμε το όνομα του συγγραφέα του post (όχι του original)
-    const headerName = isRepost ? (display.name||'User') : (p.name||'User');
-    const headerUid = isRepost ? (display.uid||p.uid) : p.uid;
-    const headerPhoto = isRepost ? (display.photo||'') : (p.photo||'');
-    const headerAvatar = headerPhoto
-      ? `<div class="avatar" style="background-image:url('${headerPhoto}')" onclick="openUserProfile('${headerUid}')"></div>`
-      : `<div class="avatar" onclick="openUserProfile('${headerUid}')">👤</div>`;
+    const mainText = isRepost ? (p.original?.text || '') : (p.text || '');
 
     return `<div class="post">
       ${repostLabel}
-      <div class="post-header">${isRepost ? avatar : headerAvatar}<div class="post-info"><div class="username" onclick="openUserProfile('${isRepost ? (display.uid||p.uid) : p.uid}')">${esc(isRepost ? (display.name||'User') : (p.name||'User'))} ${adminBadge}</div><div class="handle">@${esc(((isRepost?display.name:p.name)||'user').toLowerCase().replace(/\s+/g,''))} · ${new Date((isRepost?display.createdAt:p.createdAt)||Date.now()).toLocaleString()}</div></div>
+      <div class="post-header">${headerAvatar}<div class="post-info"><div class="username" onclick="openUserProfile('${headerUid}')">${esc(headerName||'User')} ${adminBadge}</div><div class="handle">@${esc(norm(headerName))} · ${new Date(p.createdAt||Date.now()).toLocaleString()}</div></div>
       <div class="post-menu-container"><button class="menu-btn-icon" onclick="togglePostMenu('${postId}')"><i data-lucide="more-horizontal"></i></button><div class="post-menu" id="pm_${postId}">${menuButtons}</div></div></div>
-      <div class="post-content">${renderTextWithHashtags(isRepost ? (display.text||'') : (p.text||''))}</div>
-      ${isRepost ? repostImgHtml : imgHtml}
+      <div class="post-content">${renderTextWithHashtags(mainText)}</div>
+      ${imgHtml}
       ${quoteHtml}
       <div class="post-actions">
         <span class="like-btn ${isLiked?'liked':''}" onclick="likePost('${postId}',this)"><i data-lucide="thumbs-up" style="width:16px;height:16px"></i> ${p.likes||0}</span>
@@ -1205,7 +1210,7 @@ function showUserList(uid,type){
         if(!s.exists) return '';
         const u=s.data();
         const avatar=u.photo?`<div class="avatar" style="background-image:url('${u.photo}')"></div>`:`<div class="avatar">👤</div>`;
-        return `<div class="user-list-item" onclick="openUserProfile('${s.id}')">${avatar}<div><div style="font-weight:700">${esc(u.name||'User')}</div><div class="handle">@${esc((u.name||'user').toLowerCase().replace(/\s+/g,''))}</div></div></div>`;
+        return `<div class="user-list-item" onclick="openUserProfile('${s.id}')">${avatar}<div><div style="font-weight:700">${esc(u.name||'User')}</div><div class="handle">@${esc(norm(u.name))}</div></div></div>`;
       }).join('');
       document.getElementById('userList').innerHTML=html||`<div class="empty-state">${t('noUsers')}</div>`;
     });
@@ -1234,7 +1239,7 @@ function renderProfile(m){
           <button class="btn-outline" style="border-color:var(--accent);color:var(--accent)" onclick="toggleBlock('${targetUid}')">${isBlocked?t('unblock'):t('block')}</button>
         </div>`;
       }
-      m.innerHTML=`<div class="profile"><div class="profile-header">${avatarContent}<h2 style="font-size:20px;margin-top:14px;font-weight:800">${esc(u.name||'User')} ${admin?'<span class="admin-badge">👑 Admin</span>':''}</h2><div class="handle">@${esc((u.name||'user').toLowerCase().replace(/\s+/g,''))}</div><p style="color:var(--muted);margin:10px 0;font-size:15px">${esc(u.bio||'')}</p><div class="profile-stats"><span onclick="showUserList('${targetUid}','followers')"><b>${followers}</b> ${t('followers')}</span><span onclick="showUserList('${targetUid}','following')"><b>${following}</b> ${t('following2')}</span></div>${actionButtons}</div><h3 style="margin:20px 0 12px;font-size:16px;font-weight:700">${t('myPosts')}</h3><div id="myPostsFeed"><div class="empty-state">Φόρτωση...</div></div></div>`;
+      m.innerHTML=`<div class="profile"><div class="profile-header">${avatarContent}<h2 style="font-size:20px;margin-top:14px;font-weight:800">${esc(u.name||'User')} ${admin?'<span class="admin-badge">👑 Admin</span>':''}</h2><div class="handle">@${esc(norm(u.name))}</div><p style="color:var(--muted);margin:10px 0;font-size:15px">${esc(u.bio||'')}</p><div class="profile-stats"><span onclick="showUserList('${targetUid}','followers')"><b>${followers}</b> ${t('followers')}</span><span onclick="showUserList('${targetUid}','following')"><b>${following}</b> ${t('following2')}</span></div>${actionButtons}</div><h3 style="margin:20px 0 12px;font-size:16px;font-weight:700">${t('myPosts')}</h3><div id="myPostsFeed"><div class="empty-state">Φόρτωση...</div></div></div>`;
       loadProfilePosts(targetUid,document.getElementById('myPostsFeed'));
       if(typeof lucide!=='undefined') lucide.createIcons();
     });
