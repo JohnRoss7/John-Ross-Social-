@@ -54,11 +54,20 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 @keyframes likePop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 .like-pop{animation:likePop .3s ease}
 .comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
-.comment{padding:10px 0;display:flex;gap:10px}
-.comment-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.comment-info{flex:1}
+.comment{padding:12px 0;display:flex;gap:10px;position:relative}
+.comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center}
+.comment-info{flex:1;min-width:0}
 .comment-name{font-weight:700;font-size:13px}
-.comment-text{font-size:14px;margin-top:2px}
+.comment-text{font-size:14px;margin-top:2px;line-height:1.4;word-wrap:break-word}
+.comment-actions{display:flex;align-items:center;gap:16px;margin-top:8px;color:var(--muted);font-size:12px}
+.comment-actions span{display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.comment-like.liked{color:var(--accent)}
+.comment-like.liked svg{fill:var(--accent);color:var(--accent)}
+.comment-menu-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;margin-left:auto}
+.comment-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:140px;z-index:40;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.comment-menu.show{display:block}
+.comment-menu button{width:100%;background:none;border:none;color:var(--text);padding:11px 14px;text-align:left;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
+.comment-menu button:hover{background:var(--accent);color:#fff}
 .comment-input-row{display:flex;gap:8px;margin-top:12px}
 .comment-input-row input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9999px;font-size:14px;outline:none}
 .post-menu-container{position:relative;margin-left:auto}
@@ -124,7 +133,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
 .cta-box p{color:var(--muted);margin-bottom:16px;font-size:14px}
 .repost-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;font-weight:500}
 .repost-label i{width:14px;height:14px}
-.quoted-box{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:8px;background:var(--hover)}
 </style>
 </head>
 <body>
@@ -166,7 +174,6 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
   </div>
 </div>
 
-<!-- SHARE / REPOST MODAL -->
 <div class="edit-modal" id="shareModal">
   <div class="edit-box">
     <h3 style="margin-bottom:16px;font-weight:700" id="shareModalTitle">Κοινοποίηση</h3>
@@ -242,13 +249,14 @@ let sharePostName = '';
 const adminEmails = ['rossrossg7@gmail.com'];
 
 const T = {
-  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register',mute:'Mute',unmute:'Unmute',block:'Block',unblock:'Unblock',repost:'Repost',quote:'Quote',reposted:'reposted',share:'Share'},
-  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή',mute:'Σίγαση',unmute:'Άρση σίγασης',block:'Αποκλεισμός',unblock:'Άρση αποκλεισμού',repost:'Αναδημοσίευση',quote:'Παράθεση',reposted:'αναδημοσίευσε',share:'Κοινοποίηση'}
+  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register',mute:'Mute',unmute:'Unmute',block:'Block',unblock:'Unblock',repost:'Repost',quote:'Quote',reposted:'reposted',share:'Share',reply:'Reply'},
+  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή',mute:'Σίγαση',unmute:'Άρση σίγασης',block:'Αποκλεισμός',unblock:'Άρση αποκλεισμού',repost:'Αναδημοσίευση',quote:'Παράθεση',reposted:'αναδημοσίευσε',share:'Κοινοποίηση',reply:'Απάντηση'}
 };
 
 function t(k){return T[lang][k]||k}
 function isAdmin(email){return adminEmails.includes(email)}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,6)}
 
 function toggleLang(){lang=lang==='en'?'el':'en';localStorage.setItem('jrs_lang',lang);render()}
 function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark')}
@@ -263,9 +271,7 @@ function settings(){showSettings()}
 
 function clearCache(){
   if(confirm(lang==='el'?'Θέλεις να καθαρίσεις την προσωρινή μνήμη; Η εφαρμογή θα επανεκκινήσει.':'Clear cache? The app will reload.')){
-    localStorage.clear();
-    sessionStorage.clear();
-    location.reload(true);
+    localStorage.clear();sessionStorage.clear();location.reload(true);
   }
 }
 
@@ -375,15 +381,40 @@ function renderImagePreview(){
 }
 function removeImage(){pendingImages=[];renderImagePreview()}
 
+async function notifyMentions(text, fromUid, fromName, postId){
+  if(!text) return;
+  const mentions = text.match(/@(\w+)/g) || [];
+  const unique = [...new Set(mentions.map(m => m.substring(1).toLowerCase()))];
+  for(const handle of unique){
+    try{
+      const snap = await db.collection('users').where('name','>=',handle).where('name','<=',handle+'\uf8ff').limit(5).get();
+      for(const d of snap.docs){
+        const u = d.data();
+        const uname = (u.name||'').toLowerCase().replace(/\s+/g,'');
+        if(uname === handle && d.id !== fromUid){
+          db.collection('notifications').add({
+            userId: d.id, senderId: fromUid, postId: postId||null, type:'mention',
+            text: fromName + (lang==='el' ? ' σε ανέφερε.' : ' mentioned you.'),
+            read:false, timestamp:Date.now()
+          });
+        }
+      }
+    }catch(e){}
+  }
+}
+
 function postContent(){
   const ta=document.getElementById('postText');
   if(!ta.value.trim()&&pendingImages.length===0) return;
   db.collection('users').doc(user.uid).get().then(doc=>{
     const u=doc.data()||{};
+    const name = u.name||user.displayName||user.email.split('@')[0];
     db.collection('posts').add({
-      uid:user.uid,name:u.name||user.displayName||user.email.split('@')[0],email:user.email,
+      uid:user.uid,name:name,email:user.email,
       photo:u.photo||user.photoURL||'',text:ta.value,images:pendingImages,
       likes:0,likedBy:[],comments:[],createdAt:Date.now(),isRepost:false
+    }).then(ref=>{
+      notifyMentions(ta.value, user.uid, name, ref.id);
     });
     ta.value='';pendingImages=[];renderImagePreview();
   });
@@ -433,21 +464,101 @@ async function likePost(id,el){
 async function addComment(postId){
   if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
   const inp=document.getElementById('c_'+postId);if(!inp||!inp.value.trim()) return;
+  const text = inp.value.trim();
   const doc=await db.collection('posts').doc(postId).get();
   const p=doc.data();
+  const myName = user.displayName || user.email.split('@')[0];
+  const commentObj = {
+    id: genId(),
+    uid: user.uid,
+    name: myName,
+    email: user.email,
+    text: text,
+    time: Date.now(),
+    likes: 0,
+    likedBy: []
+  };
   await db.collection('posts').doc(postId).update({
-    comments:firebase.firestore.FieldValue.arrayUnion({name:user.displayName||user.email.split('@')[0],email:user.email,text:inp.value,time:Date.now()})
+    comments: firebase.firestore.FieldValue.arrayUnion(commentObj)
   });
   if(p.uid!==user.uid){
-    const myName=await getUserName(user.uid);
     db.collection('notifications').add({
       userId:p.uid,senderId:user.uid,postId:postId,type:'comment',
       text:myName+(lang==='el'?' σχολίασε τη δημοσίευσή σου.':' commented on your post.'),
       read:false,timestamp:Date.now()
     });
   }
+  notifyMentions(text, user.uid, myName, postId);
   inp.value='';
   if(singlePostId) renderSinglePost();
+  else if(tab==='home') loadFeed();
+  else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
+}
+
+async function likeComment(postId, commentId, el){
+  if(!user){alert(lang==='el'?'Πρέπει να συνδεθείς πρώτα':'Please sign in first');return;}
+  const ref = db.collection('posts').doc(postId);
+  const doc = await ref.get();
+  if(!doc.exists) return;
+  const p = doc.data();
+  let comments = p.comments || [];
+  const idx = comments.findIndex(c => (c.id || '') === commentId);
+  if(idx === -1) return;
+  const c = comments[idx];
+  const likedBy = c.likedBy || [];
+  const isLiked = likedBy.includes(user.uid);
+  if(isLiked){
+    c.likedBy = likedBy.filter(id => id !== user.uid);
+    c.likes = Math.max(0, (c.likes||0) - 1);
+  }else{
+    c.likedBy = [...likedBy, user.uid];
+    c.likes = (c.likes||0) + 1;
+    playLikeSound();
+    if(el){el.classList.add('like-pop');setTimeout(()=>el.classList.remove('like-pop'),350);}
+    if(c.uid && c.uid !== user.uid){
+      const myName = await getUserName(user.uid);
+      db.collection('notifications').add({
+        userId: c.uid, senderId: user.uid, postId: postId, type: 'comment_like',
+        text: myName + (lang==='el' ? ' έκανε like στο σχόλιό σου.' : ' liked your comment.'),
+        read: false, timestamp: Date.now()
+      });
+    }
+  }
+  comments[idx] = c;
+  await ref.update({comments: comments});
+  if(singlePostId) renderSinglePost();
+  else if(tab==='home') loadFeed();
+  else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
+}
+
+async function deleteComment(postId, commentId){
+  if(!confirm(t('delete')+'?')) return;
+  const ref = db.collection('posts').doc(postId);
+  const doc = await ref.get();
+  if(!doc.exists) return;
+  const p = doc.data();
+  const comments = (p.comments || []).filter(c => (c.id || '') !== commentId);
+  await ref.update({comments: comments});
+  document.querySelectorAll('.comment-menu.show').forEach(m => m.classList.remove('show'));
+  if(singlePostId) renderSinglePost();
+  else if(tab==='home') loadFeed();
+  else if(tab==='profile'){const feed=document.getElementById('myPostsFeed');if(feed) loadProfilePosts(viewingUid||user.uid,feed);}
+}
+
+function replyToComment(postId, name){
+  const inp = document.getElementById('c_' + postId);
+  if(inp){
+    const handle = '@' + (name||'user').toLowerCase().replace(/\s+/g,'') + ' ';
+    inp.value = handle;
+    inp.focus();
+    inp.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+
+function toggleCommentMenu(cid){
+  event.stopPropagation();
+  document.querySelectorAll('.comment-menu.show').forEach(m=>{if(m.id!=='cm_'+cid) m.classList.remove('show');});
+  const m=document.getElementById('cm_'+cid);if(m) m.classList.toggle('show');
 }
 
 function deletePost(id){
@@ -488,13 +599,9 @@ function saveEditPost(){
   });
 }
 
-/* ========== SHARE / REPOST / QUOTE ========== */
 function focusComment(postId){
   const inp=document.getElementById('c_'+postId);
-  if(inp){
-    inp.focus();
-    inp.scrollIntoView({behavior:'smooth',block:'center'});
-  }
+  if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth',block:'center'});}
 }
 
 function openShareModal(postId){
@@ -512,7 +619,6 @@ function openShareModal(postId){
       const p=doc.data();
       sharePostText=p.text||'';
       sharePostName=p.name||'User';
-      // αν είναι ήδη repost, πάρε το original
       if(p.isRepost && p.original){
         sharePostText=p.original.text||'';
         sharePostName=p.original.name||'User';
@@ -558,12 +664,10 @@ async function doRepost(){
   const doc=await db.collection('posts').doc(sharePostId).get();
   if(!doc.exists){closeShareModal();return;}
   const p=doc.data();
-  // Αν είναι ήδη repost, παίρνουμε το original
   const original = (p.isRepost && p.original) ? p.original : {
     uid:p.uid, name:p.name, photo:p.photo||'', text:p.text||'', images:p.images||[], createdAt:p.createdAt
   };
   const originalPostId = p.isRepost ? (p.originalPostId||sharePostId) : sharePostId;
-
   const myDoc=await db.collection('users').doc(user.uid).get();
   const u=myDoc.data()||{};
   await db.collection('posts').add({
@@ -576,10 +680,7 @@ async function doRepost(){
     isRepost:true,
     originalPostId:originalPostId,
     original:original,
-    likes:0,
-    likedBy:[],
-    comments:[],
-    createdAt:Date.now()
+    likes:0,likedBy:[],comments:[],createdAt:Date.now()
   });
   if(original.uid && original.uid!==user.uid){
     const myName=await getUserName(user.uid);
@@ -613,7 +714,6 @@ function quoteFromShare(){
 
 function sharePost(postId){openShareModal(postId);}
 
-/* ========== FOLLOW / MUTE / BLOCK ========== */
 async function toggleFollow(targetUid){
   if(!user||targetUid===user.uid) return;
   const myRef=db.collection('users').doc(user.uid);
@@ -675,7 +775,7 @@ async function toggleBlock(targetUid){
   if(tab==='profile') renderProfile(document.getElementById('main'));
 }
 
-function renderTextWithHashtags(text){return esc(text).replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>')}
+function renderTextWithHashtags(text){return esc(text).replace(/#(\w+)/g,'<span class="hash" onclick="searchHashtag(\'$1\')">#$1</span>').replace(/@(\w+)/g,'<span class="hash">@$1</span>')}
 function searchHashtag(tag){showTab('search');setTimeout(()=>{const inp=document.querySelector('#main input');if(inp){inp.value='#'+tag;inp.dispatchEvent(new Event('input'));}},80)}
 function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('show')}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('show')}
@@ -754,8 +854,33 @@ function renderPosts(snap,f){
     const isLiked=user&&(p.likedBy||[]).includes(user.uid);
     const images=display.images||[];
     const imgHtml=images.length?`<div class="post-images"><img src="${images[0]}" onclick="openLightbox('${images[0]}')"></div>`:'';
-    const comments=(p.comments||[]).map(c=>`<div class="comment"><div class="comment-avatar">👤</div><div class="comment-info"><div class="comment-name">${esc(c.name)}</div><div class="comment-text">${esc(c.text)}</div></div></div>`).join('');
     
+    const commentsHtml = (p.comments||[]).map(c=>{
+      const cid = c.id || ('old_'+c.time);
+      const cLiked = user && (c.likedBy||[]).includes(user.uid);
+      const canDelComment = user && (user.uid === c.uid || user.uid === p.uid || isAdmin(user.email));
+      return `<div class="comment">
+        <div class="comment-avatar">👤</div>
+        <div class="comment-info">
+          <div class="comment-name">${esc(c.name||'User')}</div>
+          <div class="comment-text">${esc(c.text||'')}</div>
+          <div class="comment-actions">
+            <span onclick="replyToComment('${postId}','${esc(c.name||'')}')"><i data-lucide="message-circle" style="width:13px;height:13px"></i> ${t('reply')}</span>
+            <span class="comment-like ${cLiked?'liked':''}" onclick="likeComment('${postId}','${cid}',this)">
+              <i data-lucide="heart" style="width:13px;height:13px"></i> ${c.likes||0}
+            </span>
+            ${canDelComment ? `
+            <div style="position:relative;margin-left:auto">
+              <button class="comment-menu-btn" onclick="toggleCommentMenu('${cid}')"><i data-lucide="more-horizontal" style="width:14px;height:14px"></i></button>
+              <div class="comment-menu" id="cm_${cid}">
+                <button onclick="deleteComment('${postId}','${cid}')"><i data-lucide="trash-2" style="width:14px;height:14px"></i> ${t('delete')}</button>
+              </div>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
     const avatarPhoto = display.photo || '';
     const avatar=avatarPhoto
       ?`<div class="avatar" style="background-image:url('${avatarPhoto}')" onclick="openUserProfile('${display.uid||p.uid}')"></div>`
@@ -783,7 +908,7 @@ function renderPosts(snap,f){
         <span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="focusComment('${postId}')"><i data-lucide="message-circle" style="width:16px;height:16px"></i> ${(p.comments||[]).length}</span>
         <span style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" onclick="sharePost('${postId}')"><i data-lucide="share-2" style="width:16px;height:16px"></i></span>
       </div>
-      ${comments?`<div class="comments-section">${comments}</div>`:''}
+      ${commentsHtml?`<div class="comments-section">${commentsHtml}</div>`:''}
       ${user?`<div class="comment-input-row"><input id="c_${postId}" placeholder="${t('comment')}..."><button onclick="addComment('${postId}')" style="background:var(--accent);border:none;color:#fff;padding:8px 16px;border-radius:9999px;cursor:pointer"><i data-lucide="send" style="width:16px;height:16px"></i></button></div>`:''}
     </div>`;
   }).join('');
@@ -995,7 +1120,9 @@ function saveProfile(){
 }
 
 document.addEventListener('click',e=>{
-  if(!e.target.closest('.post-menu-container')) document.querySelectorAll('.post-menu.show').forEach(m=>m.classList.remove('show'));
+  if(!e.target.closest('.post-menu-container') && !e.target.closest('.comment-menu') && !e.target.closest('.comment-menu-btn')){
+    document.querySelectorAll('.post-menu.show, .comment-menu.show').forEach(m=>m.classList.remove('show'));
+  }
   const shareModal=document.getElementById('shareModal');
   if(shareModal && shareModal.classList.contains('show') && e.target===shareModal) closeShareModal();
 });
