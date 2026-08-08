@@ -392,46 +392,4 @@ loadTheme();
 <script>lucide.createIcons();</script>
 </body>
 </html>
-function quoteFromShare(){
-  closeShareModal();
-  if(!sharePostId) return;
-  db.collection('posts').doc(sharePostId).get().then(function(doc){
-    if(!doc.exists) return;
-    var p = doc.data();
-    var original = ((p.isRepost || p.isQuote) && p.original) ? p.original : {
-      uid: p.uid,
-      name: p.name,
-      photo: p.photo || '',
-      text: p.text || '',
-      images: p.images || [],
-      createdAt: p.createdAt
-    };
-    var originalPostId = (p.isRepost || p.isQuote) ? (p.originalPostId || sharePostId) : sharePostId;
-    pendingQuote = { originalPostId: originalPostId, original: original };
-    singlePostId = null;
-    tab = 'home';
-    sessionStorage.setItem('jrs_tab', 'home');
-    render();
-    setTimeout(function(){
-      var ta = document.getElementById('postText');
-      if(ta){
-        ta.value = '';
-        ta.placeholder = (lang === 'el') ? 'Γράψε το σχόλιό σου στην παράθεση...' : 'Write your comment on the quote...';
-        ta.focus();
-      }
-      var box = document.getElementById('imgPreview');
-      if(box && pendingQuote){
-        var o = pendingQuote.original;
-        var html = '<div class="quoted-box" style="width:100%;margin-bottom:8px">';
-        html += '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + (lang==='el'?'Παράθεση':'Quote') + '</div>';
-        html += '<div class="q-name">@' + esc(norm(o.name || 'user')) + '</div>';
-        html += '<div class="q-text">' + esc((o.text || '').substring(0,160)) + ((o.text || '').length > 160 ? '...' : '') + '</div>';
-        if(o.images && o.images[0]){
-          html += '<img src="' + o.images[0] + '" style="max-height:140px;border-radius:8px;margin-top:8px;width:100%;object-fit:cover">';
-        }
-        html += '</div>';
-        box.innerHTML = html;
-      }
-    }, 600);
-  });
-}
+func
