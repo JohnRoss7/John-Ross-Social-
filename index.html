@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="el">
-<!-- VERSION 6.0 - ULTIMATE STABLE -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>John Ross Social v6</title>
+    <title>John Ross Social v7</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
@@ -15,34 +14,19 @@
             --bg: #FFFFFF; --text: #000000; --muted: #666666; --border: #EEEEEE;
             --card: #F7F9F9; --accent: #dc2626; --blue: #1d9bf0;
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; position: fixed; }
 
-        /* LOCK SCREEN & DISABLE SELECTION */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        html, body { 
-            width: 100%; height: 100%; overflow: hidden; 
-            background: var(--bg); color: var(--text); 
-            font-family: -apple-system, system-ui, sans-serif; 
-            position: fixed;
-        }
+        .app-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; max-width: 550px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--bg); }
 
-        .app-wrapper { 
-            width: 100%; height: 100%; display: flex; flex-direction: column; 
-            max-width: 550px; margin: 0 auto; 
-            border-left: 1px solid var(--border); border-right: 1px solid var(--border); 
-            background: var(--bg); position: relative; 
-        }
-
-        /* HEADER */
         header { background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 1000; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .header-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
         .tabs { display: flex; border-bottom: 1px solid var(--border); }
         .tab { flex: 1; padding: 14px; text-align: center; font-weight: 600; color: var(--muted); cursor: pointer; }
         .tab.active { color: var(--text); border-bottom: 2px solid var(--accent); }
 
-        /* CONTENT */
         #main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
-        /* POSTS */
         .post { padding: 16px; border-bottom: 1px solid var(--border); position: relative; width: 100%; }
         .post-header { display: flex; gap: 12px; margin-bottom: 8px; }
         .avatar { width: 48px; height: 48px; border-radius: 12px; background: #333; background-size: cover; background-position: center; flex-shrink: 0; cursor: pointer; border: 1px solid var(--border); }
@@ -50,40 +34,33 @@
         .username { font-weight: 700; font-size: 15px; color: var(--text); display: flex; align-items: center; gap: 5px; }
         .post-text { font-size: 16px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
         
-        /* HASHTAGS */
-        .hashtag { color: var(--accent) !important; font-weight: 600; cursor: pointer; -webkit-user-select: none; user-select: none; }
+        .hashtag { color: var(--accent) !important; font-weight: 600; cursor: pointer; }
 
-        /* PHOTOS */
         .post-img { width: 100% !important; max-height: 350px !important; object-fit: cover; border-radius: 14px; margin-top: 12px; border: 1px solid var(--border); cursor: pointer; display: block; }
 
-        /* ACTIONS */
         .post-actions { display: flex; justify-content: space-between; max-width: 350px; margin-top: 15px; color: var(--muted); }
         .post-actions span { display: flex; align-items: center; gap: 10px; font-size: 16px; cursor: pointer; padding: 5px; }
-        .post-actions i { width: 24px; height: 24px; }
         .liked { color: var(--accent) !important; }
 
-        /* BOTTOM NAV */
         nav.bottom-nav { height: 65px; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; background: var(--bg); flex-shrink: 0; }
         .nav-item { color: var(--muted); position: relative; cursor: pointer; padding: 12px; }
         .nav-item.active { color: var(--text); }
         .badge { position: absolute; top: 8px; right: 8px; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; border: 2px solid var(--bg); display: none; }
 
-        /* SIDEBAR */
         .sidebar { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: var(--bg); z-index: 2000; border-right: 1px solid var(--border); transition: 0.3s ease; display: flex; flex-direction: column; }
         .sidebar.show { left: 0; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1500; display: none; }
 
-        /* NOTIFS */
-        .notif-item { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .notif-unread { background: rgba(220, 38, 38, 0.05); }
-        .red-dot { width: 10px; height: 10px; background: var(--accent); border-radius: 50%; }
+        .img-prev-container { position: relative; display: inline-block; margin-top: 10px; }
+        .img-prev-container img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; }
+        .img-prev-container .remove-btn { position: absolute; top: -5px; right: -5px; background: var(--accent); color: white; border-radius: 50%; border: none; width: 22px; height: 22px; font-weight: bold; cursor: pointer; }
 
-        /* LIGHTBOX */
         .lightbox { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; align-items: center; justify-content: center; }
-        .close-lb { position: absolute; top: 40px; right: 20px; background: var(--accent); color: #fff; border: none; border-radius: 50%; width: 45px; height: 45px; font-weight: bold; cursor: pointer; z-index: 5100; }
+        .close-lb { position: absolute; top: 40px; right: 20px; background: var(--accent); color: #fff; border: none; border-radius: 50%; width: 45px; height: 45px; font-weight: bold; cursor: pointer; z-index: 5100; font-size: 20px; }
 
         .btn-main { background: var(--accent); color: #fff; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 700; cursor: pointer; }
-        .profile-input { width: 100%; padding: 12px; background: var(--card); border: 1px solid var(--border); color: #fff; border-radius: 10px; font-size: 16px; margin-bottom: 10px; }
+        .settings-card { background: var(--card); padding: 18px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin: 0 16px 12px; cursor: pointer; border: 1px solid var(--border); }
+        .admin-badge { background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; margin-left: 5px; }
     </style>
 </head>
 <body class="dark">
@@ -91,11 +68,13 @@
 <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
 
 <aside class="sidebar" id="sidebar">
-    <div style="padding:20px; border-bottom:1px solid var(--border); font-weight:800; font-size:20px;">John Ross Social <span style="font-size: 10px; color: var(--accent)">v6.0</span></div>
-    <div style="padding:10px;">
+    <div style="padding:20px; border-bottom:1px solid var(--border); font-weight:800; font-size:20px;">John Ross Social <span style="font-size: 10px; color: var(--accent)">v7.0</span></div>
+    <div style="padding: 10px;">
+        <div onclick="showTab('home');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="home"></i> Αρχική</div>
+        <div onclick="showTab('profile');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="user"></i> Προφίλ</div>
         <div onclick="showTab('settings');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="settings"></i> Ρυθμίσεις</div>
-        <div onclick="forceClearCache()" style="padding:15px; cursor:pointer; color: orange"><i data-lucide="zap"></i> Καθαρισμός & Ανανέωση</div>
-        <div id="adminMenu" style="display:none;" onclick="showTab('admin');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="shield"></i> Admin Panel</div>
+        <div onclick="clearAppCache()" style="padding:15px; cursor:pointer; color: #ff9800"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</div>
+        <div id="adminBtn" style="display:none;" onclick="showTab('admin');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="shield"></i> Admin Panel</div>
         <hr style="border:none; border-top:1px solid var(--border); margin:10px 0;">
         <div onclick="logout()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
@@ -106,19 +85,19 @@
         <div class="header-top">
             <i data-lucide="menu" onclick="toggleSidebar(true)"></i>
             <div style="font-weight: 800; font-size: 20px;">John Ross Social</div>
-            <i data-lucide="refresh-cw" onclick="forceClearCache()" style="opacity:0.3"></i>
+            <i data-lucide="refresh-cw" onclick="location.reload()" style="opacity:0.3"></i>
         </div>
-        <div class="tabs" id="home-tabs">
+        <div class="tabs" id="home-tabs" style="display:none">
             <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</div>
             <div class="tab" id="tab-following" onclick="setFeed('following')">Ακολουθείς</div>
         </div>
     </header>
 
     <main id="main-scroll">
-        <div id="content"></div>
+        <div id="main-content"></div>
     </main>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottom-nav">
         <div class="nav-item active" id="n-home" onclick="showTab('home')"><i data-lucide="home"></i></div>
         <div class="nav-item" id="n-search" onclick="showTab('search')"><i data-lucide="search"></i></div>
         <div class="nav-item" id="n-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><div class="badge" id="notif-badge"></div></div>
@@ -166,21 +145,13 @@
             osc.type = "sine"; osc.frequency.setValueAtTime(450, ctx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
             gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
             osc.connect(gain); gain.connect(ctx.destination);
             osc.start(); osc.stop(ctx.currentTime + 0.1);
         } catch(e){}
     }
 
-    // FORCE CLEAR CACHE FUNCTION
-    function forceClearCache() {
-        if(confirm("Θέλετε να γίνει αναγκαστική ανανέωση της εφαρμογής;")) {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.reload(true); // Hard reload
-        }
-    }
-
-    // ΣΥΜΠΙΕΣΗ ΚΑΜΕΡΑΣ (ULTRA COMPRESSION)
+    // ΣΥΜΠΙΕΣΗ ΚΑΜΕΡΑΣ (FINAL FIX)
     async function processImage(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -194,7 +165,7 @@
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', 0.3)); // 30% compression for camera photos
+                    resolve(canvas.toDataURL('image/jpeg', 0.4));
                 };
                 img.src = e.target.result;
             };
@@ -205,7 +176,7 @@
     auth.onAuthStateChanged(u => {
         user = u;
         if(u) {
-            document.getElementById('adminMenu').style.display = (u.email === adminEmail) ? 'block' : 'none';
+            document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none';
             listenNotifs();
         }
         document.body.className = theme;
@@ -218,7 +189,6 @@
         document.getElementById('overlay').style.display = show ? 'block' : 'none';
     }
 
-    // NAVIGATION
     function showTab(t, fromBack = false) {
         if(!fromBack && currentTab !== t) {
             historyStack.push(currentTab);
@@ -232,12 +202,11 @@
     }
     window.onpopstate = () => { if(historyStack.length > 0) showTab(historyStack.pop(), true); };
 
-    // HASHTAG LOGIC (REGEX FIX)
     function format(text) {
         if(!text) return "";
         let escaped = String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
-        return escaped.replace(/#(\w+)/g, '<span class="hashtag" onclick="handleTagClick(\'#$1\')">#$1</span>')
-                      .replace(/@(\w+)/g, '<span class="hashtag" onclick="handleTagClick(\'@$1\')">@$1</span>');
+        return escaped.replace(/#(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleTagClick(\'#$1\')">#$1</span>')
+                      .replace(/@(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleTagClick(\'@$1\')">@$1</span>');
     }
     function handleTagClick(tag) {
         showTab('search');
@@ -251,8 +220,8 @@
         const container = document.getElementById('main-content');
         if(!user) {
             container.innerHTML = `<div style="padding:60px 25px; text-align:center;"><h1>John Ross Social</h1><br>
-                <input id="le" placeholder="Email" class="profile-input">
-                <input id="lp" type="password" placeholder="Κωδικός" class="profile-input">
+                <input id="le" placeholder="Email" style="width:100%; padding:15px; margin-bottom:10px; background:var(--card); border:1px solid var(--border); color:#fff; border-radius:10px;">
+                <input id="lp" type="password" placeholder="Κωδικός" style="width:100%; padding:15px; margin-bottom:20px; background:var(--card); border:1px solid var(--border); color:#fff; border-radius:10px;">
                 <button onclick="auth.signInWithEmailAndPassword(le.value, lp.value)" class="btn-main" style="width:100%">Σύνδεση</button></div>`;
             return;
         }
@@ -271,19 +240,19 @@
         container.innerHTML = `
             <div style="padding:16px; border-bottom:1px solid var(--border)">
                 <div style="display:flex; gap:12px">
-                    <div class="avatar" id="myAv" style="width:40px; height:40px"></div>
+                    <div class="avatar" id="myAvPost" style="width:45px; height:45px"></div>
                     <textarea id="postText" placeholder="Τι συμβαίνει;" style="flex:1; background:none; border:none; color:#fff; font-size:18px; outline:none; resize:none; font-family:inherit; min-height:60px"></textarea>
                 </div>
                 <div id="imgPrev"></div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-left:55px">
                     <i data-lucide="image" onclick="document.getElementById('fInp').click()" style="color:var(--blue); cursor:pointer"></i>
                     <input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)">
-                    <button onclick="sendPost()" class="btn-main">Post</button>
+                    <button onclick="sendPost()" class="btn-main">Δημοσίευση</button>
                 </div>
             </div>
             <div id="feed"></div>`;
         db.collection('users').doc(user.uid).get().then(doc => {
-            if(doc.exists && doc.data().photo) document.getElementById('myAv').style.backgroundImage = `url('${doc.data().photo}')`;
+            if(doc.exists && doc.data().photo) document.getElementById('myAvPost').style.backgroundImage = `url('${doc.data().photo}')`;
         });
         renderFeed();
     }
@@ -292,13 +261,13 @@
         if(!inp.files[0]) return;
         const data = await processImage(inp.files[0]);
         pendingImg = data;
-        document.getElementById('imgPrev').innerHTML = `<div style="position:relative;display:inline-block;margin-top:10px"><img src="${data}" style="width:80px;height:80px;border-radius:10px;object-fit:cover"><button onclick="pendingImg=null; document.getElementById('imgPrev').innerHTML=''" style="position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;border:none;width:22px;height:22px;font-weight:bold;cursor:pointer">×</button></div>`;
+        document.getElementById('imgPrev').innerHTML = `<div class="img-prev-container"><img src="${data}"><button class="remove-btn" onclick="pendingImg=null; document.getElementById('imgPrev').innerHTML=''">×</button></div>`;
     }
 
     function renderFeed() {
         const feed = document.getElementById('feed');
         if(!feed) return;
-        db.collection('posts').orderBy('createdAt', 'desc').limit(25).onSnapshot(snap => {
+        db.collection('posts').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
             let posts = snap.docs.map(d => ({id: d.id, ...d.data()}));
             if(feedType === 'following') {
                 db.collection('users').doc(user.uid).get().then(uDoc => {
@@ -365,7 +334,6 @@
                 return `<div class="notif-item ${!n.read?'notif-unread':''}" onclick="d.ref.update({read:true})"><span>${n.text}</span>${!n.read ? '<div class="red-dot"></div>' : ''}</div>`;
             }).join('') || '<p style="padding:20px">Καμία ειδοποίηση</p>';
             document.getElementById('notif-badge').style.display = 'none';
-            snap.docs.forEach(d => d.ref.update({read: true}));
         });
     }
 
@@ -382,11 +350,11 @@
             m.innerHTML = `<div style="height:100px; background:var(--card)"></div>
                 <div style="padding:0 20px; margin-top:-50px">
                     <div style="display:flex; justify-content:space-between; align-items:flex-end">
-                        <div class="avatar" onclick="openLB('${u.photo}')" style="width:95px; height:95px; border-radius:20px; border:4px solid var(--bg); ${u.photo?`background-image:url('${u.photo}')`:''}"></div>
-                        ${isOwn ? `<button onclick="document.getElementById('pInp').click()" class="btn-main" style="background:none; border:1px solid var(--border)">Αλλαγή Φωτό</button><input type="file" id="pInp" hidden accept="image/*" onchange="handleProfileFile(this)">` : ''}
+                        <div class="avatar" onclick="openLB('${u.photo}')" style="width:100px; height:100px; border-radius:15px; border:4px solid var(--bg); ${u.photo?`background-image:url('${u.photo}')`:''}"></div>
+                        ${isOwn ? `<button onclick="document.getElementById('pInp').click()" class="btn-main">Αλλαγή Φωτό</button><input type="file" id="pInp" hidden accept="image/*" onchange="handleProfileFile(this)">` : ''}
                     </div>
                     <div style="margin-top:15px">
-                        ${isOwn ? `<input id="uName" value="${u.name}" class="profile-input" style="font-weight:bold; margin-bottom:5px"><button onclick="saveName()" class="btn-main" style="padding:5px 15px; font-size:12px">Save Name</button>` : `<h2>${u.name}</h2>`}
+                        ${isOwn ? `<input id="uName" value="${u.name}" style="width:100%; padding:10px; background:var(--card); border:1px solid var(--border); color:#fff; border-radius:10px; font-weight:bold; margin-bottom:5px"><button onclick="saveName()" class="btn-main" style="padding:5px 15px; font-size:12px">Save</button>` : `<h2>${u.name}</h2>`}
                         <p style="color:var(--muted); margin-top:10px">${u.bio || 'Κανένα βιογραφικό'}</p>
                     </div>
                 </div><div id="user-feed"></div>`;
@@ -408,7 +376,7 @@
 
     function renderSettings(m) {
         m.innerHTML = `<div style="padding:20px"><h2>Ρυθμίσεις</h2><br>
-            <div style="background:var(--card); padding:18px; border-radius:15px; display:flex; justify-content:space-between; margin-bottom:10px" onclick="toggleTheme()"><span>Θέμα: Dark / Light</span><i data-lucide="moon"></i></div>
+            <div class="settings-card" onclick="toggleTheme()"><span>Θέμα: ${theme==='dark'?'Σκοτεινό':'Λευκό'}</span><i data-lucide="moon"></i></div>
         </div>`;
         lucide.createIcons();
     }
@@ -428,12 +396,11 @@
     }
     function openProfile(uid) { showTab('profile'); renderProfile(document.getElementById('content'), uid); }
     function openLB(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').style.display='flex'; }
+    function clearAppCache() { localStorage.clear(); location.reload(); }
     function setFeed(f) { feedType = f; document.querySelectorAll('.tab').forEach(e => e.classList.remove('active')); document.getElementById('tab-'+f).classList.add('active'); renderFeed(); }
-    function sharePost(id) { navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?post=" + id); alert("Link Copied!"); }
+    function sharePost(id) { const link = window.location.origin + window.location.pathname + "?post=" + id; navigator.clipboard.writeText(link); alert("Link Copied!"); }
 
     lucide.createIcons();
 </script>
 </body>
 </html>
-
-
