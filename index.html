@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -21,15 +20,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 .sidebar-nav{flex:1;padding:12px;overflow-y:auto}
 .sidebar-nav a{display:flex;align-items:center;gap:14px;padding:14px 16px;color:var(--text);text-decoration:none;border-radius:9999px;font-size:17px;font-weight:500;cursor:pointer;margin-bottom:4px}
 .sidebar-nav a:hover,.sidebar-nav a.active{background:var(--card)}
-.sidebar-nav a i{width:22px;height:22px}
 .sidebar-nav hr{border:none;border-top:1px solid var(--border);margin:12px 0}
-.admin-link{background:var(--card)!important;border:1px solid var(--accent)}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:none}
 .overlay.show{display:block}
 .main-header{position:sticky;top:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 16px;z-index:100;display:flex;align-items:center;gap:10px}
 body.light .main-header{background:rgba(255,255,255,.85)}
 .menu-btn{background:none;border:none;color:var(--text);cursor:pointer;padding:6px}
-.menu-btn i{width:24px;height:24px}
 .logo-text{font-weight:700;font-size:17px}
 .slogan-badge{background:var(--accent);color:#fff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
 .top-tabs{display:flex;border-bottom:1px solid var(--border)}
@@ -41,94 +37,33 @@ body.light .main-header{background:rgba(255,255,255,.85)}
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center;color:#fff;cursor:pointer}
 .avatar-lg{width:110px;height:110px;font-size:48px;border-radius:16px}
 .post-info{flex:1;min-width:0}
-.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;cursor:pointer}
+.username{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;cursor:pointer}
 .handle{color:var(--muted);font-size:14px}
 .post-content{font-size:15px;line-height:1.5;margin:4px 0 10px;word-wrap:break-word;white-space:pre-wrap}
-.post-images{margin:10px 0;border-radius:12px;overflow:hidden}
 .post-images img{width:100%;max-height:380px;object-fit:cover;border-radius:12px;cursor:pointer}
-.hash{color:#1d9bf0;cursor:pointer}
-.mention{color:var(--accent)!important;font-weight:600;cursor:pointer;user-select:none;-webkit-user-select:none}
 .post-actions{display:flex;gap:28px;color:var(--muted);font-size:13px;margin-top:10px;align-items:center}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer}
-.like-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1.5px solid transparent;transition:all .2s}
-.like-btn.liked{background:var(--accent);border-color:var(--accent);color:#fff !important}
-.like-btn.liked svg{color:#fff !important;fill:#fff}
 .comments-section{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
-.comment{padding:12px 0;display:flex;gap:10px;position:relative}
-.comment-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#dc2626,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center;cursor:pointer}
-.comment-info{flex:1;min-width:0}
-.comment-name{font-weight:700;font-size:13px;cursor:pointer}
-.comment-text{font-size:14px;margin-top:2px;line-height:1.4;word-wrap:break-word}
-.comment-actions{display:flex;align-items:center;gap:12px;margin-top:8px;color:var(--muted);font-size:12px}
-.comment-like-btn{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;color:var(--muted);font-size:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.comment-like-btn.liked{background:rgba(220,38,38,.15);border-color:var(--accent);color:var(--accent)!important}
-.comment-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:140px;z-index:40;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-.comment-menu.show{display:block}
-.comment-menu button{width:100%;background:none;border:none;color:var(--text);padding:11px 14px;text-align:left;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
-.comment-menu button:hover{background:var(--accent);color:#fff}
-.comment-input-row{display:flex;gap:8px;margin-top:12px}
-.comment-input-row input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9999px;font-size:14px;outline:none}
-.post-menu-container{position:relative;margin-left:auto}
-.menu-btn-icon{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px}
-.post-menu{position:absolute;right:0;top:28px;background:var(--card);border:1px solid var(--border);border-radius:12px;min-width:170px;z-index:50;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4)}
-.post-menu.show{display:block}
-.post-menu button{width:100%;background:none;border:none;color:var(--text);padding:12px 16px;text-align:left;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px}
-.post-menu button:hover{background:var(--accent);color:#fff}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
+.comment{padding:10px 0;display:flex;gap:10px}
+.comment-avatar{width:32px;height:32px;border-radius:50%;background:#444;background-size:cover;cursor:pointer}
+.comment-text{font-size:14px;margin-top:2px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:none;justify-content:space-around;padding:10px 0;max-width:600px;margin:0 auto;z-index:100}
 body.light .bottom-nav{background:rgba(255,255,255,.92)}
-.nav-item{background:none;border:none;color:var(--muted);padding:8px 18px;cursor:pointer;position:relative}
+.nav-item{background:none;border:none;color:var(--muted);padding:8px 18px;cursor:pointer}
 .nav-item.active{color:var(--accent)}
-.nav-item i{width:26px;height:26px}
-.nav-badge{position:absolute;top:6px;right:14px;width:9px;height:9px;background:var(--accent);border-radius:50%;display:none}
 .auth-container{text-align:center;padding:50px 24px}
-.auth-container h2{margin-bottom:8px;font-size:28px;font-weight:800}
-.auth-container .slogan{color:var(--muted);margin-bottom:32px}
-.auth-container input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:14px 18px;border-radius:9999px;margin:8px 0;font-size:15px;max-width:340px;outline:none}
-.auth-container button{width:100%;max-width:340px;background:var(--accent);color:#fff;border:none;padding:14px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:15px;margin:8px 0}
-.auth-container .btn-o{background:transparent;border:1px solid var(--border);color:var(--text)}
+.auth-container input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:14px;border-radius:9999px;margin:8px 0;outline:none;max-width:340px}
+.auth-container button{width:100%;max-width:340px;background:var(--accent);color:#fff;border:none;padding:14px;border-radius:9999px;font-weight:700;cursor:pointer;margin:8px 0}
 .profile{padding:20px}
-.profile-header{text-align:center;margin-bottom:20px}
-.profile-stats{display:flex;justify-content:center;gap:36px;margin:18px 0;color:var(--muted);font-size:14px}
-.profile-stats b{color:var(--text);font-size:20px;display:block}
-.profile-stats span{cursor:pointer}
-.profile-form input,.profile-form textarea{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:16px;margin:8px 0;font-size:15px;font-family:inherit;outline:none}
-.profile-form textarea{border-radius:12px;min-height:70px;resize:vertical}
-.profile-form button{width:100%;background:var(--accent);color:#fff;border:none;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;margin-top:12px}
-.btn-full{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
-.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:9999px;cursor:pointer;font-size:14px}
-.btn-follow{background:var(--text);color:var(--bg);border:none;padding:8px 20px;border-radius:9999px;font-weight:700;cursor:pointer;font-size:14px}
-.btn-follow.following{background:transparent;border:1.5px solid var(--border);color:var(--text)}
-.profile-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
-.empty-state{padding:50px 20px;text-align:center;color:var(--muted);font-size:15px}
-.admin-badge{background:var(--accent);color:#fff;padding:2px 7px;border-radius:8px;font-size:11px;font-weight:600}
-.notif-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:10px}
-.notif-item:hover{background:var(--hover)}
-.notif-item.unread{background:rgba(29,155,240,0.15)!important;border-left:4px solid var(--blue)}
-.notif-content{flex:1}
-.img-preview{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
-.img-preview img{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}
-.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
-.lightbox.show{display:flex}
-.lightbox img{max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain}
-.lightbox-close{position:absolute;top:16px;right:16px;background:none;border:none;color:#fff;font-size:32px;cursor:pointer}
-.user-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.profile-stats{display:flex;justify-content:center;gap:30px;margin:15px 0}
+.profile-stats b{display:block;font-size:18px}
 .edit-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1500;display:none;align-items:center;justify-content:center;padding:20px}
 .edit-modal.show{display:flex}
 .edit-box{background:var(--card);border-radius:16px;padding:20px;width:100%;max-width:400px}
-.edit-box textarea{width:100%;min-height:100px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:12px;font-size:15px;font-family:inherit;resize:vertical;outline:none}
-.edit-actions{display:flex;gap:10px;margin-top:14px}
-.edit-actions button{flex:1;padding:12px;border-radius:9999px;font-weight:700;cursor:pointer;border:none}
-.single-post-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.single-post-header button{background:none;border:none;color:var(--text);cursor:pointer}
-.cta-box{margin:20px 16px;padding:20px;background:var(--card);border-radius:16px;text-align:center;border:1px solid var(--border)}
-.repost-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.quoted-box{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;background:var(--hover);position:relative}
-.quoted-box .q-name{font-weight:700;font-size:13px;cursor:pointer;color:var(--accent)}
-.quoted-box .q-text{font-size:14px;margin-top:4px}
-.quoted-box img{width:100%;max-height:220px;object-fit:cover;border-radius:8px;margin-top:8px;cursor:pointer}
-#mentionDropdown{display:none;position:fixed;background:var(--card);border:1px solid var(--border);border-radius:12px;max-height:180px;overflow-y:auto;z-index:300;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-#mentionDropdown .mention-item{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border)}
-#mentionDropdown .mention-item:hover{background:var(--hover)}
+.edit-box textarea{width:100%;min-height:100px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:12px;margin-bottom:10px;resize:none;outline:none}
+.notif-item{padding:14px;border-bottom:1px solid var(--border);cursor:pointer}
+.notif-item.unread{background:rgba(29,155,240,0.1)}
+.img-preview img{width:80px;height:80px;object-fit:cover;border-radius:8px;margin-top:10px}
 </style>
 </head>
 <body>
@@ -139,54 +74,14 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
     <button id="close-sidebar" onclick="closeSidebar()">&times;</button>
   </div>
   <nav class="sidebar-nav">
-    <a onclick="goHome();closeSidebar()"><i data-lucide="home"></i> Home</a>
-    <a onclick="goProfile();closeSidebar()"><i data-lucide="user"></i> Profile</a>
-    <a onclick="showEditProfile();closeSidebar()"><i data-lucide="edit-3"></i> Edit Profile</a>
-    <a onclick="aiAssistant();closeSidebar()"><i data-lucide="bot"></i> AI Assistant</a>
-    <a onclick="settings();closeSidebar()"><i data-lucide="settings"></i> Settings</a>
-    <a onclick="clearCache();closeSidebar()"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</a>
-    <div id="adminMenuItem" style="display:none"><hr><a class="admin-link" onclick="showAdminPanel();closeSidebar()"><i data-lucide="shield"></i> Admin Panel</a></div>
+    <a onclick="goHome();closeSidebar()"><i data-lucide="home"></i> Αρχική</a>
+    <a onclick="showTab('profile');closeSidebar()"><i data-lucide="user"></i> Προφίλ</a>
+    <a onclick="showSettings();closeSidebar()"><i data-lucide="settings"></i> Ρυθμίσεις</a>
+    <a onclick="clearCache();closeSidebar()"><i data-lucide="trash-2"></i> Καθαρισμός Cache</a>
     <hr>
-    <a onclick="logout();closeSidebar()"><i data-lucide="log-out"></i> Logout</a>
+    <a onclick="logout();closeSidebar()"><i data-lucide="log-out"></i> Αποσύνδεση</a>
   </nav>
 </aside>
-
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
-  <img id="lightboxImg" src="" alt="">
-</div>
-
-<div class="edit-modal" id="editModal">
-  <div class="edit-box">
-    <h3 style="margin-bottom:12px;font-weight:700" id="editModalTitle">Επεξεργασία</h3>
-    <textarea id="editText"></textarea>
-    <div class="edit-actions">
-      <button style="background:var(--border);color:var(--text)" onclick="closeEditModal()">Ακύρωση</button>
-      <button style="background:var(--accent);color:#fff" onclick="saveEditPost()">Αποθήκευση</button>
-    </div>
-  </div>
-</div>
-
-<div class="edit-modal" id="shareModal">
-  <div class="edit-box">
-    <h3 style="margin-bottom:16px;font-weight:700" id="shareModalTitle">Κοινοποίηση</h3>
-    <button class="btn-full" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="doNativeShare()">
-      <i data-lucide="share-2" style="width:18px;height:18px"></i> <span id="shareAppsText">Κοινοποίηση σε εφαρμογές</span>
-    </button>
-    <button class="btn-outline" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="copyFromShare()">
-      <i data-lucide="link" style="width:18px;height:18px"></i> <span id="shareCopyText">Αντιγραφή συνδέσμου</span>
-    </button>
-    <button class="btn-outline" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="doRepost()">
-      <i data-lucide="repeat-2" style="width:18px;height:18px"></i> <span id="shareRepostText">Αναδημοσίευση</span>
-    </button>
-    <button class="btn-outline" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px" onclick="quoteFromShare()">
-      <i data-lucide="quote" style="width:18px;height:18px"></i> <span id="shareQuoteText">Παράθεση</span>
-    </button>
-    <button style="width:100%;padding:12px;border-radius:9999px;border:none;background:var(--border);color:var(--text);font-weight:600;cursor:pointer;margin-top:6px" onclick="closeShareModal()">
-      <span id="shareCloseText">Κλείσιμο</span>
-    </button>
-  </div>
-</div>
 
 <main class="app-container">
   <header class="main-header">
@@ -194,18 +89,22 @@ body.light .bottom-nav{background:rgba(255,255,255,.92)}
     <div class="logo-text">John Ross Social</div>
     <div class="slogan-badge">Your space. Your voice.</div>
   </header>
+  
   <div id="main"></div>
-  <nav class="bottom-nav" id="bottomNav" style="display:none">
-    <button class="nav-item" data-tab="home" onclick="showTab('home')"><i data-lucide="home"></i></button>
-    <button class="nav-item" data-tab="search" onclick="showTab('search')"><i data-lucide="search"></i></button>
-    <button class="nav-item" data-tab="notif" onclick="showTab('notif')"><i data-lucide="bell"></i><span class="nav-badge" id="notifBadge"></span></button>
-    <button class="nav-item" data-tab="profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
+
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item" id="nav-home" onclick="showTab('home')"><i data-lucide="home"></i></button>
+    <button class="nav-item" id="nav-search" onclick="showTab('search')"><i data-lucide="search"></i></button>
+    <button class="nav-item" id="nav-notif" onclick="showTab('notif')"><i data-lucide="bell"></i></button>
+    <button class="nav-item" id="nav-profile" onclick="showTab('profile')"><i data-lucide="user"></i></button>
   </nav>
 </main>
 
+<!-- Scripts -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCPIg-aoWUhqOqO5hyHUd66HLcHPyC6e70",
@@ -220,109 +119,147 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let user = null;
-let tab = sessionStorage.getItem('jrs_tab') || 'home';
-let feedType = 'foryou';
-let lang = localStorage.getItem('jrs_lang') || 'el';
-let pendingImages = [];
-let pendingQuote = null;
-let viewingUid = null;
-let historyStack = [];
-let editingPostId = null;
-let editingCommentId = null;
-let editingCommentPostId = null;
-let singlePostId = null;
-let sharePostId = null;
-let sharePostUrl = '';
-let sharePostText = '';
-let activeMentionInput = null;
-const adminEmails = ['rossrossg7@gmail.com'];
+let currentTab = 'home';
+let lang = 'el';
 
-const T = {
-  en:{forYou:'For You',following:'Following',login:'Login',register:'Register',email:'Email',password:'Password',google:'Google',logout:'Logout',post:'Post',placeholder:"What's happening?",like:'Like',comment:'Comment',noPosts:'No posts yet',noNotifs:'No notifications',search:'Search',profile:'Profile',bio:'Bio',save:'Save',followers:'followers',following2:'following',delete:'Delete',follow:'Follow',unfollow:'Following',changePic:'Change photo',slogan:'Your space. Your voice.',settings:'Settings',language:'Language',comingSoon:'Coming soon',noFollowing:"You're not following anyone yet",adminPanel:'Admin Panel',totalUsers:'Total Users',totalPosts:'Total Posts',recentActivity:'Recent Activity',darkMode:'Dark Mode',lightMode:'Light Mode',myPosts:'Posts',editProfile:'Edit Profile',noUsers:'No users yet',copyLink:'Copy link',edit:'Edit',joinUs:'Join John Ross Social',joinDesc:'Create your free profile and start posting!',signIn:'Sign in / Register',mute:'Mute',unmute:'Unmute',block:'Block',unblock:'Unblock',repost:'Repost',quote:'Quote',reposted:'reposted',share:'Share',reply:'Reply'},
-  el:{forYou:'Για εσένα',following:'Ακολουθείς',login:'Σύνδεση',register:'Εγγραφή',email:'Email',password:'Κωδικός',google:'Google',logout:'Αποσύνδεση',post:'Δημοσίευση',placeholder:'Τι σκέφτεσαι;',like:'Μου αρέσει',comment:'Σχόλιο',noPosts:'Δεν υπάρχουν δημοσιεύσεις',noNotifs:'Δεν υπάρχουν ειδοποιήσεις',search:'Αναζήτηση',profile:'Προφίλ',bio:'Βιογραφικό',save:'Αποθήκευση',followers:'ακόλουθοι',following2:'ακολουθείς',delete:'Διαγραφή',follow:'Ακολούθηση',unfollow:'Ακολουθείς',changePic:'Αλλαγή φωτογραφίας',slogan:'Ο χώρος σου. Η φωνή σου.',settings:'Ρυθμίσεις',language:'Γλώσσα',comingSoon:'Έρχεται σύντομα',noFollowing:'Δεν ακολουθείς κανέναν ακόμα',adminPanel:'Admin Panel',totalUsers:'Συνολικοί Χρήστες',totalPosts:'Συνολικές Δημοσιεύσεις',recentActivity:'Πρόσφατη Δραστηριότητα',darkMode:'Σκοτεινό θέμα',lightMode:'Φωτεινό θέμα',myPosts:'Δημοσιεύσεις',editProfile:'Επεξεργασία Προφίλ',noUsers:'Δεν υπάρχουν χρήστες',copyLink:'Αντιγραφή συνδέσμου',edit:'Επεξεργασία',joinUs:'Μπες στο John Ross Social',joinDesc:'Φτιάξε δωρεάν προφίλ και άρχισε να δημοσιεύεις!',signIn:'Σύνδεση / Εγγραφή',mute:'Σίγαση',unmute:'Άρση σίγασης',block:'Αποκλεισμός',unblock:'Άρση αποκλεισμού',repost:'Αναδημοσίευση',quote:'Παράθεση',reposted:'αναδημοσίευσε',share:'Κοινοποίηση',reply:'Απάντηση'}
-};
-
-function t(k){return T[lang][k]||k}
-function isAdmin(email){return adminEmails.includes(email)}
-function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function genId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,6)}
-function norm(s){return String(s||'').toLowerCase().replace(/\s+/g,'')}
-
-function toggleLang(){lang=lang==='en'?'el':'en';localStorage.setItem('jrs_lang',lang);render()}
-function toggleTheme(){document.body.classList.toggle('light');localStorage.setItem('theme',document.body.classList.contains('light')?'light':'dark')}
-function loadTheme(){if(localStorage.getItem('theme')==='light')document.body.classList.add('light')}
-
+// UI Helpers
 function openSidebar(){document.getElementById('sidebar').classList.add('show');document.getElementById('overlay').classList.add('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').classList.remove('show')}
-function goHome(){singlePostId=null;showTab('home')}
-function goProfile(){viewingUid=null;singlePostId=null;showTab('profile')}
-function aiAssistant(){alert(t('comingSoon'))}
-function settings(){showSettings()}
-function clearCache(){if(confirm(lang==='el'?'Θέλεις να καθαρίσεις την προσωρινή μνήμη;':'Clear cache?')){localStorage.clear();sessionStorage.clear();location.reload(true);}}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function clearCache(){ localStorage.clear(); location.reload(); }
 
-function showTab(name, fromBack){
-  if(!fromBack && tab !== name){historyStack.push(tab);if(historyStack.length>8)historyStack.shift();try{history.pushState({tab:name},'');}catch(e){}}
-  tab=name;singlePostId=null;sessionStorage.setItem('jrs_tab',name);
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  render();if(typeof lucide!=='undefined')lucide.createIcons();
-}
-
-auth.onAuthStateChanged(u=>{
-  user=u;
-  const ai=document.getElementById('adminMenuItem');
-  if(ai)ai.style.display=(u&&isAdmin(u.email))?'block':'none';
+// Auth Logic
+auth.onAuthStateChanged(u => {
+  user = u;
   render();
-  if(u)listenUnreadNotifs(u.uid);
 });
 
-function login(){const e=document.getElementById('le').value,p=document.getElementById('lp').value;auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message))}
-function register(){const e=document.getElementById('le').value,p=document.getElementById('lp').value;if(!e||!p)return alert(t('email')+' & '+t('password'));auth.createUserWithEmailAndPassword(e,p).then(cred=>db.collection('users').doc(cred.user.uid).set({email:e,name:e.split('@')[0],bio:'',photo:'',followers:[],following:[],muted:[],blocked:[],createdAt:Date.now()})).catch(err=>alert(err.message))}
-function googleLogin(){const provider=new firebase.auth.GoogleAuthProvider();auth.signInWithPopup(provider).then(cred=>saveUserToDb(cred.user)).catch(err=>alert(err.message))}
-function saveUserToDb(u){db.collection('users').doc(u.uid).set({email:u.email,name:u.displayName||u.email.split('@')[0],bio:'',photo:u.photoURL||'',followers:[],following:[],muted:[],blocked:[],createdAt:Date.now()},{merge:true})}
-function logout(){auth.signOut();sessionStorage.removeItem('jrs_tab');historyStack=[];singlePostId=null}
-
-async function getUserName(uid){try{const doc=await db.collection('users').doc(uid).get();if(doc.exists)return doc.data().name||'User'}catch(e){}return 'User'}
-
-function compressImage(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=e=>{const img=new Image();img.onload=()=>{try{const MAX=600;let w=img.width,h=img.height;if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX}}const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);let data=canvas.toDataURL('image/jpeg',0.5);resolve(data)}catch(err){reject(err)}};img.src=e.target.result};reader.readAsDataURL(file)})}
-
-async function handleImageSelect(e){const file=e.target.files[0];if(!file)return;try{const compressed=await compressImage(file);pendingImages=[compressed];renderImagePreview()}catch(err){alert('Error photo')}e.target.value=''}
-function renderImagePreview(){
-    const box=document.getElementById('imgPreview');
-    if(!box)return;
-    box.innerHTML = '';
-    if(pendingQuote){
-        const o = pendingQuote.original;
-        box.innerHTML = `<div class="quoted-box"><button style="position:absolute;top:5px;right:5px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer" onclick="removeQuote()">×</button><div class="q-name">@${esc(norm(o.name))}</div><div class="q-text">${esc(o.text)}</div></div>`;
-    } else {
-        box.innerHTML = pendingImages.map(src=>`<div style="position:relative;display:inline-block"><img src="${src}"><button style="position:absolute;top:-6px;right:-6px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer" onclick="removeImage()">×</button></div>`).join('');
-    }
+function login(){
+  const e=document.getElementById('le').value, p=document.getElementById('lp').value;
+  auth.signInWithEmailAndPassword(e,p).catch(err=>alert(err.message));
 }
-function removeImage(){pendingImages=[];renderImagePreview()}
-function removeQuote(){pendingQuote=null;renderImagePreview()}
+function register(){
+  const e=document.getElementById('le').value, p=document.getElementById('lp').value;
+  auth.createUserWithEmailAndPassword(e,p).then(cred => {
+    db.collection('users').doc(cred.user.uid).set({name:e.split('@')[0], bio:'', photo:'', followers:[], following:[], createdAt:Date.now()});
+  }).catch(err=>alert(err.message));
+}
+function logout(){ auth.signOut(); }
 
-function postContent(){
-    const ta=document.getElementById('postText');
-    if(!ta.value.trim() && pendingImages.length===0 && !pendingQuote) return;
-    db.collection('users').doc(user.uid).get().then(doc=>{
-        const u=doc.data()||{};
-        const postData={
-            uid:user.uid, name:u.name||user.email.split('@')[0], email:user.email,
-            photo:u.photo||'', text:ta.value, images:pendingImages,
-            likes:0, likedBy:[], comments:[], createdAt:Date.now(),
-            isRepost:false, isQuote: !!pendingQuote
-        };
-        if(pendingQuote){ postData.originalPostId=pendingQuote.originalPostId; postData.original=pendingQuote.original; }
-        db.collection('posts').add(postData);
-        ta.value=''; pendingImages=[]; pendingQuote=null; renderImagePreview();
-    });
+// Navigation
+function showTab(t){
+  currentTab = t;
+  render();
 }
 
+// Main Render
+function render(){
+  const m = document.getElementById('main');
+  const nav = document.getElementById('bottomNav');
+  
+  if(!user){
+    nav.style.display = 'none';
+    m.innerHTML = `
+      <div class="auth-container">
+        <div style="font-size:50px">👋</div>
+        <h2>Καλώς ήρθες</h2>
+        <input id="le" placeholder="Email">
+        <input id="lp" type="password" placeholder="Password">
+        <button onclick="login()">Σύνδεση</button>
+        <button style="background:#333" onclick="register()">Εγγραφή</button>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+  
+  nav.style.display = 'flex';
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  const activeNav = document.getElementById('nav-' + currentTab);
+  if(activeNav) activeNav.classList.add('active');
+
+  if(currentTab === 'home') renderHome(m);
+  else if(currentTab === 'search') renderSearch(m);
+  else if(currentTab === 'notif') renderNotifs(m);
+  else if(currentTab === 'profile') renderProfile(m);
+  
+  lucide.createIcons();
+}
+
+// Home Feed
 function renderHome(m){
-    m.innerHTML=`<div style="padding:14px 16px;border-bottom:1px solid var(--border)"><textarea id="postText" placeholder="${t('placeholder')}" style="width:100%;background:transparent;border:none;color:var(--text);font-size:17px;resize:none;min-height:60px;outline:none;font-family:inherit"></textarea><div id="imgPreview" class="img-preview"></div><div style="display:flex;justify-content:space-between;margin-top:8px"><button onclick="document.getElementById('imgInput').click()" style="background:none;border:none;color:var(--muted);cursor:pointer"><i data-lucide="image"></i></button><input type="file" id="imgInput" style="display:none" onchange="handleImageSelect(event)"><button class="btn-full" style="width:auto;padding:8px 20px" onclick="postContent()">${t('post')}</button></div></div><div id="feed"></div>`;
-    db.collection('posts').orderBy('createdAt','desc').limit(40).onSnapshot(snap=>renderPosts(snap, document.getElementById('feed')));
-    if(typeof lucide!=='undefined')lucide.createIcons();
+  m.innerHTML = `
+    <div style="padding:15px; border-bottom:1px solid var(--border)">
+      <textarea id="postText" placeholder="Τι σκέφτεσαι;" style="width:100%; background:none; border:none; color:#fff; font-size:18px; outline:none; resize:none"></textarea>
+      <div style="text-align:right; margin-top:10px">
+        <button class="btn-full" style="width:auto; padding:8px 20px" onclick="createPost()">Post</button>
+      </div>
+    </div>
+    <div id="feed"><div class="empty-state">Φόρτωση...</div></div>`;
+  
+  db.collection('posts').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
+    const feed = document.getElementById('feed');
+    if(snap.empty) { feed.innerHTML = '<div class="empty-state">Δεν υπάρχουν δημοσιεύσεις</div>'; return; }
+    feed.innerHTML = snap.docs.map(d => {
+      const p = d.data();
+      return `
+        <div class="post">
+          <div class="post-header">
+            <div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}">👤</div>
+            <div class="post-info"><b>${esc(p.name)}</b><div class="handle">@${esc(p.name.toLowerCase())}</div></div>
+          </div>
+          <div class="post-content">${esc(p.text)}</div>
+          <div class="post-actions">
+            <span><i data-lucide="heart" style="width:18px"></i> ${p.likes||0}</span>
+            <span><i data-lucide="message-circle" style="width:18px"></i></span>
+          </div>
+        </div>`;
+    }).join('');
+    lucide.createIcons();
+  });
 }
 
-function renderPosts(snap, f){
-    if(!f)return;
-    if(snap.empty){f.innerHTML='<div clas
+function createPost(){
+  const txt = document.getElementById('postText').value;
+  if(!txt.trim()) return;
+  db.collection('posts').add({
+    uid: user.uid, name: user.email.split('@')[0], text: txt,
+    likes:0, createdAt: Date.now()
+  });
+  document.getElementById('postText').value = '';
+}
+
+// Search
+function renderSearch(m){
+  m.innerHTML = `<div style="padding:15px"><input placeholder="Αναζήτηση χρηστών..." style="width:100%; background:var(--card); border:none; color:#fff; padding:12px; border-radius:20px; outline:none"></div><div class="empty-state">Ξεκινήστε την αναζήτηση</div>`;
+}
+
+// Notifications
+function renderNotifs(m){
+  m.innerHTML = `<div class="empty-state">Δεν υπάρχουν νέες ειδοποιήσεις</div>`;
+}
+
+// Profile
+function renderProfile(m){
+  db.collection('users').doc(user.uid).get().then(doc => {
+    const u = doc.data() || {};
+    m.innerHTML = `
+      <div class="profile">
+        <div style="text-align:center">
+          <div class="avatar avatar-lg" style="margin:0 auto; ${u.photo?`background-image:url('${u.photo}')`:''}">👤</div>
+          <h2 style="margin-top:10px">${esc(u.name || user.email.split('@')[0])}</h2>
+          <p style="color:var(--muted)">${esc(u.bio || 'Κανένα βιογραφικό')}</p>
+        </div>
+        <div class="profile-stats">
+          <span><b>${(u.followers||[]).length}</b> Followers</span>
+          <span><b>${(u.following||[]).length}</b> Following</span>
+        </div>
+        <button class="btn-outline" style="width:100%" onclick="alert('Επεξεργασία σύντομα')">Επεξεργασία Προφίλ</button>
+      </div>`;
+  });
+}
+
+// Initialize Lucide
+lucide.createIcons();
+</script>
+</body>
+</html>
