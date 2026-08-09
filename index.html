@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>John Ross Social v24</title>
+    <title>John Ross Social v25</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root { --bg:#000; --text:#fff; --muted:#777; --border:#222; --card:#16181c; --accent:#dc2626; --blue:#1d9bf0; }
         body.light { --bg:#fff; --text:#000; --muted:#666; --border:#eee; --card:#f7f9f9; }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:-apple-system, system-ui, sans-serif; position:fixed; }
+        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:sans-serif; position:fixed; }
+        
         .app-wrapper { width:100%; height:100%; display:flex; flex-direction:column; max-width:550px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); position:relative; }
         
+        /* HEADER */
         header { background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; z-index:1000; }
         .header-top { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
         .tabs { display:flex; border-bottom:1px solid var(--border); }
@@ -19,6 +21,8 @@
         .tab.active { color:var(--text); border-bottom:2px solid var(--accent); }
         
         #main-scroll { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+
+        /* POSTS */
         .post { padding:16px; border-bottom:1px solid var(--border); position:relative; width:100%; }
         .post-header { display:flex; gap:12px; margin-bottom:8px; align-items: flex-start; }
         .avatar { width:48px; height:48px; border-radius:12px; background:#333; background-size:cover; background-position:center; flex-shrink:0; cursor:pointer; border:1px solid var(--border); }
@@ -27,28 +31,35 @@
         .hashtag { color:var(--accent) !important; font-weight:600; cursor:pointer; }
         .post-img { width:100%; max-height:350px; object-fit:cover; border-radius:14px; margin-top:12px; border:1px solid var(--border); cursor:pointer; display:block; background:#111; }
         
-        .post-actions { display:flex; justify-content:space-between; max-width:400px; margin-top:15px; color:var(--muted); }
+        .post-actions { display:flex; justify-content:space-between; max-width:350px; margin-top:15px; color:var(--muted); }
         .post-actions span { display:flex; align-items:center; gap:8px; font-size:16px; cursor:pointer; padding:5px; }
         .liked i { fill:var(--accent); color:var(--accent); }
         .post-menu-btn { position:absolute; top:15px; right:12px; color:var(--muted); cursor:pointer; padding:5px; }
 
+        /* SIDEBAR WITH RED X */
         .sidebar { position:fixed; top:0; left:-285px; width:280px; height:100%; background:var(--bg); z-index:3000; border-right:1px solid var(--border); transition:0.3s ease; display:flex; flex-direction:column; }
         .sidebar.show { left:0; }
         .sidebar-header { padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
         .close-btn-red { color:var(--accent); cursor:pointer; }
 
+        /* MODALS */
         .modal { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:5000; display:none; align-items:center; justify-content:center; padding:20px; }
         .modal-content { background:var(--card); width:100%; max-width:400px; border-radius:24px; padding:20px; border:1px solid var(--border); }
         .input-box { width:100%; padding:14px; background:var(--bg); border:1px solid var(--border); color:#fff; border-radius:12px; font-size:16px; margin-top:5px; margin-bottom:10px; }
 
+        /* NAV */
         nav.bottom-nav { height:65px; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; background:var(--bg); flex-shrink:0; }
         .nav-item { color:var(--muted); position:relative; cursor:pointer; padding:12px; }
         .nav-item.active { color:var(--text); }
         .red-dot { position:absolute; top:8px; right:8px; width:12px; height:12px; background:var(--accent); border-radius:50%; border:2px solid var(--bg); display:none; }
         .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1500; display:none; }
         .btn-main { background:var(--accent); color:#fff; border:none; padding:12px 25px; border-radius:20px; font-weight:700; cursor:pointer; width:100%; }
+        
         .lightbox { position:fixed; inset:0; background:#000; z-index:6000; display:none; align-items:center; justify-content:center; }
         .close-lb { position:absolute; top:40px; right:20px; background:var(--accent); color:#fff; border:none; border-radius:50%; width:45px; height:45px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:22px; }
+        
+        .settings-row { padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; background:var(--card); border-radius:12px; margin-bottom:10px; }
+        .admin-badge { background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; margin-left:5px; }
     </style>
 </head>
 <body class="dark">
@@ -76,10 +87,10 @@
         <div class="header-top">
             <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
             <div style="font-weight:800; font-size:20px">John Ross Social</div>
-            <i data-lucide="bell" onclick="showTab('notif')" style="cursor:pointer"></i>
+            <i data-lucide="refresh-cw" onclick="location.reload()" style="opacity:0.2"></i>
         </div>
         <div class="tabs" id="home-tabs" style="display:none">
-            <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')" data-t="foryou">Για εσένα</div>
+            <div class="tab active" id="t-foryou" onclick="setFeed('foryou')" data-t="foryou">Για εσένα</div>
             <div class="tab" id="tab-following" onclick="setFeed('following')" data-t="following">Ακολουθείς</div>
         </div>
     </header>
@@ -96,10 +107,10 @@
 <div class="modal" id="shareModal">
     <div class="modal-content">
         <h3 id="shTitle">Κοινοποίηση</h3><br>
-        <div onclick="doNativeShare()" style="padding:15px; border-bottom:1px solid var(--border); cursor:pointer">Κοινοποίηση σε εφαρμογές</div>
-        <div onclick="copyLink()" style="padding:15px; border-bottom:1px solid var(--border); cursor:pointer">Αντιγραφή Συνδέσμου</div>
-        <div onclick="repostNow()" style="padding:15px; border-bottom:1px solid var(--border); cursor:pointer">Αναδημοσίευση (Repost)</div>
-        <div onclick="quoteNow()" style="padding:15px; cursor:pointer">Παράθεση (Quote)</div>
+        <div onclick="doNativeShare()" class="settings-row"><span>Σε εφαρμογές</span><i data-lucide="share"></i></div>
+        <div onclick="copyLink()" class="settings-row"><span>Αντιγραφή Συνδέσμου</span><i data-lucide="link"></i></div>
+        <div onclick="repostNow()" class="settings-row"><span>Repost</span><i data-lucide="repeat"></i></div>
+        <div onclick="quoteNow()" class="settings-row"><span>Quote</span><i data-lucide="quote"></i></div>
         <button onclick="closeAll()" class="btn-main" style="background:#222; margin-top:10px">Κλείσιμο</button>
     </div>
 </div>
@@ -113,7 +124,7 @@
     const firebaseConfig = { apiKey: "AIzaSyCPIg-aoWUhqOqO5hyHUd66HLcHPyC6e70", authDomain: "studio-386569156-384ec.firebaseapp.com", projectId: "studio-386569156-384ec", storageBucket: "studio-386569156-384ec.firebasestorage.app", messagingSenderId: "976658898078", appId: "1:976658898078:web:6209be10508924e2116f8f" };
     firebase.initializeApp(firebaseConfig); const auth = firebase.auth(); const db = firebase.firestore();
     
-    let user = null, currentTab = 'home', feedType = 'foryou', pendingImg = null, historyStack = [], activePost = null;
+    let user = null, currentTab = 'home', feedType = 'foryou', pendingImg = null, activePost = null, historyStack = [];
     let lang = localStorage.getItem('jrs_lang') || 'el', theme = localStorage.getItem('jrs_theme') || 'dark';
     const adminEmail = 'rossrossg7@gmail.com';
 
@@ -122,23 +133,12 @@
         en: { home:"Home", profile:"Profile", settings:"Settings", clearCache:"Clear Cache", logout:"Logout", foryou:"For You", following:"Following", placeholder:"What's happening?", save:"Save Changes", langBtn:"Ελληνικά" }
     };
 
-    function playPop() {
-        try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator(); const gain = ctx.createGain();
-            osc.type = "sine"; osc.frequency.setValueAtTime(500, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.2, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(ctx.destination);
-            osc.start(); osc.stop(ctx.currentTime + 0.1);
-        } catch(e){}
-    }
+    function playPop() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.type="sine"; o.frequency.setValueAtTime(500, ctx.currentTime); o.frequency.exponentialRampToValueAtTime(100, ctx.currentTime+0.1); g.gain.setValueAtTime(0.2, ctx.currentTime); o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.1); } catch(e){} }
 
     auth.onAuthStateChanged(u => { user = u; if(u) { document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none'; listenNotifs(); } document.body.className = theme; render(); });
 
     function toggleSidebar(s) { document.getElementById('sidebar').classList.toggle('show', s); document.getElementById('overlay').style.display = s ? 'block' : 'none'; }
-    function closeAll() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); document.getElementById('overlay').style.display='none'; toggleSidebar(false); }
+    function closeAll() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); document.getElementById('sidebar').classList.remove('show'); document.getElementById('overlay').style.display='none'; }
 
     function showTab(t, fromBack = false) {
         if(!fromBack && currentTab !== t) { historyStack.push(currentTab); window.history.pushState({tab: t}, ""); }
@@ -151,8 +151,8 @@
 
     function format(text) {
         if(!text) return "";
-        let esc = String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
-        return esc.replace(/#(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleHash(\'#$1\')">#$1</span>');
+        let escaped = String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+        return escaped.replace(/#(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleHash(\'#$1\')">#$1</span>');
     }
     function handleHash(h) { showTab('search'); setTimeout(() => { const i = document.getElementById('searchInp'); if(i) { i.value = h; doSearch(h); } }, 400); }
 
@@ -170,7 +170,7 @@
     }
 
     function renderHome(m) {
-        m.innerHTML = `<div style="padding:16px; border-bottom:1px solid var(--border)"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${T[lang].placeholder}" style="flex:1; background:none; border:none; color:#fff; font-size:18px; outline:none; resize:none; min-height:60px"></textarea></div><div id="imgPrv"></div><div style="display:flex; justify-content:space-between; margin-top:10px; padding-left:52px"><div style="display:flex; gap:15px"><i data-lucide="image" onclick="document.getElementById('fInp').click()" style="color:var(--blue); cursor:pointer"></i><i data-lucide="map-pin" onclick="addLoc()" style="color:var(--blue); cursor:pointer"></i></div><input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto">Post</button></div></div><div id="feed"></div>`;
+        m.innerHTML = `<div style="padding:16px; border-bottom:1px solid var(--border)"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${T[lang].placeholder}" style="flex:1; background:none; border:none; color:#fff; font-size:18px; outline:none; resize:none; min-height:60px"></textarea></div><div id="imgPrv"></div><div style="display:flex; justify-content:space-between; margin-top:10px; padding-left:52px"><i data-lucide="image" onclick="document.getElementById('fInp').click()" style="color:var(--blue); cursor:pointer"></i><input type="file" id="fInp" hidden onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto">Post</button></div></div><div id="feed"></div>`;
         db.collection('users').doc(user.uid).get().then(doc => { if(doc.data().photo) document.getElementById('myAvH').style.backgroundImage = `url('${doc.data().photo}')`; });
         loadFeed('feed');
     }
@@ -178,25 +178,27 @@
     function loadFeed(id, uid = null) {
         const feed = document.getElementById(id);
         let q = db.collection('posts').orderBy('createdAt', 'desc').limit(25);
-        if(feedType === 'following') {
-            db.collection('users').doc(user.uid).get().then(uDoc => {
-                const following = uDoc.data().following || [];
-                q.onSnapshot(snap => displayPosts(snap.docs.map(d=>({id:d.id, ...d.data()})).filter(p=>following.includes(p.uid) || p.uid === user.uid), feed));
-            });
-        } else {
-            if(uid) q = q.where('uid', '==', uid);
-            q.onSnapshot(snap => displayPosts(snap.docs.map(d=>({id:d.id, ...d.data()})), feed));
-        }
+        q.onSnapshot(snap => {
+            let posts = snap.docs.map(d => ({id:d.id, ...d.data()}));
+            if(feedType === 'following' && currentTab === 'home') {
+                db.collection('users').doc(user.uid).get().then(uDoc => {
+                    const following = uDoc.data().following || [];
+                    displayPosts(posts.filter(p => following.includes(p.uid) || p.uid === user.uid), feed);
+                });
+            } else {
+                if(uid) posts = posts.filter(p => p.uid === uid);
+                displayPosts(posts, feed);
+            }
+        });
     }
 
     function displayPosts(posts, container) {
-        if(!container) return;
         container.innerHTML = posts.map(p => {
             const isLiked = (p.likedBy || []).includes(user.uid);
             const canManage = (user.uid === p.uid || user.email === adminEmail);
             return `<div class="post">
-                ${canManage ? `<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${d.id}', '${p.text}', '${p.uid}')"></i>` : ''}
-                <div class="post-header" onclick="openProfile('${p.uid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div class="post-content"><div class="username">${p.name}</div><div class="post-text">${format(p.text)}</div>
+                ${canManage ? `<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${p.id}', '${p.text}', '${p.uid}')"></i>` : ''}
+                <div class="post-header" onclick="openProfile('${p.uid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div class="post-content"><div class="username">${p.name} ${p.email===adminEmail?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-text">${format(p.text)}</div>
                 ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation(); openLB('${p.images[0]}')">` : ''}
                 <div class="post-actions"><span onclick="event.stopPropagation();like('${p.id}')"><i data-lucide="heart" style="${isLiked?'fill:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();alert('Comments soon')"><i data-lucide="message-circle"></i></span><span onclick="event.stopPropagation();openShare('${p.id}','${p.text}','${p.images?p.images[0]:''}')"><i data-lucide="share-2"></i></span></div>
                 </div></div></div>`;
@@ -211,8 +213,8 @@
                 if (w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } } else { if(h > MAX) { w *= MAX/h; h = MAX; } }
                 canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                const data = canvas.toDataURL('image/jpeg', 0.3); // High compression for success
-                if(target === 'profile') { db.collection('users').doc(user.uid).update({ photo: data }); alert("Photo OK!"); }
+                const data = canvas.toDataURL('image/jpeg', 0.3);
+                if(target === 'profile') { db.collection('users').doc(user.uid).update({ photo: data }); updateAllPosts(null, data); }
                 else { pendingImg = data; document.getElementById('imgPrv').innerHTML = `<div style="position:relative;display:inline-block;margin-top:10px"><img src="${data}" style="width:80px;height:80px;border-radius:10px;object-fit:cover"><button onclick="pendingImg=null;document.getElementById('imgPrv').innerHTML=''" style="position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;border:none;width:20px;height:20px;font-weight:bold">×</button></div>`; }
             }; img.src = e.target.result;
         }; reader.readAsDataURL(inp.files[0]);
@@ -228,18 +230,16 @@
     async function like(id) {
         playPop(); const ref = db.collection('posts').doc(id); const doc = await ref.get(); const p = doc.data();
         if((p.likedBy || []).includes(user.uid)) { ref.update({ likes: firebase.firestore.FieldValue.increment(-1), likedBy: firebase.firestore.FieldValue.arrayRemove(user.uid) }); }
-        else { ref.update({ likes: firebase.firestore.FieldValue.increment(1), likedBy: firebase.firestore.FieldValue.arrayUnion(user.uid) }); if(p.uid !== user.uid) db.collection('notifications').add({ userId: p.uid, text: `${user.name || user.email.split('@')[0]} έκανε like`, read: false, createdAt: Date.now() }); }
+        else { ref.update({ likes: firebase.firestore.FieldValue.increment(1), likedBy: firebase.firestore.FieldValue.arrayUnion(user.uid) }); if(p.uid !== user.uid) db.collection('notifications').add({ userId: p.uid, text: `${user.email.split('@')[0]} έκανε like`, read: false, createdAt: Date.now() }); }
     }
 
     function renderProfile(m, uid) {
         db.collection('users').doc(uid).onSnapshot(doc => {
             const u = doc.data();
-            m.innerHTML = `<div style="padding:25px; text-align:center; border-bottom:1px solid var(--border)">
-                <div class="avatar" style="width:100px; height:100px; border-radius:20px; border:3px solid var(--accent); margin:0 auto 15px; ${u.photo?`background-image:url('${u.photo}')`:''}" onclick="openLB('${u.photo}')"></div>
-                <h2>${u.name}</h2><p style="color:var(--muted); margin-top:5px">${u.bio||''}</p>
-                <div style="display:flex; justify-content:center; gap:20px; margin-top:15px"><b>${(u.followers||[]).length} Followers</b> <b>${(u.following||[]).length} Following</b></div>
+            m.innerHTML = `<div class="profile-head"><div class="avatar-lg" onclick="openLB('${u.photo}')" style="${u.photo?`background-image:url('${u.photo}')`:''}"></div><h2>${u.name}</h2><p style="color:var(--muted); margin-top:5px">${u.bio||''}</p>
+                <div class="stats"><div class="stat-btn"><b>${(u.followers||[]).length}</b><span>Followers</span></div><div class="stat-btn"><b>${(u.following||[]).length}</b><span>Following</span></div></div>
                 ${uid !== user.uid ? `<button onclick="toggleFollow('${uid}')" class="btn-main" style="width:auto; padding:8px 20px; margin-top:15px">${(u.followers||[]).includes(user.uid)?'Ακολουθείς':'Ακολούθηση'}</button>` : ''}
-            </div><div id="p-feed"></div>`;
+                </div><div id="p-feed"></div>`;
             loadFeed('p-feed', uid);
         });
     }
@@ -249,7 +249,9 @@
             const u = doc.data();
             m.innerHTML = `<div style="padding:20px"><h2>Ρυθμίσεις</h2><br>
                 <div class="settings-group">
-                    <div style="padding:15px"><label>Όνομα Χρήστη / Emoji</label><input id="s-name" class="input-box" value="${u.name}"><label style="margin-top:10px; display:block">Βιογραφικό (Bio)</label><textarea id="s-bio" class="input-box" style="height:80px">${u.bio||''}</textarea><button onclick="saveProfile()" class="btn-main">Save Changes</button></div>
+                    <div class="settings-row" onclick="document.getElementById('pInp').click()"><span>Αλλαγή Φωτογραφίας</span><i data-lucide="camera"></i></div>
+                    <input type="file" id="pInp" hidden accept="image/*" onchange="handleFile(this, 'profile')">
+                    <div style="padding:15px"><label>Όνομα Χρήστη / Emoji</label><input id="s-name" class="input-box" value="${u.name}"><label style="margin-top:10px; display:block">Bio</label><textarea id="s-bio" class="input-box" style="height:80px">${u.bio||''}</textarea><button onclick="saveProfile()" class="btn-main">Save Profile</button></div>
                 </div>
                 <div class="settings-group"><div class="settings-row" onclick="toggleThemeNow()"><span>Θέμα: ${theme==='dark'?'Dark':'Light'}</span><i data-lucide="moon"></i></div><div class="settings-row" onclick="toggleLangNow()"><span>Γλώσσα: ${lang==='el'?'Ελληνικά':'English'}</span><i data-lucide="languages"></i></div></div></div>`;
             lucide.createIcons();
@@ -259,9 +261,12 @@
     async function saveProfile() {
         const n = document.getElementById('s-name').value; const b = document.getElementById('s-bio').value;
         await db.collection('users').doc(user.uid).update({ name:n, bio:b });
+        updateAllPosts(n, null); alert("Αποθηκεύτηκε!");
+    }
+
+    async function updateAllPosts(newName, newPhoto) {
         const posts = await db.collection('posts').where('uid', '==', user.uid).get();
-        const batch = db.batch(); posts.forEach(d => batch.update(d.ref, {name: n})); await batch.commit();
-        alert("Saved!");
+        const batch = db.batch(); posts.forEach(d => { let data = {}; if(newName) data.name = newName; if(newPhoto) data.photo = newPhoto; batch.update(d.ref, data); }); await batch.commit();
     }
 
     function openShare(id, text, img) { activePost = {id, text, img}; document.getElementById('shareModal').style.display='flex'; document.getElementById('overlay').style.display='block'; }
@@ -274,9 +279,8 @@
     function renderNotifs(m) { m.innerHTML = '<h2 style="padding:20px">Ειδοποιήσεις</h2><div id="nL"></div>'; db.collection('notifications').where('userId', '==', user.uid).orderBy('createdAt', 'desc').limit(20).onSnapshot(s => { document.getElementById('nL').innerHTML = s.docs.map(d => `<div class="notif-item" onclick="d.ref.update({read:true})"><span>${d.data().text}</span>${!d.data().read ? '<div class="red-dot"></div>' : ''}</div>`).join('') || '<p style="padding:20px">Καμία ειδοποίηση</p>'; s.forEach(d => d.ref.update({read:true})); }); }
     function openProfile(uid) { showTab('profile'); renderProfile(document.getElementById('content'), uid); }
     function openLB(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').style.display='flex'; }
-    function postOp(id, text, postUid) { if(user.uid === postUid) { const op = confirm("OK: Delete, Cancel: Edit"); if(op) db.collection('posts').doc(id).delete(); else { const nt = prompt("New text:", text); if(nt) db.collection('posts').doc(id).update({text:nt}); } } else if(user.email === adminEmail) { if(confirm("ADMIN: Delete?")) db.collection('posts').doc(id).delete(); } }
+    function postOp(id, text, postUid) { if(user.uid === postUid) { const op = confirm("Delete (OK) / Edit (Cancel)"); if(op) db.collection('posts').doc(id).delete(); else { const nt = prompt("Text:", text); if(nt) db.collection('posts').doc(id).update({text:nt}); } } else if(user.email === adminEmail) { if(confirm("ADMIN DELETE?")) db.collection('posts').doc(id).delete(); } }
     function setFeed(f) { feedType = f; document.querySelectorAll('.tab').forEach(e => e.classList.remove('active')); document.getElementById('tab-'+f).classList.add('active'); loadFeed('feed'); }
-    function addLoc() { const l = prompt("Πού είστε;"); if(l) document.getElementById('postText').value += " — στην τοποθεσία " + l; }
 
     lucide.createIcons();
 </script>
