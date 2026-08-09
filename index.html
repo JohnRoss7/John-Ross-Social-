@@ -3,83 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>John Ross Social v10</title>
+    <title>John Ross Social v11</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root { --bg:#000; --text:#fff; --muted:#777; --border:#222; --card:#111; --accent:#dc2626; --blue:#1d9bf0; }
-        body.light { --bg:#fff; --text:#000; --muted:#666; --border:#eee; --card:#f9f9f9; }
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        :root { --bg:#000; --text:#fff; --muted:#777; --border:#222; --card:#16181c; --accent:#dc2626; --blue:#1d9bf0; }
+        body.light { --bg:#fff; --text:#000; --muted:#666; --border:#eee; --card:#f7f9f9; }
+        
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
         html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:-apple-system, system-ui, sans-serif; position:fixed; }
-        .app-wrapper { width:100%; height:100%; display:flex; flex-direction:column; max-width:550px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); }
-        header { background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:1000; border-bottom:1px solid var(--border); flex-shrink:0; }
+
+        .app-wrapper { width:100%; height:100%; display:flex; flex-direction:column; max-width:550px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); position:relative; }
+
+        /* HEADER */
+        header { background:rgba(0,0,0,0.85); backdrop-filter:blur(15px); z-index:1000; border-bottom:1px solid var(--border); flex-shrink:0; }
         .header-top { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
         .tabs { display:flex; border-bottom:1px solid var(--border); }
         .tab { flex:1; padding:14px; text-align:center; font-weight:600; color:var(--muted); cursor:pointer; }
         .tab.active { color:var(--text); border-bottom:2px solid var(--accent); }
+
+        /* SCROLL AREA */
         #main-scroll { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+
+        /* POSTS */
         .post { padding:16px; border-bottom:1px solid var(--border); position:relative; width:100%; }
         .post-header { display:flex; gap:12px; margin-bottom:8px; }
         .avatar { width:48px; height:48px; border-radius:12px; background:#333; background-size:cover; background-position:center; flex-shrink:0; cursor:pointer; border:1px solid var(--border); }
         .post-content { flex:1; min-width:0; }
         .username { font-weight:700; font-size:15px; color:var(--text); display:flex; align-items:center; gap:5px; }
         .post-text { font-size:16px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; }
+        
         .hashtag { color:var(--accent) !important; font-weight:600; cursor:pointer; }
-        .post-img { width:100%; max-height:350px; object-fit:cover; border-radius:14px; margin-top:12px; border:1px solid var(--border); cursor:pointer; display:block; background:#111; }
+        .post-img { width:100% !important; max-height:350px !important; object-fit:cover; border-radius:14px; margin-top:12px; border:1px solid var(--border); cursor:pointer; display:block; background:#111; }
+
         .post-actions { display:flex; justify-content:space-between; max-width:350px; margin-top:15px; color:var(--muted); }
         .post-actions span { display:flex; align-items:center; gap:10px; font-size:16px; cursor:pointer; padding:5px; }
         .liked { color:var(--accent) !important; }
+
+        /* NAV */
         nav.bottom-nav { height:65px; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; background:var(--bg); flex-shrink:0; }
         .nav-item { color:var(--muted); position:relative; cursor:pointer; padding:12px; }
         .nav-item.active { color:var(--text); }
         .badge { position:absolute; top:8px; right:8px; width:12px; height:12px; background:var(--accent); border-radius:50%; border:2px solid var(--bg); display:none; }
+
+        /* SIDEBAR */
         .sidebar { position:fixed; top:0; left:-285px; width:280px; height:100%; background:var(--bg); z-index:2000; border-right:1px solid var(--border); transition:0.3s ease; display:flex; flex-direction:column; }
         .sidebar.show { left:0; }
         .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1500; display:none; }
-        .profile-input { width:100%; padding:14px; background:var(--card); border:1px solid var(--border); color:#fff; border-radius:12px; font-size:16px; margin-top:5px; }
-        .btn-main { background:var(--accent); color:#fff; border:none; padding:12px 24px; border-radius:20px; font-weight:700; cursor:pointer; width:100%; margin-top:10px; }
+
+        /* UI ELEMENTS */
+        .btn-main { background:var(--accent); color:#fff; border:none; padding:12px 24px; border-radius:20px; font-weight:700; cursor:pointer; width:100%; }
+        .profile-input { width:100%; padding:14px; background:var(--card); border:1px solid var(--border); color:#fff; border-radius:12px; font-size:16px; margin-top:5px; margin-bottom:10px; }
+        .admin-badge { background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; margin-left:5px; }
+        
+        .img-prev-box { position:relative; display:inline-block; margin-top:10px; }
+        .img-prev-box img { width:90px; height:90px; border-radius:12px; object-fit:cover; border:1px solid var(--accent); }
+        .img-prev-box .del { position:absolute; top:-5px; right:-5px; background:var(--accent); color:white; border-radius:50%; border:none; width:22px; height:22px; font-weight:bold; cursor:pointer; }
+        
         .lightbox { position:fixed; inset:0; background:#000; z-index:5000; display:none; align-items:center; justify-content:center; }
         .close-lb { position:absolute; top:40px; right:20px; background:var(--accent); color:#fff; border:none; border-radius:50%; width:45px; height:45px; font-weight:bold; cursor:pointer; z-index:5100; font-size:20px; }
-        .notif-item { padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
-        .red-dot { width:10px; height:10px; background:var(--accent); border-radius:50%; }
-        .admin-badge { background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; margin-left:5px; }
     </style>
 </head>
 <body class="dark">
+
 <div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
+
 <aside class="sidebar" id="sidebar">
-    <div style="padding:20px; border-bottom:1px solid var(--border); font-weight:800; font-size:20px;">John Ross Social <span style="font-size:10px; color:var(--accent)">v10.0</span></div>
-    <div style="padding:10px;">
+    <div style="padding:20px; border-bottom:1px solid var(--border); font-weight:800; font-size:20px;">John Ross Social <span style="font-size:10px; color:var(--accent)">v11.0</span></div>
+    <div style="padding:10px; flex:1; overflow-y:auto;">
         <div onclick="showTab('home');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="home"></i> Αρχική</div>
         <div onclick="showTab('profile');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="user"></i> Προφίλ</div>
         <div onclick="showTab('settings');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="settings"></i> Ρυθμίσεις</div>
-        <div onclick="forceReset()" style="padding:15px; cursor:pointer; color:orange"><i data-lucide="refresh-cw"></i> Καθαρισμός & Επανεκκίνηση</div>
-        <div id="adminBtn" style="display:none" onclick="showTab('admin');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="shield"></i> Admin Panel</div>
+        <div onclick="forceResetApp()" style="padding:15px; cursor:pointer; color:#ff9800"><i data-lucide="refresh-cw"></i> Καθαρισμός & Επανεκκίνηση</div>
+        <div id="adminBtn" style="display:none;" onclick="showTab('admin');toggleSidebar(false)" style="padding:15px; cursor:pointer"><i data-lucide="shield"></i> Admin Panel</div>
         <hr style="border:none; border-top:1px solid var(--border); margin:10px 0;">
-        <div onclick="auth.signOut();location.reload()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
+        <div onclick="logout()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
 </aside>
+
 <div class="app-wrapper">
     <header>
         <div class="header-top">
-            <i data-lucide="menu" onclick="toggleSidebar(true)"></i>
+            <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
             <div style="font-weight:800; font-size:20px">John Ross Social</div>
-            <i data-lucide="refresh-cw" onclick="location.reload()" style="opacity:0.3"></i>
+            <i data-lucide="info" onclick="showTab('settings')" style="opacity:0.3"></i>
         </div>
         <div class="tabs" id="home-tabs" style="display:none">
-            <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</div>
-            <div class="tab" id="tab-following" onclick="setFeed('following')">Ακολουθείς</div>
+            <div class="tab active" id="t-foryou" onclick="setFeed('foryou')">Για εσένα</div>
+            <div class="tab" id="t-following" onclick="setFeed('following')">Ακολουθείς</div>
         </div>
     </header>
-    <main id="main-scroll"><div id="content"><div style="padding:50px; text-align:center">Φόρτωση...</div></div></main>
+
+    <main id="main-scroll">
+        <div id="content"></div>
+    </main>
+
     <nav class="bottom-nav">
-        <div class="nav-item active" id="n-home" onclick="showTab('home')"><i data-lucide="home"></i></div>
-        <div class="nav-item" id="n-search" onclick="showTab('search')"><i data-lucide="search"></i></div>
-        <div class="nav-item" id="n-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><div class="badge" id="notif-badge"></div></div>
-        <div class="nav-item" id="n-profile" onclick="showTab('profile')"><i data-lucide="user"></i></div>
+        <div class="nav-item active" id="btn-home" onclick="showTab('home')"><i data-lucide="home"></i></div>
+        <div class="nav-item" id="btn-search" onclick="showTab('search')"><i data-lucide="search"></i></div>
+        <div class="nav-item" id="btn-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><div class="badge" id="notif-badge"></div></div>
+        <div class="nav-item" id="btn-profile" onclick="showTab('profile')"><i data-lucide="user"></i></div>
     </nav>
 </div>
-<div class="lightbox" id="lightbox" onclick="this.style.display='none'"><button class="close-lb">X</button><img id="lb-img"></div>
 
+<div class="lightbox" id="lightbox">
+    <button class="close-lb" onclick="document.getElementById('lightbox').style.display='none'">X</button>
+    <img id="lb-img" style="max-width:100%; max-height:100%; object-fit:contain">
+</div>
+
+<!-- FIREBASE SDKS -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -102,6 +133,7 @@
     let feedType = 'foryou';
     let pendingImg = null;
     let historyStack = [];
+    let theme = localStorage.getItem('jrs_theme') || 'dark';
     const adminEmail = 'rossrossg7@gmail.com';
 
     // ΗΧΟΣ LIKE
@@ -125,26 +157,32 @@
             document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none';
             listenNotifs();
         }
+        document.body.className = theme;
         render();
     });
 
+    function logout() { auth.signOut(); location.reload(); }
     function toggleSidebar(show) {
         document.getElementById('sidebar').classList.toggle('show', show);
         document.getElementById('overlay').style.display = show ? 'block' : 'none';
     }
+    function forceResetApp() { localStorage.clear(); location.href = location.pathname + '?r=' + Date.now(); }
 
-    function forceReset() { localStorage.clear(); location.href = location.pathname + "?refresh=" + Date.now(); }
-
+    // NAVIGATION
     function showTab(t, fromBack = false) {
-        if(!fromBack && currentTab !== t) { historyStack.push(currentTab); window.history.pushState({tab: t}, ""); }
+        if(!fromBack && currentTab !== t) {
+            historyStack.push(currentTab);
+            window.history.pushState({tab: t}, "");
+        }
         currentTab = t;
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        if(document.getElementById('n-'+t)) document.getElementById('n-'+t).classList.add('active');
+        if(document.getElementById('btn-'+t)) document.getElementById('btn-'+t).classList.add('active');
         document.getElementById('home-tabs').style.display = (t === 'home') ? 'flex' : 'none';
         render();
     }
     window.onpopstate = () => { if(historyStack.length > 0) showTab(historyStack.pop(), true); };
 
+    // CONTENT FORMATTING
     function format(text) {
         if(!text) return "";
         let escaped = String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
@@ -153,24 +191,30 @@
     }
     function handleTagClick(tag) {
         showTab('search');
-        setTimeout(() => { const inp = document.getElementById('searchInp'); if(inp) { inp.value = tag; doSearch(tag); } }, 500);
+        setTimeout(() => {
+            const inp = document.getElementById('searchInp');
+            if(inp) { inp.value = tag; doSearch(tag); }
+        }, 400);
     }
 
+    // MAIN RENDER
     function render() {
         const container = document.getElementById('content');
         if(!user) {
-            container.innerHTML = `<div style="padding:60px 20px; text-align:center;"><h1>John Ross Social</h1><br>
+            container.innerHTML = `<div style="padding:60px 25px; text-align:center;"><h1>John Ross Social</h1><br>
                 <input id="le" placeholder="Email" class="profile-input">
-                <input id="lp" type="password" placeholder="Κωδικός" class="profile-input">
-                <button onclick="auth.signInWithEmailAndPassword(le.value, lp.value)" class="btn-main">Σύνδεση</button></div>`;
-            lucide.createIcons(); return;
+                <input id="lp" type="password" placeholder="Password" class="profile-input" type="password">
+                <button onclick="auth.signInWithEmailAndPassword(le.value, lp.value).catch(e=>alert('Σφάλμα'))" class="btn-main">Σύνδεση</button></div>`;
+            return;
         }
+
         if(currentTab === 'home') renderHome(container);
         else if(currentTab === 'profile') renderProfile(container, user.uid);
         else if(currentTab === 'notif') renderNotifs(container);
         else if(currentTab === 'search') renderSearch(container);
         else if(currentTab === 'settings') renderSettings(container);
         else if(currentTab === 'admin') renderAdmin(container);
+        
         lucide.createIcons();
     }
 
@@ -188,14 +232,13 @@
                     <button onclick="sendPost()" class="btn-main" style="width:auto">Post</button>
                 </div>
             </div>
-            <div id="feed"><div style="padding:20px; text-align:center">Φόρτωση δημοσιεύσεων...</div></div>`;
+            <div id="feed"><div style="padding:40px; text-align:center">Φόρτωση...</div></div>`;
         db.collection('users').doc(user.uid).get().then(doc => { if(doc.exists && doc.data().photo) document.getElementById('myAvPost').style.backgroundImage = `url('${doc.data().photo}')`; });
-        renderFeed();
+        loadPosts();
     }
 
-    function renderFeed() {
+    function loadPosts() {
         const feed = document.getElementById('feed');
-        if(!feed) return;
         db.collection('posts').orderBy('createdAt', 'desc').limit(25).onSnapshot(snap => {
             let posts = snap.docs.map(d => ({id: d.id, ...d.data()}));
             if(feedType === 'following') {
@@ -208,7 +251,7 @@
     }
 
     function displayPosts(posts, container) {
-        if(posts.length === 0) { container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted)">Δεν υπάρχουν δημοσιεύσεις.</div>'; return; }
+        if(!container) return;
         container.innerHTML = posts.map(p => {
             const isLiked = (p.likedBy || []).includes(user.uid);
             const canManage = (user.uid === p.uid || user.email === adminEmail);
@@ -222,7 +265,7 @@
                         ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-img" onclick="openLB('${p.images[0]}')">` : ''}
                         <div class="post-actions">
                             <span class="${isLiked?'liked':''}" onclick="like('${p.id}')"><i data-lucide="heart" style="${isLiked?'fill:var(--accent)':''}"></i> ${p.likes||0}</span>
-                            <span onclick="alert('Σχόλια σύντομα...')"><i data-lucide="message-circle"></i></span>
+                            <span onclick="alert('Σχόλια σύντομα')"><i data-lucide="message-circle"></i></span>
                             <span onclick="sharePost('${p.id}')"><i data-lucide="share-2"></i></span>
                         </div>
                     </div>
@@ -252,7 +295,7 @@
             ref.update({ likes: firebase.firestore.FieldValue.increment(-1), likedBy: firebase.firestore.FieldValue.arrayRemove(user.uid) });
         } else {
             ref.update({ likes: firebase.firestore.FieldValue.increment(1), likedBy: firebase.firestore.FieldValue.arrayUnion(user.uid) });
-            if(p.uid !== user.uid) db.collection('notifications').add({ userId: p.uid, text: `${user.name || user.email.split('@')[0]} έκανε like στο ποστ σου`, read: false, createdAt: Date.now() });
+            if(p.uid !== user.uid) db.collection('notifications').add({ userId: p.uid, text: `${user.email.split('@')[0]} έκανε like στο ποστ σου`, read: false, createdAt: Date.now() });
         }
     }
 
@@ -263,15 +306,11 @@
             m.innerHTML = `<div style="height:100px; background:var(--card)"></div>
                 <div style="padding:0 20px; margin-top:-50px">
                     <div style="display:flex; justify-content:space-between; align-items:flex-end">
-                        <div class="avatar" onclick="openLB('${u.photo}')" style="width:95px; height:95px; border-radius:20px; border:4px solid var(--bg); ${u.photo?`background-image:url('${u.photo}')`:''}"></div>
+                        <div class="avatar" onclick="openLB('${u.photo}')" style="width:95px; height:95px; border-radius:15px; border:4px solid var(--bg); ${u.photo?`background-image:url('${u.photo}')`:''}"></div>
                         ${isOwn ? `<button onclick="document.getElementById('pInp').click()" class="btn-main" style="width:auto; padding:5px 15px">Αλλαγή Φωτό</button><input type="file" id="pInp" hidden accept="image/*" onchange="handleFile(this, 'profile')">` : `<button class="btn-main" onclick="toggleFollow('${uid}')" style="width:auto; padding:5px 15px">${(u.followers||[]).includes(user.uid)?'Ακολουθείς':'Ακολούθηση'}</button>`}
                     </div>
                     <div style="margin-top:15px">
-                        ${isOwn ? `<div style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border)">
-                                     <input id="uName" value="${u.name}" class="profile-input" style="font-weight:bold">
-                                     <textarea id="uBio" class="profile-input" style="height:80px; resize:none">${u.bio || ''}</textarea>
-                                     <button onclick="saveProfile()" class="btn-main">Save Profile</button>
-                                   </div>` : `<h2>${u.name}</h2><p style="color:var(--muted)">${u.bio || ''}</p>`}
+                        ${isOwn ? `<input id="uName" value="${u.name}" class="profile-input" style="font-weight:bold"><textarea id="uBio" class="profile-input" style="height:80px; resize:none" placeholder="Βιογραφικό...">${u.bio || ''}</textarea><button onclick="saveProfile()" class="btn-main">Save Profile</button>` : `<h2>${u.name}</h2><p>${u.bio || ''}</p>`}
                         <div style="display:flex; gap:20px; margin-top:15px"><span><b>${(u.followers||[]).length}</b> Followers</span></div>
                     </div>
                 </div><div id="user-feed"></div>`;
@@ -284,16 +323,32 @@
         const b = document.getElementById('uBio').value;
         await db.collection('users').doc(user.uid).update({ name: n, bio: b });
         const posts = await db.collection('posts').where('uid', '==', user.uid).get();
-        const batch = db.batch();
-        posts.forEach(d => batch.update(d.ref, { name: n }));
-        await batch.commit();
+        const batch = db.batch(); posts.forEach(d => batch.update(d.ref, { name: n })); await batch.commit();
         alert("Αποθηκεύτηκε!");
     }
 
-    async function listenNotifs() {
-        db.collection('notifications').where('userId', '==', user.uid).where('read', '==', false).onSnapshot(snap => {
-            document.getElementById('notif-badge').style.display = snap.empty ? 'none' : 'block';
-        });
+    async function handleFile(inp, target = 'post') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas'); const MAX = 800;
+                let w = img.width, h = img.height;
+                if (w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } } else { if(h > MAX) { w *= MAX/h; h = MAX; } }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                const data = canvas.toDataURL('image/jpeg', 0.3);
+                if(target === 'profile') {
+                    db.collection('users').doc(user.uid).update({ photo: data });
+                    const b = db.batch(); db.collection('posts').where('uid', '==', user.uid).get().then(s => { s.forEach(d => b.update(d.ref, {photo: data})); b.commit(); });
+                } else {
+                    pendingImg = data;
+                    document.getElementById('imgPrev').innerHTML = `<div class="img-prev-box"><img src="${data}"><button class="del" onclick="pendingImg=null; document.getElementById('imgPrev').innerHTML=''">×</button></div>`;
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(inp.files[0]);
     }
 
     function renderNotifs(m) {
@@ -303,50 +358,28 @@
                 const n = d.data();
                 return `<div class="notif-item" onclick="d.ref.update({read:true})"><span>${n.text}</span>${!n.read ? '<div class="red-dot"></div>' : ''}</div>`;
             }).join('') || '<p style="padding:20px">Καμία ειδοποίηση</p>';
-            snap.docs.forEach(d => d.ref.update({read: true}));
+            document.getElementById('notif-badge').style.display = 'none';
         });
     }
 
-    async function handleFile(inp, target = 'post') {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX = 800; let w = img.width, h = img.height;
-                if (w > h) { if(w > MAX){ h *= MAX/w; w = MAX; } } else { if(h > MAX){ w *= MAX/h; h = MAX; } }
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                const data = canvas.toDataURL('image/jpeg', 0.3);
-                if(target === 'profile') {
-                    db.collection('users').doc(user.uid).update({ photo: data });
-                    const batch = db.batch();
-                    db.collection('posts').where('uid', '==', user.uid).get().then(s => { s.forEach(d => batch.update(d.ref, {photo: data})); batch.commit(); });
-                } else {
-                    pendingImg = data;
-                    document.getElementById('imgPrev').innerHTML = `<div class="img-prev-container"><img src="${data}"><button class="remove-btn" onclick="pendingImg=null; document.getElementById('imgPrev').innerHTML=''">×</button></div>`;
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(inp.files[0]);
+    function listenNotifs() {
+        db.collection('notifications').where('userId', '==', user.uid).where('read', '==', false).onSnapshot(snap => {
+            document.getElementById('notif-badge').style.display = snap.empty ? 'none' : 'block';
+        });
     }
 
-    function postAction(id, text, postUid) {
-        if (user.uid === postUid) {
-            const op = confirm("OK: Διαγραφή, Cancel: Επεξεργασία");
-            if(op) db.collection('posts').doc(id).delete();
-            else { const nt = prompt("Νέο κείμενο:", text); if(nt) db.collection('posts').doc(id).update({text:nt}); }
-        } else if (user.email === adminEmail) { if(confirm("ADMIN: Διαγραφή;")) db.collection('posts').doc(id).delete(); }
+    function renderSettings(m) {
+        m.innerHTML = `<div style="padding:20px"><h2>Ρυθμίσεις</h2><br><div style="background:var(--card); padding:18px; border-radius:16px; display:flex; justify-content:space-between; cursor:pointer" onclick="document.body.classList.toggle('light')"><span>Θέμα: Dark / Light</span><i data-lucide="moon"></i></div></div>`;
+        lucide.createIcons();
     }
-
-    function renderSearch(m) { m.innerHTML = `<div style="padding:20px"><input id="searchInp" oninput="doSearch(this.value)" placeholder="Search #hashtags..." class="profile-input" style="border-radius:30px"></div><div id="sRes"></div>`; }
-    function doSearch(q) { if(!q) return; db.collection('posts').where('text', '>=', q).limit(10).get().then(snap => displayPosts(snap.docs.map(d=>({id:d.id, ...d.data()})), document.getElementById('sRes'))); }
-    function renderSettings(m) { m.innerHTML = `<div style="padding:20px"><h2>Ρυθμίσεις</h2><br><div style="background:var(--card); padding:18px; border-radius:16px; display:flex; justify-content:space-between; cursor:pointer" onclick="document.body.classList.toggle('light')"><span>Θέμα: Dark / Light</span><i data-lucide="moon"></i></div></div>`; }
     function renderAdmin(m) { Promise.all([db.collection('users').get(), db.collection('posts').get()]).then(([u, p]) => { m.innerHTML = `<div style="padding:20px"><h2>Admin Panel</h2><br><div style="background:var(--card); padding:20px; border-radius:15px; text-align:center"><b>${u.size}</b> Χρήστες<br><b>${p.size}</b> Ποστ</div></div>`; }); }
+    function postAction(id, text, postUid) { if (user.uid === postUid) { const op = confirm("OK: Διαγραφή, Cancel: Επεξεργασία"); if(op) db.collection('posts').doc(id).delete(); else { const nt = prompt("Νέο κείμενο:", text); if(nt) db.collection('posts').doc(id).update({text:nt}); } } else if (user.email === adminEmail) { if(confirm("ADMIN: Διαγραφή;")) db.collection('posts').doc(id).delete(); } }
     function openProfile(uid) { showTab('profile'); renderProfile(document.getElementById('content'), uid); }
     function openLB(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').style.display='flex'; }
-    function setFeed(f) { feedType = f; document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'))
+    function setFeed(f) { feedType = f; document.querySelectorAll('.tab').forEach(e => e.classList.remove('active')); document.getElementById('tab-'+f).classList.add('active'); loadPosts(); }
+    function sharePost(id) { navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?post=" + id); alert("Link Copied!"); }
 
-    
+    lucide.createIcons();
+</script>
+</body>
+</html>
