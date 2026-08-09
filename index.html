@@ -10,18 +10,19 @@
 body.light{--bg:#fff;--text:#0f1419;--muted:#536471;--border:#eff3f4;--card:#f7f9f9;--accent:#dc2626;--hover:rgba(0,0,0,.03);--blue:#1d9bf0}
 
 *{margin:0;padding:0;box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; font-size:16px; overscroll-behavior: none}
 
+/* CONTAINER FIX */
 .app-container{max-width:550px; margin:0 auto; min-height:100vh; padding-bottom:80px; background:var(--bg); border-left:1px solid var(--border); border-right:1px solid var(--border); position: relative; width:100%}
 
 /* SIDEBAR */
-.sidebar{position:fixed; top:0; left:-280px; width:280px; height:100vh; background:var(--bg); border-right:1px solid var(--border); z-index:1500; transition:left 0.3s ease; display:flex; flex-direction:column}
+.sidebar{position:fixed; top:0; left:-280px; width:280px; height:100vh; background:var(--bg); border-right:1px solid var(--border); z-index:2500; transition:left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display:flex; flex-direction:column}
 .sidebar.show{left:0}
 .sidebar-header{padding:20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
 .sidebar-nav{flex:1; padding:12px; overflow-y:auto}
 .sidebar-nav a{display:flex; align-items:center; gap:15px; padding:14px 16px; color:var(--text); text-decoration:none; border-radius:9999px; font-size:18px; font-weight:500; cursor:pointer; margin-bottom:5px}
 
-.overlay{position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1400; display:none}
+.overlay{position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; display:none}
 .overlay.show{display:block}
 
 /* HEADER */
@@ -31,50 +32,48 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; 
 .tab-btn{flex:1; padding:15px; background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; font-weight:600; border-bottom:4px solid transparent}
 .tab-btn.active{color:var(--text); border-bottom-color:var(--accent)}
 
-/* POSTS */
+/* POSTS & PHOTOS */
 .post{border-bottom:1px solid var(--border); padding:16px; position: relative; width: 100%}
 .post-header{display:flex; gap:12px; margin-bottom:8px}
 .avatar{width:48px; height:48px; border-radius:12px; background:#333; background-size:cover; background-position:center; flex-shrink:0; cursor: pointer}
 .post-info{flex:1; min-width:0}
-.username{font-weight:700; font-size:16px; display:flex; align-items:center; gap:4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
-.post-content{font-size:16px; line-height:1.5; margin:8px 0; white-space:pre-wrap; word-wrap:break-word}
-.post-content span.hashtag, .post-content span.mention{color: var(--accent); font-weight: 600; cursor: pointer}
+.username{font-weight:700; font-size:16px; display:flex; align-items:center; gap:4px}
+.post-content{font-size:17px; line-height:1.5; margin:8px 0; white-space:pre-wrap; word-wrap:break-word}
+.post-content span.highlight{color: var(--accent); font-weight: 600; cursor: pointer}
 
-/* PHOTO FIXED */
-.post-images img{width:100%; max-height:350px; object-fit:cover; border-radius:16px; margin-top:10px; border:1px solid var(--border); cursor: pointer}
+/* PHOTO HEIGHT FIX */
+.post-images img{width:100% !important; max-height:350px !important; object-fit:cover !important; border-radius:16px; margin-top:10px; border:1px solid var(--border); display: block}
 
-/* ACTION BUTTONS */
-.post-actions{display:flex; justify-content:space-between; max-width:100%; color:var(--muted); margin-top:15px; padding:0 10px}
-.post-actions span{display:flex; align-items:center; gap:8px; font-size:16px; cursor:pointer}
-.post-actions i{width:24px; height:24px}
+/* ACTION BUTTONS (LARGER) */
+.post-actions{display:flex; justify-content:space-between; max-width:380px; color:var(--muted); margin-top:15px}
+.post-actions span{display:flex; align-items:center; gap:8px; font-size:16px; cursor:pointer; padding:8px}
+.post-actions i{width:26px; height:26px}
 .liked{color:var(--accent)}
 
 .post-menu-btn{position:absolute; top:16px; right:16px; color:var(--muted); cursor:pointer; padding:5px}
 
 /* BOTTOM NAV */
-.bottom-nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:550px; background:var(--bg); border-top:1px solid var(--border); display:none; justify-content:space-around; padding:12px 0; z-index:2000}
+.bottom-nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:550px; background:var(--bg); border-top:1px solid var(--border); display:none; justify-content:space-around; padding:10px 0; z-index:3000}
 .nav-item{background:none; border:none; color:var(--muted); cursor:pointer; position:relative}
 .nav-item.active{color:var(--text)}
 .nav-badge{position:absolute; top:-2px; right:-2px; width:12px; height:12px; background:var(--accent); border-radius:50%; border:2px solid var(--bg); display:none}
 
 /* MODALS */
-.modal{position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px}
+.modal{position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:4000; display:none; align-items:center; justify-content:center; padding:20px}
 .modal-content{background:var(--card); width:100%; max-width:400px; border-radius:20px; padding:20px; border:1px solid var(--border)}
 .modal-content textarea{width:100%; height:120px; background:var(--bg); color:#fff; border:1px solid var(--border); border-radius:10px; padding:10px; font-size:16px; margin-bottom:15px; outline:none}
 
 /* LIGHTBOX */
-.lightbox{position:fixed; inset:0; background:#000; z-index:4000; display:none; align-items:center; justify-content:center}
+.lightbox{position:fixed; inset:0; background:#000; z-index:5000; display:none; align-items:center; justify-content:center}
 .lightbox img{max-width:100%; max-height:100%; object-fit: contain}
-.close-lightbox{position:absolute; top:30px; right:20px; background:var(--accent); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:20px; cursor:pointer; font-weight:bold; z-index:4100}
+.close-lightbox{position:absolute; top:30px; right:20px; background:var(--accent); color:#fff; border:none; border-radius:50%; width:45px; height:45px; font-size:22px; cursor:pointer; font-weight:bold; z-index:5100}
 
-/* ADMIN PANEL STYLE */
+/* ADMIN & SETTINGS */
 .stat-card{background:var(--card); padding:20px; border-radius:16px; margin-bottom:15px; border:1px solid var(--border); text-align:center}
-.stat-card b{font-size:28px; color:var(--accent); display:block}
-
-/* SETTINGS */
+.stat-card b{font-size:30px; color:var(--accent); display:block}
 .settings-row{background:var(--card); padding:18px; border-radius:16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; cursor:pointer}
 
-.admin-badge{background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:800; margin-left:5px}
+.admin-badge{background:var(--accent); color:#fff; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:800; margin-left:5px}
 .btn-save{background:var(--accent); color:#fff; border:none; padding:12px 24px; border-radius:20px; font-weight:700; cursor:pointer}
 </style>
 </head>
@@ -88,13 +87,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; 
     <button onclick="closeSidebar()" style="background:none; border:none; color:var(--text); font-size:32px">&times;</button>
   </div>
   <nav class="sidebar-nav">
-    <a onclick="showTab('home');closeSidebar()"><i data-lucide="home"></i> Αρχική</a>
-    <a onclick="showTab('profile');closeSidebar()"><i data-lucide="user"></i> Προφίλ</a>
-    <a onclick="showTab('settings');closeSidebar()"><i data-lucide="settings"></i> Ρυθμίσεις</a>
-    <a onclick="clearCache()"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</a>
+    <a onclick="showTab('home');closeSidebar()"><i data-lucide="home"></i> <span data-tr="home">Αρχική</span></a>
+    <a onclick="showTab('profile');closeSidebar()"><i data-lucide="user"></i> <span data-tr="profile">Προφίλ</span></a>
+    <a onclick="showTab('settings');closeSidebar()"><i data-lucide="settings"></i> <span data-tr="settings">Ρυθμίσεις</span></a>
+    <a onclick="clearCache()"><i data-lucide="trash-2"></i> <span data-tr="clearCache">Εκκαθάριση Cache</span></a>
     <div id="adminBtn" style="display:none"><hr><a onclick="showTab('admin');closeSidebar()"><i data-lucide="shield"></i> Admin Panel</a></div>
     <hr>
-    <a onclick="logout()"><i data-lucide="log-out"></i> Αποσύνδεση</a>
+    <a onclick="logout()"><i data-lucide="log-out"></i> <span data-tr="logout">Αποσύνδεση</span></a>
   </nav>
 </aside>
 
@@ -105,8 +104,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; 
       <div class="logo-text">John Ross Social</div>
     </div>
     <div class="top-tabs" id="homeTabs" style="display:none">
-      <button class="tab-btn active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</button>
-      <button class="tab-btn" id="tab-following" onclick="setFeed('following')">Ακολουθείς</button>
+      <button class="tab-btn active" id="tab-foryou" onclick="setFeed('foryou')"><span data-tr="foryou">Για εσένα</span></button>
+      <button class="tab-btn" id="tab-following" onclick="setFeed('following')"><span data-tr="following">Ακολουθείς</span></button>
     </div>
   </header>
 
@@ -126,10 +125,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; 
 <!-- EDIT MODAL -->
 <div class="modal" id="editModal">
   <div class="modal-content">
-    <h3 id="modalTitle">Επεξεργασία</h3><br>
+    <h3 data-tr="editTitle">Επεξεργασία</h3><br>
     <textarea id="editArea"></textarea>
     <div style="display:flex; justify-content:space-between">
-      <button onclick="closeModal()" style="background:none; border:none; color:#fff; cursor:pointer">Ακύρωση</button>
+      <button onclick="closeModal()" data-tr="cancel" style="background:none; border:none; color:#fff; cursor:pointer">Ακύρωση</button>
       <button class="btn-save" id="saveBtn">Save</button>
     </div>
   </div>
@@ -162,10 +161,14 @@ let user = null;
 let currentTab = 'home';
 let historyStack = [];
 let feedType = 'foryou';
-let pendingImages = [];
 let lang = localStorage.getItem('jrs_lang') || 'el';
 let theme = localStorage.getItem('jrs_theme') || 'dark';
 const adminEmail = 'rossrossg7@gmail.com';
+
+const T = {
+  el: { home:"Αρχική", profile:"Προφίλ", settings:"Ρυθμίσεις", clearCache:"Εκκαθάριση Cache", logout:"Αποσύνδεση", foryou:"Για εσένα", following:"Ακολουθείς", postPlaceholder:"Τι συμβαίνει;", editTitle:"Επεξεργασία", cancel:"Ακύρωση", save:"Αποθήκευση", themeLabel:"Θέμα: ", langLabel:"Γλώσσα: ", notifTitle:"Ειδοποιήσεις" },
+  en: { home:"Home", profile:"Profile", settings:"Settings", clearCache:"Clear Cache", logout:"Logout", foryou:"For You", following:"Following", postPlaceholder:"What's happening?", editTitle:"Edit Post", cancel:"Cancel", save:"Save", themeLabel:"Theme: ", langLabel:"Language: ", notifTitle:"Notifications" }
+};
 
 // UTILS
 function openSidebar(){ document.getElementById('sidebar').classList.add('show'); document.getElementById('overlay').classList.add('show'); }
@@ -174,10 +177,9 @@ function closeModal(){ document.getElementById('editModal').style.display='none'
 function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function formatContent(text){
-    return esc(text).replace(/#(\w+)/g, '<span class="hashtag">#$1</span>')
-                   .replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+    return esc(text).replace(/([#@]\w+)/g, '<span class="highlight">$1</span>');
 }
-function clearCache(){ localStorage.clear(); location.reload(); }
+function clearCache(){ if(confirm("Εκκαθάριση όλων;")) { localStorage.clear(); location.reload(); } }
 
 // AUTH
 auth.onAuthStateChanged(u => {
@@ -223,7 +225,7 @@ function render(){
   
   if(!user){
     nav.style.display = 'none'; hTabs.style.display = 'none';
-    m.innerHTML = `<div class="auth-container"><h1>John Ross Social</h1><br><input id="le" placeholder="Email"><input id="lp" type="password" placeholder="Κωδικός"><button onclick="auth.signInWithEmailAndPassword(document.getElementById('le').value, document.getElementById('lp').value)">Login</button></div>`;
+    m.innerHTML = `<div class="auth-container"><h1>John Ross Social</h1><br><input id="le" placeholder="Email"><input id="lp" type="password" placeholder="Password"><button onclick="auth.signInWithEmailAndPassword(document.getElementById('le').value, document.getElementById('lp').value)">Login</button></div>`;
     lucide.createIcons(); return;
   }
 
@@ -237,6 +239,11 @@ function render(){
   else if(currentTab === 'settings') renderSettings(m);
   else if(currentTab === 'admin') renderAdmin(m);
   
+  // Translate UI
+  document.querySelectorAll('[data-tr]').forEach(el => {
+    const key = el.getAttribute('data-tr');
+    el.innerText = T[lang][key] || key;
+  });
   lucide.createIcons();
 }
 
@@ -245,7 +252,7 @@ function renderHome(m){
     <div style="padding:16px; border-bottom:1px solid var(--border)">
       <div style="display:flex;gap:12px">
         <div class="avatar" id="myAvHome" style="width:40px;height:40px"></div>
-        <textarea id="postText" placeholder="Τι συμβαίνει;" style="flex:1; background:none; border:none; color:var(--text); font-size:18px; outline:none; resize:none; min-height:60px; font-family:inherit"></textarea>
+        <textarea id="postText" placeholder="${T[lang].postPlaceholder}" style="flex:1; background:none; border:none; color:var(--text); font-size:18px; outline:none; resize:none; min-height:60px; font-family:inherit"></textarea>
       </div>
       <div id="imgPrev"></div>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-left:52px">
@@ -265,7 +272,7 @@ function renderHome(m){
 function loadPosts(){
   const feed = document.getElementById('feed');
   if(!feed) return;
-  db.collection('posts').orderBy('createdAt', 'desc').limit(40).onSnapshot(snap => {
+  db.collection('posts').orderBy('createdAt', 'desc').limit(25).onSnapshot(snap => {
     let posts = snap.docs.map(d => ({id: d.id, ...d.data()}));
     if(feedType === 'following'){
       db.collection('users').doc(user.uid).get().then(uDoc => {
@@ -296,12 +303,26 @@ function renderFeed(posts){
       ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-images" onclick="showImg('${p.images[0]}')">` : ''}
       <div class="post-actions">
         <span class="${isLiked?'liked':''}" onclick="likePost('${p.id}')"><i data-lucide="heart" style="fill:${isLiked?'var(--accent)':'none'}"></i> ${p.likes||0}</span>
-        <span onclick="alert('Σύντομα')"><i data-lucide="message-circle"></i> ${(p.comments||[]).length}</span>
+        <span onclick="alert('Σχόλια σύντομα')"><i data-lucide="message-circle"></i> ${(p.comments||[]).length}</span>
         <span onclick="sharePost('${p.id}')"><i data-lucide="share"></i></span>
       </div>
     </div>`;
   }).join('');
   lucide.createIcons();
+}
+
+function showPostMenu(id, text){
+  const action = confirm("Επιλέξτε: \n OK για Διαγραφή \n Cancel για Επεξεργασία");
+  if(action) { 
+     if(confirm("Διαγραφή ποστ;")) db.collection('posts').doc(id).delete();
+  } else {
+    document.getElementById('editModal').style.display='flex';
+    document.getElementById('editArea').value = text;
+    document.getElementById('saveBtn').onclick = () => {
+      db.collection('posts').doc(id).update({ text: document.getElementById('editArea').value });
+      closeModal();
+    };
+  }
 }
 
 async function createPost(){
@@ -323,29 +344,14 @@ async function likePost(id){
     ref.update({ likes: firebase.firestore.FieldValue.increment(-1), likedBy: firebase.firestore.FieldValue.arrayRemove(user.uid) });
   } else {
     ref.update({ likes: firebase.firestore.FieldValue.increment(1), likedBy: firebase.firestore.FieldValue.arrayUnion(user.uid) });
-    if(p.uid !== user.uid) db.collection('notifications').add({ userId: p.uid, text: `${user.email.split('@')[0]} έκανε like`, read: false, createdAt: Date.now() });
-  }
-}
-
-function showPostMenu(id, text){
-  const action = confirm("Επιλέξτε: \n OK για Διαγραφή \n Cancel για Επεξεργασία");
-  if(action) { 
-     if(confirm("Διαγραφή ποστ;")) db.collection('posts').doc(id).delete();
-  } else {
-    document.getElementById('editModal').style.display='flex';
-    document.getElementById('editArea').value = text;
-    document.getElementById('saveBtn').onclick = () => {
-      db.collection('posts').doc(id).update({ text: document.getElementById('editArea').value });
-      closeModal();
-    };
+    if(p.uid !== user.uid) db.collection('notifications').add({ userId: p.uid, text: `${user.email.split('@')[0]} έκανε like στο ποστ σου`, read: false, createdAt: Date.now() });
   }
 }
 
 function renderNotifications(m){
-  m.innerHTML = '<h2 style="padding:20px">Ειδοποιήσεις</h2><div id="nL"></div>';
+  m.innerHTML = `<h2 style="padding:20px">${T[lang].notifTitle}</h2><div id="nL"></div>`;
   db.collection('notifications').where('userId', '==', user.uid).orderBy('createdAt', 'desc').limit(20).onSnapshot(snap => {
     document.getElementById('nL').innerHTML = snap.docs.map(d => `<div style="padding:15px; border-bottom:1px solid var(--border)">${esc(d.data().text)}</div>`).join('') || '<p style="padding:20px">Καμία ειδοποίηση</p>';
-    // Mark as read
     snap.docs.forEach(d => d.ref.update({read: true}));
   });
 }
@@ -366,9 +372,9 @@ function renderAdmin(m){
 }
 
 function renderSettings(m){
-  m.innerHTML = `<div style="padding:20px"><h2>Ρυθμίσεις</h2><br>
-    <div class="settings-row" onclick="toggleTheme()"><span>Θέμα: ${theme==='dark'?'Σκοτεινό':'Λευκό'}</span><i data-lucide="moon"></i></div>
-    <div class="settings-row" onclick="toggleLang()"><span>Γλώσσα: ${lang==='el'?'Ελληνικά':'English'}</span><i data-lucide="languages"></i></div>
+  m.innerHTML = `<div style="padding:20px"><h2 style="margin-bottom:25px">${T[lang].settings}</h2>
+    <div class="settings-row" onclick="toggleTheme()"><span>${T[lang].themeLabel} ${theme==='dark'?'Dark':'Light'}</span><i data-lucide="moon"></i></div>
+    <div class="settings-row" onclick="toggleLang()"><span>${T[lang].langLabel} ${lang==='el'?'Ελληνικά':'English'}</span><i data-lucide="languages"></i></div>
   </div>`;
   lucide.createIcons();
 }
@@ -377,12 +383,12 @@ function toggleTheme(){
   theme = (theme === 'dark' ? 'light' : 'dark'); 
   localStorage.setItem('jrs_theme', theme); 
   document.body.className = theme; 
-  renderSettings(document.getElementById('main')); 
+  render(); 
 }
 function toggleLang(){ 
   lang = (lang === 'el' ? 'en' : 'el'); 
   localStorage.setItem('jrs_lang', lang); 
-  location.reload(); 
+  render(); 
 }
 
 function renderProfile(m, uid){
@@ -415,7 +421,7 @@ async function handleImage(e, target = 'post'){
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
       const data = canvas.toDataURL('image/jpeg', 0.7);
       if(target === 'profile') db.collection('users').doc(user.uid).update({ photo: data });
-      else { pendingImages = [data]; document.getElementById('imgPrev').innerHTML = `<div style="position:relative;display:inline-block;margin-top:10px"><img src="${data}" style="width:80px;height:80px;border-radius:10px"><button onclick="pendingImages=[];document.getElementById('imgPrev').innerHTML=''" style="position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;border:none;width:20px;height:20px">×</button></div>`; }
+      else { pendingImages = [data]; document.getElementById('imgPrev').innerHTML = `<div style="position:relative;display:inline-block;margin-top:10px"><img src="${data}" style="width:80px;height:80px;border-radius:10px;object-fit:cover"><button onclick="pendingImages=[];document.getElementById('imgPrev').innerHTML=''" style="position:absolute;top:-5px;right:-5px;background:red;color:white;border-radius:50%;border:none;width:24px;height:24px;font-weight:bold;cursor:pointer">×</button></div>`; }
     };
     img.src = event.target.result;
   };
