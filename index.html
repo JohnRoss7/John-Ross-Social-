@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>John Ross Social v25</title>
+    <title>John Ross Social</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root { --bg:#000; --text:#fff; --muted:#777; --border:#222; --card:#16181c; --accent:#dc2626; --blue:#1d9bf0; }
         body.light { --bg:#fff; --text:#000; --muted:#666; --border:#eee; --card:#f7f9f9; }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, sans-serif; position:fixed; }
+        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, BlinkMacSystemFont, sans-serif; position:fixed; }
         
         .app-wrapper { width:100%; height:100%; display:flex; flex-direction:column; max-width:550px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); position:relative; }
         @media (min-width: 700px) { .app-wrapper { max-width: 620px; } }
@@ -51,7 +51,7 @@
         .red-dot { position:absolute; top:4px; right:12px; width:10px; height:10px; background:var(--accent); border-radius:50%; border:2px solid var(--bg); display:none; }
 
         .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1500; display:none; }
-        .btn-main { background:var(--accent); color:#fff; border:none; padding:12px 25px; border-radius:20px; font-weight:700; cursor:pointer; width:100%; }
+        .btn-main { background:var(--accent); color:#fff; border:none; padding:14px 25px; border-radius:30px; font-weight:700; cursor:pointer; width:100%; font-size:16px; }
         
         .lightbox { position:fixed; inset:0; background:#000; z-index:6000; display:none; align-items:center; justify-content:center; }
         .close-lb { position:absolute; top:40px; right:20px; background:var(--accent); color:#fff; border:none; border-radius:50%; width:45px; height:45px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:22px; }
@@ -80,6 +80,14 @@
         
         .guest-banner { background:linear-gradient(90deg, #dc2626, #b91c1c); color:#fff; padding:14px 16px; text-align:center; font-weight:600; }
         .guest-banner button { background:#fff; color:#dc2626; border:none; padding:8px 18px; border-radius:20px; font-weight:700; margin-top:8px; cursor:pointer; }
+
+        /* Login Screen */
+        .login-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:30px 25px; text-align:center; }
+        .login-logo { font-size:32px; font-weight:900; letter-spacing:-0.5px; margin-bottom:6px; }
+        .login-tagline { color:var(--accent); font-size:15px; font-weight:600; letter-spacing:0.3px; margin-bottom:40px; font-style:italic; }
+        .login-form { width:100%; max-width:340px; }
+        .login-form input { width:100%; padding:16px; background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:14px; font-size:16px; margin-bottom:14px; }
+        .login-form input:focus { border-color:var(--accent); }
     </style>
 </head>
 <body class="dark">
@@ -106,7 +114,9 @@
     <header>
         <div class="header-top">
             <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
-            <div style="font-weight:800; font-size:20px">John Ross Social</div>
+            <div style="text-align:center">
+                <div style="font-weight:800; font-size:18px; line-height:1.1">John Ross Social</div>
+            </div>
             <i data-lucide="refresh-cw" onclick="location.reload()" style="opacity:0.2"></i>
         </div>
         <div class="tabs" id="home-tabs" style="display:none">
@@ -201,7 +211,6 @@
     let theme = localStorage.getItem('jrs_theme') || 'dark';
     const adminEmail = 'rossrossg7@gmail.com';
     const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000;
-    let guestMode = false; // όταν βλέπει shared link χωρίς login
 
     const T = {
         el: { home:"Αρχική", profile:"Προφίλ", settings:"Ρυθμίσεις", clearCache:"Εκκαθάριση Cache", logout:"Αποσύνδεση", foryou:"Για εσένα", following:"Ακολουθείς", placeholder:"Τι συμβαίνει;" },
@@ -222,20 +231,17 @@
         } catch(e) {}
     }
 
-    // ===== URL Parameters (shared links) =====
     function checkUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const userId = params.get('user');
         const postId = params.get('post');
 
         if (postId) {
-            guestMode = !user;
             renderSinglePost(postId);
             history.replaceState({}, '', window.location.pathname);
             return true;
         }
         if (userId) {
-            guestMode = !user;
             openProfile(userId);
             history.replaceState({}, '', window.location.pathname);
             return true;
@@ -246,7 +252,6 @@
     auth.onAuthStateChanged(u => {
         user = u;
         if (u) {
-            guestMode = false;
             document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none';
             document.getElementById('bottomNav').style.display = 'flex';
             
@@ -275,18 +280,28 @@
         
         document.body.className = theme;
         
-        // Ελέγχουμε πρώτα αν υπάρχει shared link
         if (!checkUrlParams()) {
             render();
         }
     });
 
     function doLogin() {
-        const email = prompt('Email:');
-        const pass = prompt('Password:');
-        if (email && pass) {
-            auth.signInWithEmailAndPassword(email, pass).catch(err => alert('Λάθος στοιχεία'));
+        const email = document.getElementById('loginEmail')?.value;
+        const pass = document.getElementById('loginPass')?.value;
+        if (!email || !pass) {
+            alert('Συμπλήρωσε email και κωδικό');
+            return;
         }
+        auth.signInWithEmailAndPassword(email, pass)
+            .catch(err => {
+                if (err.code === 'auth/user-not-found') {
+                    // Δημιουργία νέου λογαριασμού
+                    auth.createUserWithEmailAndPassword(email, pass)
+                        .catch(e => alert('Σφάλμα: ' + e.message));
+                } else {
+                    alert('Λάθος στοιχεία ή σφάλμα σύνδεσης');
+                }
+            });
     }
 
     function toggleSidebar(s) {
@@ -301,7 +316,7 @@
     }
 
     function showTab(t, fromBack = false) {
-        if (!user) return doLogin();
+        if (!user) return;
         if (!fromBack && currentTab !== t) {
             historyStack.push(currentTab);
             window.history.pushState({ tab: t }, "");
@@ -330,7 +345,7 @@
     }
 
     function handleHash(h) {
-        if (!user) return doLogin();
+        if (!user) return;
         showTab('search');
         setTimeout(() => {
             const i = document.getElementById('searchInp');
@@ -339,28 +354,40 @@
     }
 
     function handleMention(uname) {
-        db.collection('usernames').doc(uname.toLowerCase()).get().then(doc => {
+        const clean = uname.toLowerCase().trim();
+        db.collection('usernames').doc(clean).get().then(doc => {
             if (doc.exists) {
                 openProfile(doc.data().uid);
             } else {
-                if (!user) return doLogin();
-                showTab('search');
-                setTimeout(() => {
-                    const i = document.getElementById('searchInp');
-                    if (i) { i.value = '@' + uname; doSearch(uname); }
-                }, 300);
+                // Δοκιμή και με το κανονικό όνομα
+                db.collection('users').where('username', '==', clean).limit(1).get().then(snap => {
+                    if (!snap.empty) {
+                        openProfile(snap.docs[0].id);
+                    } else {
+                        alert('Ο χρήστης @' + uname + ' δεν βρέθηκε');
+                    }
+                });
             }
-        });
+        }).catch(() => alert('Σφάλμα αναζήτησης'));
     }
 
     function render() {
         const c = document.getElementById('content');
         if (!user) {
             c.innerHTML = `
-                <div style="padding:60px 25px; text-align:center">
-                    <h1>John Ross Social</h1>
-                    <p style="color:var(--muted); margin:15px 0 25px">Η δική σου social εφαρμογή</p>
-                    <button onclick="doLogin()" class="btn-main">Σύνδεση / Εγγραφή</button>
+                <div class="login-screen">
+                    <div class="login-logo">John Ross Social</div>
+                    <div class="login-tagline">Your space. Your voice.</div>
+                    
+                    <div class="login-form">
+                        <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+                        <input type="password" id="loginPass" placeholder="Κωδικός" autocomplete="current-password">
+                        <button onclick="doLogin()" class="btn-main">Σύνδεση / Εγγραφή</button>
+                    </div>
+                    
+                    <p style="margin-top:30px; color:var(--muted); font-size:13px; max-width:280px; line-height:1.5">
+                        Αν δεν έχεις λογαριασμό, απλά βάλε email & κωδικό και θα δημιουργηθεί αυτόματα.
+                    </p>
                 </div>`;
             return;
         }
@@ -378,7 +405,6 @@
         lucide.createIcons();
     }
 
-    // ===== SINGLE POST (για κοινοποίηση) =====
     async function renderSinglePost(postId) {
         const c = document.getElementById('content');
         c.innerHTML = `<div style="padding:40px; text-align:center; color:var(--muted)">Φόρτωση...</div>`;
@@ -397,16 +423,14 @@
                 <div class="guest-banner">
                     Θέλεις να φτιάξεις κι εσύ προφίλ;
                     <br>
-                    <button onclick="doLogin()">Σύνδεση / Εγγραφή</button>
+                    <button onclick="location.href=location.pathname">Σύνδεση / Εγγραφή</button>
                 </div>`;
             }
             
             html += `<div id="singlePost"></div>`;
             c.innerHTML = html;
-            
             displayPosts([p], document.getElementById('singlePost'));
             
-            // Κρύβουμε το bottom nav αν είναι guest
             if (!user) document.getElementById('bottomNav').style.display = 'none';
             
         } catch (err) {
@@ -425,7 +449,7 @@
                 <div style="display:flex; justify-content:space-between; margin-top:10px; padding-left:52px">
                     <i data-lucide="image" onclick="document.getElementById('fInp').click()" style="color:var(--blue); cursor:pointer"></i>
                     <input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)">
-                    <button onclick="sendPost()" class="btn-main" style="width:auto">Post</button>
+                    <button onclick="sendPost()" class="btn-main" style="width:auto; padding:10px 20px;">Post</button>
                 </div>
             </div>
             <div id="feed"></div>`;
@@ -448,21 +472,15 @@
             let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             
             if (uid) {
-                // Προφίλ: πρώτα τα pinned
                 db.collection('users').doc(uid).get().then(uDoc => {
                     const pinned = (uDoc.exists && uDoc.data().pinnedPosts) ? uDoc.data().pinnedPosts : [];
                     let userPosts = posts.filter(p => p.uid === uid);
-                    
-                    // Σημειώνουμε ποια είναι pinned
                     userPosts.forEach(p => p._isPinned = pinned.includes(p.id));
-                    
-                    // Ταξινόμηση: pinned πρώτα
                     userPosts.sort((a, b) => {
                         if (a._isPinned && !b._isPinned) return -1;
                         if (!a._isPinned && b._isPinned) return 1;
                         return b.createdAt - a.createdAt;
                     });
-                    
                     displayPosts(userPosts, feed);
                 });
             } else if (feedType === 'following' && currentTab === 'home') {
@@ -519,11 +537,11 @@
                         ${quoteHtml}
                         ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation(); openLB('${safeImg}')">` : ''}
                         <div class="post-actions">
-                            <span onclick="event.stopPropagation(); ${user ? `like('${safeId}')` : 'doLogin()'}">
+                            <span onclick="event.stopPropagation(); ${user ? `like('${safeId}')` : 'location.href=location.pathname'}">
                                 <i data-lucide="heart" style="${isLiked ? 'fill:var(--accent);color:var(--accent)' : ''}"></i> ${p.likes || 0}
                             </span>
                             <span onclick="event.stopPropagation(); alert('Comments soon')"><i data-lucide="message-circle"></i></span>
-                            <span onclick="event.stopPropagation(); ${user ? `openShare('${safeId}', '${safeText}', '${safeImg}')` : 'doLogin()'}"><i data-lucide="share-2"></i></span>
+                            <span onclick="event.stopPropagation(); ${user ? `openShare('${safeId}', '${safeText}', '${safeImg}')` : 'location.href=location.pathname'}"><i data-lucide="share-2"></i></span>
                         </div>
                     </div>
                 </div>
@@ -602,7 +620,7 @@
     }
 
     async function like(id) {
-        if (!user) return doLogin();
+        if (!user) return;
         playPop();
         try {
             const ref = db.collection('posts').doc(id);
@@ -640,7 +658,7 @@
                 <div class="guest-banner">
                     Θέλεις να φτιάξεις κι εσύ προφίλ;
                     <br>
-                    <button onclick="doLogin()">Σύνδεση / Εγγραφή</button>
+                    <button onclick="location.href=location.pathname">Σύνδεση / Εγγραφή</button>
                 </div>`;
             }
 
@@ -661,11 +679,11 @@
                     </div>
 
                     <div style="display:flex; gap:28px; margin:18px 0 14px 0;">
-                        <div onclick="${user ? `showUserList('${uid}', 'followers')` : 'doLogin()'}" style="cursor:pointer;">
+                        <div onclick="${user ? `showUserList('${uid}', 'followers')` : 'location.href=location.pathname'}" style="cursor:pointer;">
                             <b style="font-size:17px; display:block;">${(u.followers || []).length}</b>
                             <span style="font-size:13px; color:var(--muted);">Followers</span>
                         </div>
-                        <div onclick="${user ? `showUserList('${uid}', 'following')` : 'doLogin()'}" style="cursor:pointer;">
+                        <div onclick="${user ? `showUserList('${uid}', 'following')` : 'location.href=location.pathname'}" style="cursor:pointer;">
                             <b style="font-size:17px; display:block;">${(u.following || []).length}</b>
                             <span style="font-size:13px; color:var(--muted);">Following</span>
                         </div>
@@ -695,7 +713,6 @@
             lucide.createIcons();
             if (user) loadFeed('p-feed', uid);
             else {
-                // Guest: δείχνουμε posts χωρίς real-time
                 db.collection('posts').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(20).get().then(snap => {
                     const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     displayPosts(posts, document.getElementById('p-feed'));
@@ -705,7 +722,7 @@
     }
 
     async function showUserList(uid, type) {
-        if (!user) return doLogin();
+        if (!user) return;
         const title = type === 'followers' ? 'Followers' : 'Following';
         document.getElementById('listModalTitle').innerText = title;
         document.getElementById('listModalContent').innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">Φόρτωση...</p>';
@@ -1015,7 +1032,6 @@
         document.getElementById('lightbox').style.display = 'flex';
     }
 
-    // ===== POST MENU με Pin =====
     async function postOp(id, text, postUid, isPinned) {
         if (!user) return;
         
@@ -1034,7 +1050,6 @@
         const choice = prompt(`Επίλεξε:\n1 = ${options[0]}\n2 = ${options[1]}\n3 = ${options[2]}\n\nΓράψε 1, 2 ή 3:`);
         
         if (choice === "1") {
-            // Pin / Unpin
             await togglePin(id, postUid, isPinned);
         } else if (choice === "2") {
             const nt = prompt("Νέο κείμενο:", text.replace(/\\n/g, '\n'));
@@ -1052,12 +1067,10 @@
             let pinned = data.pinnedPosts || [];
 
             if (currentlyPinned) {
-                // Unpin
                 pinned = pinned.filter(id => id !== postId);
                 await userRef.update({ pinnedPosts: pinned });
                 alert("Αφαιρέθηκε το Pin");
             } else {
-                // Pin
                 const isAdminUser = user.email === adminEmail && postUid === user.uid;
                 if (!isAdminUser && pinned.length >= 2) {
                     alert("Μπορείς να έχεις μόνο 2 pinned posts.\nΞεκαρφίτσωσε πρώτα κάποιο.");
