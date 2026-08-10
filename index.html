@@ -11,7 +11,17 @@
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
         html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, sans-serif; position:fixed; }
         
-        .app-wrapper { width:100%; height:100%; display:flex; flex-direction:column; max-width:550px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); position:relative; }
+        .app-wrapper { 
+            width:100%; height:100%; display:flex; flex-direction:column; 
+            max-width:550px; margin:0 auto; 
+            border-left:1px solid var(--border); border-right:1px solid var(--border); 
+            background:var(--bg); position:relative; 
+        }
+        
+        /* Καλύτερο πλάτος στο laptop */
+        @media (min-width: 700px) {
+            .app-wrapper { max-width: 620px; }
+        }
         
         header { background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; z-index:1000; }
         .header-top { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
@@ -25,7 +35,7 @@
         .post-header { display:flex; gap:12px; margin-bottom:8px; align-items: flex-start; }
         .avatar { width:48px; height:48px; border-radius:12px; background:#333; background-size:cover; background-position:center; flex-shrink:0; cursor:pointer; border:1px solid var(--border); }
         .username { font-weight:700; font-size:15px; color:var(--text); cursor:pointer; }
-        .post-text { font-size:16px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; margin:5px 0; }
+        .post-text { font-size:16px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; margin:5px 0; cursor:pointer; }
         .hashtag, .mention { color:var(--accent) !important; font-weight:600; cursor:pointer; }
         .post-img { width:100%; max-height:350px; object-fit:cover; border-radius:14px; margin-top:12px; border:1px solid var(--border); cursor:pointer; display:block; background:#111; }
         
@@ -43,29 +53,10 @@
         .input-box { width:100%; padding:14px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:12px; font-size:16px; margin-top:5px; margin-bottom:10px; }
 
         nav.bottom-nav { 
-            height:70px; 
-            border-top:1px solid var(--border); 
-            display:flex; 
-            justify-content:space-around; 
-            align-items:center; 
-            background:var(--bg); 
-            flex-shrink:0;
-            padding-bottom: env(safe-area-inset-bottom);
+            height:70px; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; 
+            background:var(--bg); flex-shrink:0; padding-bottom: env(safe-area-inset-bottom);
         }
-        .nav-item { 
-            color:var(--muted); 
-            position:relative; 
-            cursor:pointer; 
-            padding:8px 12px;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            gap:4px;
-            font-size:11px;
-            font-weight:500;
-            transition: all 0.2s;
-            min-width:60px;
-        }
+        .nav-item { color:var(--muted); position:relative; cursor:pointer; padding:8px 12px; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; font-weight:500; min-width:60px; }
         .nav-item i { width:24px; height:24px; }
         .nav-item.active { color:var(--accent); }
         .nav-item.active i { transform: scale(1.1); }
@@ -95,6 +86,8 @@
         .user-list-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); cursor:pointer; }
         .user-list-item:last-child { border-bottom:none; }
         .user-list-item .avatar { width:42px; height:42px; }
+        
+        .handle { color:var(--muted); font-size:14px; font-weight:400; }
     </style>
 </head>
 <body class="dark">
@@ -219,6 +212,7 @@
     let lang = localStorage.getItem('jrs_lang') || 'el';
     let theme = localStorage.getItem('jrs_theme') || 'dark';
     const adminEmail = 'rossrossg7@gmail.com';
+    const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 ημέρες
 
     const T = {
         el: { home:"Αρχική", profile:"Προφίλ", settings:"Ρυθμίσεις", clearCache:"Εκκαθάριση Cache", logout:"Αποσύνδεση", foryou:"Για εσένα", following:"Ακολουθείς", placeholder:"Τι συμβαίνει;" },
@@ -239,23 +233,43 @@
         } catch(e) {}
     }
 
+    // ===== Έλεγχος URL παραμέτρων (για κοινοποίηση προφίλ) =====
+    function checkUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get('user');
+        if (userId && user) {
+            setTimeout(() => openProfile(userId), 400);
+            // Καθαρίζουμε το URL χωρίς να κάνουμε reload
+            history.replaceState({}, '', window.location.pathname);
+        }
+    }
+
     auth.onAuthStateChanged(u => {
         user = u;
         if (u) {
             document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none';
+            
+            // Δημιουργία / ενημέρωση προφίλ
             db.collection('users').doc(u.uid).get().then(doc => {
                 if (!doc.exists) {
+                    const base = (u.email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const username = base + Math.floor(Math.random()*900+100);
                     db.collection('users').doc(u.uid).set({
                         name: u.email.split('@')[0],
+                        username: username,
                         bio: '',
                         photo: '',
                         followers: [],
                         following: [],
+                        usernameChangedAt: Date.now(),
                         createdAt: Date.now()
                     });
+                    // Κράτηση username
+                    db.collection('usernames').doc(username).set({ uid: u.uid });
                 }
             });
             listenNotifs();
+            checkUrlParams();
         }
         document.body.className = theme;
         render();
@@ -286,11 +300,8 @@
     }
 
     window.onpopstate = () => {
-        if (historyStack.length > 0) {
-            showTab(historyStack.pop(), true);
-        } else {
-            showTab('home', true);
-        }
+        if (historyStack.length > 0) showTab(historyStack.pop(), true);
+        else showTab('home', true);
     };
 
     function format(text) {
@@ -298,7 +309,9 @@
         let escaped = String(text).replace(/[&<>"']/g, c => ({
             '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
         }[c]));
+        // Mentions με @username
         escaped = escaped.replace(/@(\w+)/g, '<span class="mention" onclick="event.stopPropagation(); handleMention(\'$1\')">@$1</span>');
+        // Hashtags
         escaped = escaped.replace(/#(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleHash(\'#$1\')">#$1</span>');
         return escaped;
     }
@@ -311,15 +324,17 @@
         }, 300);
     }
 
-    function handleMention(name) {
-        db.collection('users').where('name', '==', name).limit(1).get().then(snap => {
-            if (!snap.empty) {
-                openProfile(snap.docs[0].id);
+    function handleMention(uname) {
+        // Ψάχνει με το username
+        db.collection('usernames').doc(uname.toLowerCase()).get().then(doc => {
+            if (doc.exists) {
+                openProfile(doc.data().uid);
             } else {
+                // Fallback αναζήτηση
                 showTab('search');
                 setTimeout(() => {
                     const i = document.getElementById('searchInp');
-                    if (i) { i.value = '@' + name; doSearch(name); }
+                    if (i) { i.value = '@' + uname; doSearch(uname); }
                 }, 300);
             }
         });
@@ -425,7 +440,7 @@
                     <div class="avatar" style="${p.photo ? `background-image:url('${p.photo}')` : ''}"></div>
                     <div class="post-content">
                         <div class="username">${p.name || 'User'} ${user.email === adminEmail && p.uid === user.uid ? '<span class="admin-badge">ADMIN</span>' : ''}</div>
-                        <div class="post-text">${format(p.text)}</div>
+                        <div class="post-text" onclick="event.stopPropagation(); copyText('${safeText}')">${format(p.text)}</div>
                         ${quoteHtml}
                         ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation(); openLB('${safeImg}')">` : ''}
                         <div class="post-actions">
@@ -440,6 +455,23 @@
             </div>`;
         }).join('');
         lucide.createIcons();
+    }
+
+    // ===== Αντιγραφή κειμένου =====
+    function copyText(text) {
+        const clean = text.replace(/\\n/g, '\n').replace(/\\'/g, "'");
+        navigator.clipboard.writeText(clean).then(() => {
+            alert('Το κείμενο αντιγράφηκε!');
+        }).catch(() => {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = clean;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('Το κείμενο αντιγράφηκε!');
+        });
     }
 
     async function handleFile(inp, target = 'post') {
@@ -484,6 +516,7 @@
             await db.collection('posts').add({
                 uid: user.uid,
                 name: uData.name || user.email.split('@')[0],
+                username: uData.username || '',
                 photo: uData.photo || '',
                 text: txt,
                 images: pendingImg ? [pendingImg] : [],
@@ -518,7 +551,6 @@
         } catch (err) {}
     }
 
-    // ===== ΝΕΟ PROFILE LAYOUT =====
     function renderProfile(m, uid) {
         db.collection('users').doc(uid).onSnapshot(doc => {
             if (!doc.exists) { 
@@ -531,8 +563,6 @@
 
             m.innerHTML = `
                 <div style="padding:20px 16px; text-align:left; border-bottom:1px solid var(--border);">
-                    
-                    <!-- Φωτογραφία αριστερά + Όνομα -->
                     <div style="display:flex; gap:16px; align-items:flex-start;">
                         <div onclick="openLB('${u.photo || ''}')" 
                              style="width:86px; height:86px; border-radius:18px; flex-shrink:0; 
@@ -542,12 +572,12 @@
                         </div>
                         
                         <div style="flex:1; padding-top:4px;">
-                            <h2 style="font-size:20px; margin:0 0 4px 0; line-height:1.3;">${u.name || 'User'}</h2>
-                            <p style="color:var(--muted); font-size:14px; margin:0; white-space:pre-wrap;">${u.bio || ''}</p>
+                            <h2 style="font-size:20px; margin:0 0 2px 0; line-height:1.3;">${u.name || 'User'}</h2>
+                            <div class="handle">@${u.username || 'user'}</div>
+                            <p style="color:var(--muted); font-size:14px; margin:8px 0 0 0; white-space:pre-wrap;">${u.bio || ''}</p>
                         </div>
                     </div>
 
-                    <!-- Στατιστικά -->
                     <div style="display:flex; gap:28px; margin:18px 0 14px 0;">
                         <div onclick="showUserList('${uid}', 'followers')" style="cursor:pointer;">
                             <b style="font-size:17px; display:block;">${(u.followers || []).length}</b>
@@ -559,7 +589,6 @@
                         </div>
                     </div>
 
-                    <!-- Κουμπιά Follow + Share -->
                     <div style="display:flex; gap:10px; margin-top:6px;">
                         ${!isMe ? `
                             <button onclick="toggleFollow('${uid}')" 
@@ -614,7 +643,7 @@
                     <div class="avatar" style="${u.photo ? `background-image:url('${u.photo}')` : ''}"></div>
                     <div>
                         <div style="font-weight:700">${u.name || 'User'}</div>
-                        <div style="font-size:13px;color:var(--muted)">${u.bio ? u.bio.substring(0,40) : ''}</div>
+                        <div style="font-size:13px;color:var(--muted)">@${u.username || 'user'}</div>
                     </div>
                 </div>`;
             }).join('') || '<p style="text-align:center;color:var(--muted)">Κανένας ακόμα</p>';
@@ -634,7 +663,6 @@
             
             const [myDoc, targetDoc] = await Promise.all([myRef.get(), targetRef.get()]);
             const myData = myDoc.data() || {};
-            const targetData = targetDoc.data() || {};
 
             const isFollowing = (myData.following || []).includes(targetUid);
 
@@ -658,7 +686,6 @@
         }
     }
 
-    // ===== Κοινοποίηση Προφίλ =====
     function shareProfile(uid, name) {
         const url = window.location.origin + window.location.pathname + "?user=" + uid;
         
@@ -678,18 +705,34 @@
     function renderSettings(m) {
         db.collection('users').doc(user.uid).get().then(doc => {
             const u = doc.exists ? doc.data() : {};
+            const lastChange = u.usernameChangedAt || 0;
+            const canChange = (Date.now() - lastChange) > USERNAME_COOLDOWN;
+            const daysLeft = canChange ? 0 : Math.ceil((USERNAME_COOLDOWN - (Date.now() - lastChange)) / (24*60*60*1000));
+
             m.innerHTML = `
                 <div style="padding:20px">
                     <h2>Ρυθμίσεις</h2><br>
                     <div class="settings-row" onclick="document.getElementById('pInp').click()"><span>Αλλαγή Φωτογραφίας</span><i data-lucide="camera"></i></div>
                     <input type="file" id="pInp" hidden accept="image/*" onchange="handleFile(this, 'profile')">
+                    
                     <div style="padding:15px 0">
-                        <label>Όνομα Χρήστη</label>
+                        <label>Εμφανιζόμενο Όνομα (με emoji)</label>
                         <input id="s-name" class="input-box" value="${u.name || ''}">
+                        
+                        <label style="margin-top:12px; display:block">Username (@)</label>
+                        <input id="s-username" class="input-box" value="${u.username || ''}" 
+                               ${!canChange ? 'disabled' : ''} 
+                               placeholder="μόνο λατινικά, αριθμοί, _">
+                        <div style="font-size:12px; color:var(--muted); margin-top:-6px; margin-bottom:10px;">
+                            ${canChange ? 'Μπορείς να το αλλάξεις τώρα' : `Μπορείς να το αλλάξεις σε ${daysLeft} ημέρες`}
+                        </div>
+                        
                         <label style="margin-top:10px; display:block">Bio</label>
                         <textarea id="s-bio" class="input-box" style="height:80px">${u.bio || ''}</textarea>
+                        
                         <button onclick="saveProfile()" class="btn-main">Αποθήκευση</button>
                     </div>
+                    
                     <div class="settings-row" onclick="toggleThemeNow()"><span>Θέμα: ${theme === 'dark' ? 'Dark' : 'Light'}</span><i data-lucide="moon"></i></div>
                     <div class="settings-row" onclick="toggleLangNow()"><span>Γλώσσα: ${lang === 'el' ? 'Ελληνικά' : 'English'}</span><i data-lucide="languages"></i></div>
                 </div>`;
@@ -700,9 +743,59 @@
     async function saveProfile() {
         const n = document.getElementById('s-name').value.trim();
         const b = document.getElementById('s-bio').value.trim();
-        await db.collection('users').doc(user.uid).update({ name: n, bio: b });
-        updateAllPosts(n, null);
-        alert("Αποθηκεύτηκε!");
+        let newUsername = document.getElementById('s-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+        if (newUsername.length < 3) {
+            alert("Το username πρέπει να έχει τουλάχιστον 3 χαρακτήρες");
+            return;
+        }
+
+        try {
+            const uDoc = await db.collection('users').doc(user.uid).get();
+            const uData = uDoc.data() || {};
+            const oldUsername = uData.username || '';
+
+            // Αν άλλαξε username
+            if (newUsername && newUsername !== oldUsername) {
+                const lastChange = uData.usernameChangedAt || 0;
+                if ((Date.now() - lastChange) < USERNAME_COOLDOWN) {
+                    alert("Μπορείς να αλλάξεις username μόνο κάθε 30 ημέρες");
+                    return;
+                }
+
+                // Έλεγχος αν είναι διαθέσιμο
+                const unameDoc = await db.collection('usernames').doc(newUsername).get();
+                if (unameDoc.exists && unameDoc.data().uid !== user.uid) {
+                    alert("Το username χρησιμοποιείται ήδη");
+                    return;
+                }
+
+                // Ενημέρωση
+                const batch = db.batch();
+                batch.update(db.collection('users').doc(user.uid), {
+                    name: n,
+                    bio: b,
+                    username: newUsername,
+                    usernameChangedAt: Date.now()
+                });
+                
+                // Διαγραφή παλιού
+                if (oldUsername) batch.delete(db.collection('usernames').doc(oldUsername));
+                // Νέο
+                batch.set(db.collection('usernames').doc(newUsername), { uid: user.uid });
+                
+                await batch.commit();
+                updateAllPosts(n, null);
+                alert("Αποθηκεύτηκε! Το username άλλαξε.");
+            } else {
+                await db.collection('users').doc(user.uid).update({ name: n, bio: b });
+                updateAllPosts(n, null);
+                alert("Αποθηκεύτηκε!");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Σφάλμα αποθήκευσης");
+        }
     }
 
     async function updateAllPosts(newName, newPhoto) {
@@ -746,6 +839,7 @@
             await db.collection('posts').add({
                 uid: user.uid,
                 name: uData.name || user.email.split('@')[0],
+                username: uData.username || '',
                 photo: uData.photo || '',
                 text: "Repost: " + (activePost.text || ''),
                 images: activePost.img ? [activePost.img] : [],
@@ -782,6 +876,7 @@
             await db.collection('posts').add({
                 uid: user.uid,
                 name: uData.name || user.email.split('@')[0],
+                username: uData.username || '',
                 photo: uData.photo || '',
                 text: comment,
                 images: [],
@@ -896,7 +991,7 @@
     function renderSearch(m) {
         m.innerHTML = `
             <div style="padding:16px">
-                <input id="searchInp" class="input-box" placeholder="Αναζήτηση #hashtag ή κειμένου..." oninput="doSearch(this.value)">
+                <input id="searchInp" class="input-box" placeholder="Αναζήτηση #hashtag ή @username..." oninput="doSearch(this.value)">
                 <div id="searchResults" style="margin-top:15px"></div>
             </div>`;
     }
@@ -905,12 +1000,13 @@
         const results = document.getElementById('searchResults');
         if (!results) return;
         if (!q || q.trim().length < 2) { results.innerHTML = ''; return; }
-        const term = q.toLowerCase().trim().replace(/^#/, '');
+        const term = q.toLowerCase().trim().replace(/^#/, '').replace(/^@/, '');
         db.collection('posts').orderBy('createdAt', 'desc').limit(60).get().then(snap => {
             const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                 .filter(p => 
                     (p.text || '').toLowerCase().includes(term) || 
-                    (p.name || '').toLowerCase().includes(term)
+                    (p.name || '').toLowerCase().includes(term) ||
+                    (p.username || '').toLowerCase().includes(term)
                 );
             displayPosts(posts, results);
         });
