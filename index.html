@@ -11,17 +11,8 @@
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
         html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:system-ui, -apple-system, sans-serif; position:fixed; }
         
-        .app-wrapper { 
-            width:100%; height:100%; display:flex; flex-direction:column; 
-            max-width:550px; margin:0 auto; 
-            border-left:1px solid var(--border); border-right:1px solid var(--border); 
-            background:var(--bg); position:relative; 
-        }
-        
-        /* Καλύτερο πλάτος στο laptop */
-        @media (min-width: 700px) {
-            .app-wrapper { max-width: 620px; }
-        }
+        .app-wrapper { width:100%; height:100%; display:flex; flex-direction:column; max-width:550px; margin:0 auto; border-left:1px solid var(--border); border-right:1px solid var(--border); background:var(--bg); position:relative; }
+        @media (min-width: 700px) { .app-wrapper { max-width: 620px; } }
         
         header { background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; z-index:1000; }
         .header-top { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
@@ -52,10 +43,7 @@
         .modal-content { background:var(--card); width:100%; max-width:400px; border-radius:24px; padding:20px; border:1px solid var(--border); max-height:85vh; overflow-y:auto; }
         .input-box { width:100%; padding:14px; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:12px; font-size:16px; margin-top:5px; margin-bottom:10px; }
 
-        nav.bottom-nav { 
-            height:70px; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; 
-            background:var(--bg); flex-shrink:0; padding-bottom: env(safe-area-inset-bottom);
-        }
+        nav.bottom-nav { height:70px; border-top:1px solid var(--border); display:flex; justify-content:space-around; align-items:center; background:var(--bg); flex-shrink:0; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { color:var(--muted); position:relative; cursor:pointer; padding:8px 12px; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; font-weight:500; min-width:60px; }
         .nav-item i { width:24px; height:24px; }
         .nav-item.active { color:var(--accent); }
@@ -70,6 +58,7 @@
         
         .settings-row { padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; background:var(--card); border-radius:12px; margin-bottom:10px; }
         .admin-badge { background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; margin-left:5px; }
+        .pin-badge { background:#f59e0b; color:#000; padding:2px 7px; border-radius:6px; font-size:10px; font-weight:800; margin-left:6px; }
         
         .notif-item { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
         
@@ -88,6 +77,9 @@
         .user-list-item .avatar { width:42px; height:42px; }
         
         .handle { color:var(--muted); font-size:14px; font-weight:400; }
+        
+        .guest-banner { background:linear-gradient(90deg, #dc2626, #b91c1c); color:#fff; padding:14px 16px; text-align:center; font-weight:600; }
+        .guest-banner button { background:#fff; color:#dc2626; border:none; padding:8px 18px; border-radius:20px; font-weight:700; margin-top:8px; cursor:pointer; }
     </style>
 </head>
 <body class="dark">
@@ -124,23 +116,19 @@
     </header>
     <main id="main-scroll"><div id="content"></div></main>
     
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="bottomNav">
         <div class="nav-item active" id="btn-home" onclick="showTab('home')">
-            <i data-lucide="home"></i>
-            <span>Αρχική</span>
+            <i data-lucide="home"></i><span>Αρχική</span>
         </div>
         <div class="nav-item" id="btn-search" onclick="showTab('search')">
-            <i data-lucide="search"></i>
-            <span>Αναζήτηση</span>
+            <i data-lucide="search"></i><span>Αναζήτηση</span>
         </div>
         <div class="nav-item" id="btn-notif" onclick="showTab('notif')">
-            <i data-lucide="bell"></i>
-            <span>Ειδοπ.</span>
+            <i data-lucide="bell"></i><span>Ειδοπ.</span>
             <div class="red-dot" id="notif-badge"></div>
         </div>
         <div class="nav-item" id="btn-profile" onclick="showTab('profile')">
-            <i data-lucide="user"></i>
-            <span>Προφίλ</span>
+            <i data-lucide="user"></i><span>Προφίλ</span>
         </div>
     </nav>
 </div>
@@ -212,7 +200,8 @@
     let lang = localStorage.getItem('jrs_lang') || 'el';
     let theme = localStorage.getItem('jrs_theme') || 'dark';
     const adminEmail = 'rossrossg7@gmail.com';
-    const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000; // 30 ημέρες
+    const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000;
+    let guestMode = false; // όταν βλέπει shared link χωρίς login
 
     const T = {
         el: { home:"Αρχική", profile:"Προφίλ", settings:"Ρυθμίσεις", clearCache:"Εκκαθάριση Cache", logout:"Αποσύνδεση", foryou:"Για εσένα", following:"Ακολουθείς", placeholder:"Τι συμβαίνει;" },
@@ -233,23 +222,34 @@
         } catch(e) {}
     }
 
-    // ===== Έλεγχος URL παραμέτρων (για κοινοποίηση προφίλ) =====
+    // ===== URL Parameters (shared links) =====
     function checkUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const userId = params.get('user');
-        if (userId && user) {
-            setTimeout(() => openProfile(userId), 400);
-            // Καθαρίζουμε το URL χωρίς να κάνουμε reload
+        const postId = params.get('post');
+
+        if (postId) {
+            guestMode = !user;
+            renderSinglePost(postId);
             history.replaceState({}, '', window.location.pathname);
+            return true;
         }
+        if (userId) {
+            guestMode = !user;
+            openProfile(userId);
+            history.replaceState({}, '', window.location.pathname);
+            return true;
+        }
+        return false;
     }
 
     auth.onAuthStateChanged(u => {
         user = u;
         if (u) {
+            guestMode = false;
             document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none';
+            document.getElementById('bottomNav').style.display = 'flex';
             
-            // Δημιουργία / ενημέρωση προφίλ
             db.collection('users').doc(u.uid).get().then(doc => {
                 if (!doc.exists) {
                     const base = (u.email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -261,19 +261,33 @@
                         photo: '',
                         followers: [],
                         following: [],
+                        pinnedPosts: [],
                         usernameChangedAt: Date.now(),
                         createdAt: Date.now()
                     });
-                    // Κράτηση username
                     db.collection('usernames').doc(username).set({ uid: u.uid });
                 }
             });
             listenNotifs();
-            checkUrlParams();
+        } else {
+            document.getElementById('bottomNav').style.display = 'none';
         }
+        
         document.body.className = theme;
-        render();
+        
+        // Ελέγχουμε πρώτα αν υπάρχει shared link
+        if (!checkUrlParams()) {
+            render();
+        }
     });
+
+    function doLogin() {
+        const email = prompt('Email:');
+        const pass = prompt('Password:');
+        if (email && pass) {
+            auth.signInWithEmailAndPassword(email, pass).catch(err => alert('Λάθος στοιχεία'));
+        }
+    }
 
     function toggleSidebar(s) {
         document.getElementById('sidebar').classList.toggle('show', s);
@@ -287,6 +301,7 @@
     }
 
     function showTab(t, fromBack = false) {
+        if (!user) return doLogin();
         if (!fromBack && currentTab !== t) {
             historyStack.push(currentTab);
             window.history.pushState({ tab: t }, "");
@@ -309,14 +324,13 @@
         let escaped = String(text).replace(/[&<>"']/g, c => ({
             '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
         }[c]));
-        // Mentions με @username
         escaped = escaped.replace(/@(\w+)/g, '<span class="mention" onclick="event.stopPropagation(); handleMention(\'$1\')">@$1</span>');
-        // Hashtags
         escaped = escaped.replace(/#(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleHash(\'#$1\')">#$1</span>');
         return escaped;
     }
 
     function handleHash(h) {
+        if (!user) return doLogin();
         showTab('search');
         setTimeout(() => {
             const i = document.getElementById('searchInp');
@@ -325,12 +339,11 @@
     }
 
     function handleMention(uname) {
-        // Ψάχνει με το username
         db.collection('usernames').doc(uname.toLowerCase()).get().then(doc => {
             if (doc.exists) {
                 openProfile(doc.data().uid);
             } else {
-                // Fallback αναζήτηση
+                if (!user) return doLogin();
                 showTab('search');
                 setTimeout(() => {
                     const i = document.getElementById('searchInp');
@@ -343,8 +356,12 @@
     function render() {
         const c = document.getElementById('content');
         if (!user) {
-            c.innerHTML = `<div style="padding:60px 25px; text-align:center"><h1>John Ross Social</h1><br>
-                <button onclick="auth.signInWithEmailAndPassword(prompt('Email:'), prompt('Password:'))" class="btn-main">Σύνδεση</button></div>`;
+            c.innerHTML = `
+                <div style="padding:60px 25px; text-align:center">
+                    <h1>John Ross Social</h1>
+                    <p style="color:var(--muted); margin:15px 0 25px">Η δική σου social εφαρμογή</p>
+                    <button onclick="doLogin()" class="btn-main">Σύνδεση / Εγγραφή</button>
+                </div>`;
             return;
         }
         if (currentTab === 'home') renderHome(c);
@@ -359,6 +376,42 @@
             el.innerText = T[lang][k] || k;
         });
         lucide.createIcons();
+    }
+
+    // ===== SINGLE POST (για κοινοποίηση) =====
+    async function renderSinglePost(postId) {
+        const c = document.getElementById('content');
+        c.innerHTML = `<div style="padding:40px; text-align:center; color:var(--muted)">Φόρτωση...</div>`;
+        
+        try {
+            const doc = await db.collection('posts').doc(postId).get();
+            if (!doc.exists) {
+                c.innerHTML = `<div style="padding:40px; text-align:center"><p>Η ανάρτηση δεν βρέθηκε</p><br><button onclick="location.href=location.pathname" class="btn-main">Αρχική</button></div>`;
+                return;
+            }
+            const p = { id: doc.id, ...doc.data() };
+            
+            let html = '';
+            if (!user) {
+                html += `
+                <div class="guest-banner">
+                    Θέλεις να φτιάξεις κι εσύ προφίλ;
+                    <br>
+                    <button onclick="doLogin()">Σύνδεση / Εγγραφή</button>
+                </div>`;
+            }
+            
+            html += `<div id="singlePost"></div>`;
+            c.innerHTML = html;
+            
+            displayPosts([p], document.getElementById('singlePost'));
+            
+            // Κρύβουμε το bottom nav αν είναι guest
+            if (!user) document.getElementById('bottomNav').style.display = 'none';
+            
+        } catch (err) {
+            c.innerHTML = `<div style="padding:40px; text-align:center; color:#dc2626">Σφάλμα φόρτωσης</div>`;
+        }
     }
 
     function renderHome(m) {
@@ -390,16 +443,34 @@
         const feed = document.getElementById(id);
         if (!feed) return;
 
-        let q = db.collection('posts').orderBy('createdAt', 'desc').limit(40);
+        let q = db.collection('posts').orderBy('createdAt', 'desc').limit(50);
         unsubscribeFeed = q.onSnapshot(snap => {
             let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            if (feedType === 'following' && currentTab === 'home') {
+            
+            if (uid) {
+                // Προφίλ: πρώτα τα pinned
+                db.collection('users').doc(uid).get().then(uDoc => {
+                    const pinned = (uDoc.exists && uDoc.data().pinnedPosts) ? uDoc.data().pinnedPosts : [];
+                    let userPosts = posts.filter(p => p.uid === uid);
+                    
+                    // Σημειώνουμε ποια είναι pinned
+                    userPosts.forEach(p => p._isPinned = pinned.includes(p.id));
+                    
+                    // Ταξινόμηση: pinned πρώτα
+                    userPosts.sort((a, b) => {
+                        if (a._isPinned && !b._isPinned) return -1;
+                        if (!a._isPinned && b._isPinned) return 1;
+                        return b.createdAt - a.createdAt;
+                    });
+                    
+                    displayPosts(userPosts, feed);
+                });
+            } else if (feedType === 'following' && currentTab === 'home') {
                 db.collection('users').doc(user.uid).get().then(uDoc => {
                     const following = (uDoc.exists && uDoc.data().following) ? uDoc.data().following : [];
                     displayPosts(posts.filter(p => following.includes(p.uid) || p.uid === user.uid), feed);
                 });
             } else {
-                if (uid) posts = posts.filter(p => p.uid === uid);
                 displayPosts(posts, feed);
             }
         }, err => {
@@ -416,8 +487,8 @@
         }
 
         container.innerHTML = posts.map(p => {
-            const isLiked = (p.likedBy || []).includes(user.uid);
-            const canManage = (user.uid === p.uid || user.email === adminEmail);
+            const isLiked = user && (p.likedBy || []).includes(user.uid);
+            const canManage = user && (user.uid === p.uid || user.email === adminEmail);
             const safeId = String(p.id).replace(/'/g, "\\'");
             const safeUid = String(p.uid).replace(/'/g, "\\'");
             const safeText = String(p.text || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n');
@@ -435,20 +506,24 @@
 
             return `
             <div class="post">
-                ${canManage ? `<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${safeId}', '${safeText}', '${safeUid}')"></i>` : ''}
+                ${canManage ? `<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${safeId}', '${safeText}', '${safeUid}', ${!!p._isPinned})"></i>` : ''}
                 <div class="post-header" onclick="openProfile('${safeUid}')">
                     <div class="avatar" style="${p.photo ? `background-image:url('${p.photo}')` : ''}"></div>
                     <div class="post-content">
-                        <div class="username">${p.name || 'User'} ${user.email === adminEmail && p.uid === user.uid ? '<span class="admin-badge">ADMIN</span>' : ''}</div>
+                        <div class="username">
+                            ${p.name || 'User'}
+                            ${p._isPinned ? '<span class="pin-badge">PINNED</span>' : ''}
+                            ${user && user.email === adminEmail && p.uid === user.uid ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        </div>
                         <div class="post-text" onclick="event.stopPropagation(); copyText('${safeText}')">${format(p.text)}</div>
                         ${quoteHtml}
                         ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation(); openLB('${safeImg}')">` : ''}
                         <div class="post-actions">
-                            <span onclick="event.stopPropagation(); like('${safeId}')">
+                            <span onclick="event.stopPropagation(); ${user ? `like('${safeId}')` : 'doLogin()'}">
                                 <i data-lucide="heart" style="${isLiked ? 'fill:var(--accent);color:var(--accent)' : ''}"></i> ${p.likes || 0}
                             </span>
                             <span onclick="event.stopPropagation(); alert('Comments soon')"><i data-lucide="message-circle"></i></span>
-                            <span onclick="event.stopPropagation(); openShare('${safeId}', '${safeText}', '${safeImg}')"><i data-lucide="share-2"></i></span>
+                            <span onclick="event.stopPropagation(); ${user ? `openShare('${safeId}', '${safeText}', '${safeImg}')` : 'doLogin()'}"><i data-lucide="share-2"></i></span>
                         </div>
                     </div>
                 </div>
@@ -457,21 +532,18 @@
         lucide.createIcons();
     }
 
-    // ===== Αντιγραφή κειμένου =====
     function copyText(text) {
         const clean = text.replace(/\\n/g, '\n').replace(/\\'/g, "'");
-        navigator.clipboard.writeText(clean).then(() => {
-            alert('Το κείμενο αντιγράφηκε!');
-        }).catch(() => {
-            // Fallback
-            const ta = document.createElement('textarea');
-            ta.value = clean;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            alert('Το κείμενο αντιγράφηκε!');
-        });
+        navigator.clipboard.writeText(clean).then(() => alert('Το κείμενο αντιγράφηκε!'))
+            .catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = clean;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                alert('Το κείμενο αντιγράφηκε!');
+            });
     }
 
     async function handleFile(inp, target = 'post') {
@@ -530,6 +602,7 @@
     }
 
     async function like(id) {
+        if (!user) return doLogin();
         playPop();
         try {
             const ref = db.collection('posts').doc(id);
@@ -558,10 +631,20 @@
                 return; 
             }
             const u = doc.data();
-            const isMe = uid === user.uid;
-            const isFollowing = (u.followers || []).includes(user.uid);
+            const isMe = user && uid === user.uid;
+            const isFollowing = user && (u.followers || []).includes(user.uid);
 
-            m.innerHTML = `
+            let html = '';
+            if (!user) {
+                html += `
+                <div class="guest-banner">
+                    Θέλεις να φτιάξεις κι εσύ προφίλ;
+                    <br>
+                    <button onclick="doLogin()">Σύνδεση / Εγγραφή</button>
+                </div>`;
+            }
+
+            html += `
                 <div style="padding:20px 16px; text-align:left; border-bottom:1px solid var(--border);">
                     <div style="display:flex; gap:16px; align-items:flex-start;">
                         <div onclick="openLB('${u.photo || ''}')" 
@@ -570,7 +653,6 @@
                                     background-size:cover; background-position:center; 
                                     border:2px solid var(--border); cursor:pointer;">
                         </div>
-                        
                         <div style="flex:1; padding-top:4px;">
                             <h2 style="font-size:20px; margin:0 0 2px 0; line-height:1.3;">${u.name || 'User'}</h2>
                             <div class="handle">@${u.username || 'user'}</div>
@@ -579,18 +661,18 @@
                     </div>
 
                     <div style="display:flex; gap:28px; margin:18px 0 14px 0;">
-                        <div onclick="showUserList('${uid}', 'followers')" style="cursor:pointer;">
+                        <div onclick="${user ? `showUserList('${uid}', 'followers')` : 'doLogin()'}" style="cursor:pointer;">
                             <b style="font-size:17px; display:block;">${(u.followers || []).length}</b>
                             <span style="font-size:13px; color:var(--muted);">Followers</span>
                         </div>
-                        <div onclick="showUserList('${uid}', 'following')" style="cursor:pointer;">
+                        <div onclick="${user ? `showUserList('${uid}', 'following')` : 'doLogin()'}" style="cursor:pointer;">
                             <b style="font-size:17px; display:block;">${(u.following || []).length}</b>
                             <span style="font-size:13px; color:var(--muted);">Following</span>
                         </div>
                     </div>
 
                     <div style="display:flex; gap:10px; margin-top:6px;">
-                        ${!isMe ? `
+                        ${user && !isMe ? `
                             <button onclick="toggleFollow('${uid}')" 
                                 style="flex:1; padding:11px; border-radius:14px; font-size:15px; font-weight:700; cursor:pointer;
                                        background:${isFollowing ? 'transparent' : 'var(--accent)'};
@@ -609,12 +691,21 @@
                 </div>
                 <div id="p-feed"></div>`;
             
+            m.innerHTML = html;
             lucide.createIcons();
-            loadFeed('p-feed', uid);
+            if (user) loadFeed('p-feed', uid);
+            else {
+                // Guest: δείχνουμε posts χωρίς real-time
+                db.collection('posts').where('uid', '==', uid).orderBy('createdAt', 'desc').limit(20).get().then(snap => {
+                    const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    displayPosts(posts, document.getElementById('p-feed'));
+                });
+            }
         });
     }
 
     async function showUserList(uid, type) {
+        if (!user) return doLogin();
         const title = type === 'followers' ? 'Followers' : 'Following';
         document.getElementById('listModalTitle').innerText = title;
         document.getElementById('listModalContent').innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">Φόρτωση...</p>';
@@ -650,20 +741,17 @@
 
             lucide.createIcons();
         } catch (err) {
-            console.error(err);
-            document.getElementById('listModalContent').innerHTML = '<p style="color:#dc2626;text-align:center">Σφάλμα φόρτωσης</p>';
+            document.getElementById('listModalContent').innerHTML = '<p style="color:#dc2626;text-align:center">Σφάλμα</p>';
         }
     }
 
     async function toggleFollow(targetUid) {
-        if (targetUid === user.uid) return;
+        if (!user || targetUid === user.uid) return;
         try {
             const myRef = db.collection('users').doc(user.uid);
             const targetRef = db.collection('users').doc(targetUid);
-            
-            const [myDoc, targetDoc] = await Promise.all([myRef.get(), targetRef.get()]);
+            const myDoc = await myRef.get();
             const myData = myDoc.data() || {};
-
             const isFollowing = (myData.following || []).includes(targetUid);
 
             if (isFollowing) {
@@ -672,7 +760,6 @@
             } else {
                 await myRef.update({ following: firebase.firestore.FieldValue.arrayUnion(targetUid) });
                 await targetRef.update({ followers: firebase.firestore.FieldValue.arrayUnion(user.uid) });
-                
                 db.collection('notifications').add({
                     userId: targetUid,
                     text: `${myData.name || user.email.split('@')[0]} σε ακολούθησε`,
@@ -680,25 +767,19 @@
                     createdAt: Date.now()
                 });
             }
-        } catch (err) {
-            console.error(err);
-            alert("Σφάλμα");
-        }
+        } catch (err) { alert("Σφάλμα"); }
     }
 
     function shareProfile(uid, name) {
         const url = window.location.origin + window.location.pathname + "?user=" + uid;
-        
         if (navigator.share) {
             navigator.share({
                 title: name + ' | John Ross Social',
                 text: 'Δες το προφίλ του/της ' + name + ' στο John Ross Social',
                 url: url
-            }).catch(() => {
-                navigator.clipboard.writeText(url).then(() => alert("Το link του προφίλ αντιγράφηκε!"));
-            });
+            }).catch(() => navigator.clipboard.writeText(url).then(() => alert("Link αντιγράφηκε!")));
         } else {
-            navigator.clipboard.writeText(url).then(() => alert("Το link του προφίλ αντιγράφηκε!"));
+            navigator.clipboard.writeText(url).then(() => alert("Link αντιγράφηκε!"));
         }
     }
 
@@ -714,25 +795,18 @@
                     <h2>Ρυθμίσεις</h2><br>
                     <div class="settings-row" onclick="document.getElementById('pInp').click()"><span>Αλλαγή Φωτογραφίας</span><i data-lucide="camera"></i></div>
                     <input type="file" id="pInp" hidden accept="image/*" onchange="handleFile(this, 'profile')">
-                    
                     <div style="padding:15px 0">
-                        <label>Εμφανιζόμενο Όνομα (με emoji)</label>
+                        <label>Εμφανιζόμενο Όνομα</label>
                         <input id="s-name" class="input-box" value="${u.name || ''}">
-                        
                         <label style="margin-top:12px; display:block">Username (@)</label>
-                        <input id="s-username" class="input-box" value="${u.username || ''}" 
-                               ${!canChange ? 'disabled' : ''} 
-                               placeholder="μόνο λατινικά, αριθμοί, _">
+                        <input id="s-username" class="input-box" value="${u.username || ''}" ${!canChange ? 'disabled' : ''}>
                         <div style="font-size:12px; color:var(--muted); margin-top:-6px; margin-bottom:10px;">
                             ${canChange ? 'Μπορείς να το αλλάξεις τώρα' : `Μπορείς να το αλλάξεις σε ${daysLeft} ημέρες`}
                         </div>
-                        
                         <label style="margin-top:10px; display:block">Bio</label>
                         <textarea id="s-bio" class="input-box" style="height:80px">${u.bio || ''}</textarea>
-                        
                         <button onclick="saveProfile()" class="btn-main">Αποθήκευση</button>
                     </div>
-                    
                     <div class="settings-row" onclick="toggleThemeNow()"><span>Θέμα: ${theme === 'dark' ? 'Dark' : 'Light'}</span><i data-lucide="moon"></i></div>
                     <div class="settings-row" onclick="toggleLangNow()"><span>Γλώσσα: ${lang === 'el' ? 'Ελληνικά' : 'English'}</span><i data-lucide="languages"></i></div>
                 </div>`;
@@ -745,57 +819,39 @@
         const b = document.getElementById('s-bio').value.trim();
         let newUsername = document.getElementById('s-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 
-        if (newUsername.length < 3) {
-            alert("Το username πρέπει να έχει τουλάχιστον 3 χαρακτήρες");
-            return;
-        }
+        if (newUsername.length < 3) { alert("Το username πρέπει να έχει τουλάχιστον 3 χαρακτήρες"); return; }
 
         try {
             const uDoc = await db.collection('users').doc(user.uid).get();
             const uData = uDoc.data() || {};
             const oldUsername = uData.username || '';
 
-            // Αν άλλαξε username
             if (newUsername && newUsername !== oldUsername) {
                 const lastChange = uData.usernameChangedAt || 0;
                 if ((Date.now() - lastChange) < USERNAME_COOLDOWN) {
                     alert("Μπορείς να αλλάξεις username μόνο κάθε 30 ημέρες");
                     return;
                 }
-
-                // Έλεγχος αν είναι διαθέσιμο
                 const unameDoc = await db.collection('usernames').doc(newUsername).get();
                 if (unameDoc.exists && unameDoc.data().uid !== user.uid) {
                     alert("Το username χρησιμοποιείται ήδη");
                     return;
                 }
-
-                // Ενημέρωση
                 const batch = db.batch();
                 batch.update(db.collection('users').doc(user.uid), {
-                    name: n,
-                    bio: b,
-                    username: newUsername,
-                    usernameChangedAt: Date.now()
+                    name: n, bio: b, username: newUsername, usernameChangedAt: Date.now()
                 });
-                
-                // Διαγραφή παλιού
                 if (oldUsername) batch.delete(db.collection('usernames').doc(oldUsername));
-                // Νέο
                 batch.set(db.collection('usernames').doc(newUsername), { uid: user.uid });
-                
                 await batch.commit();
                 updateAllPosts(n, null);
-                alert("Αποθηκεύτηκε! Το username άλλαξε.");
+                alert("Αποθηκεύτηκε!");
             } else {
                 await db.collection('users').doc(user.uid).update({ name: n, bio: b });
                 updateAllPosts(n, null);
                 alert("Αποθηκεύτηκε!");
             }
-        } catch (err) {
-            console.error(err);
-            alert("Σφάλμα αποθήκευσης");
-        }
+        } catch (err) { alert("Σφάλμα"); }
     }
 
     async function updateAllPosts(newName, newPhoto) {
@@ -852,8 +908,7 @@
 
     function openQuoteModal() {
         closeAll();
-        const preview = document.getElementById('quotePreview');
-        preview.innerHTML = `
+        document.getElementById('quotePreview').innerHTML = `
             <div class="q-name">Παράθεση ανάρτησης</div>
             <div class="q-text">${format(activePost.text || '')}</div>
             ${activePost.img ? `<img src="${activePost.img}">` : ''}`;
@@ -866,7 +921,6 @@
     async function submitQuote() {
         const comment = document.getElementById('quoteText').value.trim();
         if (!comment) { alert("Γράψε κάτι!"); return; }
-
         try {
             const uDoc = await db.collection('users').doc(user.uid).get();
             const uData = uDoc.exists ? uDoc.data() : {};
@@ -880,22 +934,14 @@
                 photo: uData.photo || '',
                 text: comment,
                 images: [],
-                quote: {
-                    id: activePost.id,
-                    name: origData.name || 'User',
-                    text: activePost.text || '',
-                    image: activePost.img || null
-                },
+                quote: { id: activePost.id, name: origData.name || 'User', text: activePost.text || '', image: activePost.img || null },
                 likes: 0, likedBy: [],
                 createdAt: Date.now()
             });
             closeAll();
             alert("Η παράθεση δημοσιεύτηκε!");
             if (currentTab !== 'home') showTab('home');
-        } catch (err) {
-            console.error(err);
-            alert("Σφάλμα");
-        }
+        } catch (err) { alert("Σφάλμα"); }
     }
 
     function toggleThemeNow() {
@@ -911,18 +957,17 @@
     }
 
     function clearCache() {
-        if (confirm("Θέλεις να καθαρίσεις την προσωρινή μνήμη;\n\nΘα διαγραφούν οι ρυθμίσεις θέματος και γλώσσας.")) {
+        if (confirm("Θέλεις να καθαρίσεις την προσωρινή μνήμη;")) {
             localStorage.clear();
             sessionStorage.clear();
-            if ('caches' in window) {
-                caches.keys().then(names => names.forEach(name => caches.delete(name)));
-            }
+            if ('caches' in window) caches.keys().then(names => names.forEach(name => caches.delete(name)));
             alert("Η cache καθαρίστηκε!");
             location.reload();
         }
     }
 
     function listenNotifs() {
+        if (!user) return;
         db.collection('notifications')
             .where('userId', '==', user.uid)
             .where('read', '==', false)
@@ -953,12 +998,14 @@
     }
 
     function openProfile(uid) {
-        historyStack.push(currentTab);
-        window.history.pushState({ tab: 'profile' }, "");
-        currentTab = 'profile';
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('btn-profile')?.classList.add('active');
-        document.getElementById('home-tabs').style.display = 'none';
+        if (user) {
+            historyStack.push(currentTab);
+            window.history.pushState({ tab: 'profile' }, "");
+            currentTab = 'profile';
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-profile')?.classList.add('active');
+            document.getElementById('home-tabs').style.display = 'none';
+        }
         renderProfile(document.getElementById('content'), uid);
     }
 
@@ -968,16 +1015,61 @@
         document.getElementById('lightbox').style.display = 'flex';
     }
 
-    function postOp(id, text, postUid) {
-        if (user.uid === postUid) {
-            const op = confirm("OK = Διαγραφή\nCancel = Επεξεργασία");
-            if (op) db.collection('posts').doc(id).delete();
-            else {
-                const nt = prompt("Νέο κείμενο:", text.replace(/\\n/g, '\n'));
-                if (nt !== null) db.collection('posts').doc(id).update({ text: nt });
+    // ===== POST MENU με Pin =====
+    async function postOp(id, text, postUid, isPinned) {
+        if (!user) return;
+        
+        const isOwner = user.uid === postUid;
+        const isAdmin = user.email === adminEmail;
+        
+        if (!isOwner && !isAdmin) return;
+
+        let options = [];
+        if (isOwner || isAdmin) {
+            options.push(isPinned ? "Unpin" : "Pin");
+            options.push("Επεξεργασία");
+            options.push("Διαγραφή");
+        }
+
+        const choice = prompt(`Επίλεξε:\n1 = ${options[0]}\n2 = ${options[1]}\n3 = ${options[2]}\n\nΓράψε 1, 2 ή 3:`);
+        
+        if (choice === "1") {
+            // Pin / Unpin
+            await togglePin(id, postUid, isPinned);
+        } else if (choice === "2") {
+            const nt = prompt("Νέο κείμενο:", text.replace(/\\n/g, '\n'));
+            if (nt !== null) db.collection('posts').doc(id).update({ text: nt });
+        } else if (choice === "3") {
+            if (confirm("Σίγουρα διαγραφή;")) db.collection('posts').doc(id).delete();
+        }
+    }
+
+    async function togglePin(postId, postUid, currentlyPinned) {
+        try {
+            const userRef = db.collection('users').doc(postUid);
+            const userDoc = await userRef.get();
+            const data = userDoc.data() || {};
+            let pinned = data.pinnedPosts || [];
+
+            if (currentlyPinned) {
+                // Unpin
+                pinned = pinned.filter(id => id !== postId);
+                await userRef.update({ pinnedPosts: pinned });
+                alert("Αφαιρέθηκε το Pin");
+            } else {
+                // Pin
+                const isAdminUser = user.email === adminEmail && postUid === user.uid;
+                if (!isAdminUser && pinned.length >= 2) {
+                    alert("Μπορείς να έχεις μόνο 2 pinned posts.\nΞεκαρφίτσωσε πρώτα κάποιο.");
+                    return;
+                }
+                pinned.push(postId);
+                await userRef.update({ pinnedPosts: pinned });
+                alert("Έγινε Pin!");
             }
-        } else if (user.email === adminEmail) {
-            if (confirm("ADMIN: Διαγραφή ανάρτησης;")) db.collection('posts').doc(id).delete();
+        } catch (err) {
+            console.error(err);
+            alert("Σφάλμα");
         }
     }
 
