@@ -80,14 +80,6 @@
         .settings-row { padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:600; background:var(--card); border-radius:12px; margin-bottom:10px; }
         .admin-badge { background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; margin-left:5px; }
         
-        .profile-head { padding:20px; text-align:center; border-bottom:1px solid var(--border); }
-        .avatar-lg { width:90px; height:90px; border-radius:20px; background:#333; background-size:cover; background-position:center; margin:0 auto 12px; border:2px solid var(--border); cursor:pointer; }
-        .stats { display:flex; justify-content:center; gap:30px; margin-top:15px; }
-        .stat-btn { text-align:center; cursor:pointer; padding:8px 12px; border-radius:12px; transition:background 0.2s; }
-        .stat-btn:hover { background:rgba(255,255,255,0.05); }
-        .stat-btn b { display:block; font-size:18px; }
-        .stat-btn span { font-size:13px; color:var(--muted); }
-        
         .notif-item { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
         
         .quote-box { border:1px solid var(--border); border-radius:14px; padding:12px; margin-top:12px; background:rgba(255,255,255,0.03); }
@@ -251,7 +243,6 @@
         user = u;
         if (u) {
             document.getElementById('adminBtn').style.display = (u.email === adminEmail) ? 'block' : 'none';
-            // Δημιουργία προφίλ αν δεν υπάρχει
             db.collection('users').doc(u.uid).get().then(doc => {
                 if (!doc.exists) {
                     db.collection('users').doc(u.uid).set({
@@ -302,19 +293,13 @@
         }
     };
 
-    // ===== FORMAT με Hashtags + Mentions σε κόκκινο =====
     function format(text) {
         if (!text) return "";
         let escaped = String(text).replace(/[&<>"']/g, c => ({
             '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
         }[c]));
-
-        // Mentions @username
         escaped = escaped.replace(/@(\w+)/g, '<span class="mention" onclick="event.stopPropagation(); handleMention(\'$1\')">@$1</span>');
-        
-        // Hashtags #tag
         escaped = escaped.replace(/#(\w+)/g, '<span class="hashtag" onclick="event.stopPropagation(); handleHash(\'#$1\')">#$1</span>');
-        
         return escaped;
     }
 
@@ -322,27 +307,19 @@
         showTab('search');
         setTimeout(() => {
             const i = document.getElementById('searchInp');
-            if (i) {
-                i.value = h;
-                doSearch(h);
-            }
+            if (i) { i.value = h; doSearch(h); }
         }, 300);
     }
 
     function handleMention(name) {
-        // Ψάχνει χρήστη με αυτό το όνομα
         db.collection('users').where('name', '==', name).limit(1).get().then(snap => {
             if (!snap.empty) {
                 openProfile(snap.docs[0].id);
             } else {
-                // Αν δεν βρεθεί, ανοίγει αναζήτηση
                 showTab('search');
                 setTimeout(() => {
                     const i = document.getElementById('searchInp');
-                    if (i) {
-                        i.value = '@' + name;
-                        doSearch(name);
-                    }
+                    if (i) { i.value = '@' + name; doSearch(name); }
                 }, 300);
             }
         });
@@ -541,39 +518,73 @@
         } catch (err) {}
     }
 
+    // ===== ΝΕΟ PROFILE LAYOUT =====
     function renderProfile(m, uid) {
         db.collection('users').doc(uid).onSnapshot(doc => {
-            if (!doc.exists) { m.innerHTML = "<p style='padding:20px'>Ο χρήστης δεν βρέθηκε</p>"; return; }
+            if (!doc.exists) { 
+                m.innerHTML = "<p style='padding:20px'>Ο χρήστης δεν βρέθηκε</p>"; 
+                return; 
+            }
             const u = doc.data();
             const isMe = uid === user.uid;
             const isFollowing = (u.followers || []).includes(user.uid);
 
             m.innerHTML = `
-                <div class="profile-head">
-                    <div class="avatar-lg" onclick="openLB('${u.photo || ''}')" style="${u.photo ? `background-image:url('${u.photo}')` : ''}"></div>
-                    <h2>${u.name || 'User'}</h2>
-                    <p style="color:var(--muted); margin-top:5px">${u.bio || ''}</p>
-                    <div class="stats">
-                        <div class="stat-btn" onclick="showUserList('${uid}', 'followers')">
-                            <b>${(u.followers || []).length}</b>
-                            <span>Followers</span>
+                <div style="padding:20px 16px; text-align:left; border-bottom:1px solid var(--border);">
+                    
+                    <!-- Φωτογραφία αριστερά + Όνομα -->
+                    <div style="display:flex; gap:16px; align-items:flex-start;">
+                        <div onclick="openLB('${u.photo || ''}')" 
+                             style="width:86px; height:86px; border-radius:18px; flex-shrink:0; 
+                                    background:${u.photo ? `url('${u.photo}')` : '#333'}; 
+                                    background-size:cover; background-position:center; 
+                                    border:2px solid var(--border); cursor:pointer;">
                         </div>
-                        <div class="stat-btn" onclick="showUserList('${uid}', 'following')">
-                            <b>${(u.following || []).length}</b>
-                            <span>Following</span>
+                        
+                        <div style="flex:1; padding-top:4px;">
+                            <h2 style="font-size:20px; margin:0 0 4px 0; line-height:1.3;">${u.name || 'User'}</h2>
+                            <p style="color:var(--muted); font-size:14px; margin:0; white-space:pre-wrap;">${u.bio || ''}</p>
                         </div>
                     </div>
-                    ${!isMe ? `
-                        <button onclick="toggleFollow('${uid}')" class="btn-main" style="width:auto; padding:8px 20px; margin-top:15px">
-                            ${isFollowing ? 'Ακολουθείς' : 'Ακολούθηση'}
-                        </button>` : ''}
+
+                    <!-- Στατιστικά -->
+                    <div style="display:flex; gap:28px; margin:18px 0 14px 0;">
+                        <div onclick="showUserList('${uid}', 'followers')" style="cursor:pointer;">
+                            <b style="font-size:17px; display:block;">${(u.followers || []).length}</b>
+                            <span style="font-size:13px; color:var(--muted);">Followers</span>
+                        </div>
+                        <div onclick="showUserList('${uid}', 'following')" style="cursor:pointer;">
+                            <b style="font-size:17px; display:block;">${(u.following || []).length}</b>
+                            <span style="font-size:13px; color:var(--muted);">Following</span>
+                        </div>
+                    </div>
+
+                    <!-- Κουμπιά Follow + Share -->
+                    <div style="display:flex; gap:10px; margin-top:6px;">
+                        ${!isMe ? `
+                            <button onclick="toggleFollow('${uid}')" 
+                                style="flex:1; padding:11px; border-radius:14px; font-size:15px; font-weight:700; cursor:pointer;
+                                       background:${isFollowing ? 'transparent' : 'var(--accent)'};
+                                       color:${isFollowing ? 'var(--text)' : '#fff'};
+                                       border:1.5px solid ${isFollowing ? 'var(--border)' : 'var(--accent)'};">
+                                ${isFollowing ? 'Ακολουθείς' : 'Ακολούθηση'}
+                            </button>
+                        ` : ''}
+                        
+                        <button onclick="shareProfile('${uid}', '${(u.name || 'User').replace(/'/g, "\\'")}')" 
+                            style="padding:11px 16px; border-radius:14px; background:var(--card); 
+                                   border:1.5px solid var(--border); color:var(--text); cursor:pointer; min-width:52px; display:flex; align-items:center; justify-content:center;">
+                            <i data-lucide="share-2" style="width:18px; height:18px;"></i>
+                        </button>
+                    </div>
                 </div>
                 <div id="p-feed"></div>`;
+            
+            lucide.createIcons();
             loadFeed('p-feed', uid);
         });
     }
 
-    // ===== Εμφάνιση λίστας Followers / Following =====
     async function showUserList(uid, type) {
         const title = type === 'followers' ? 'Followers' : 'Following';
         document.getElementById('listModalTitle').innerText = title;
@@ -593,10 +604,7 @@
                 return;
             }
 
-            // Φέρνουμε τα στοιχεία κάθε χρήστη
-            const usersData = await Promise.all(
-                list.map(id => db.collection('users').doc(id).get())
-            );
+            const usersData = await Promise.all(list.map(id => db.collection('users').doc(id).get()));
 
             document.getElementById('listModalContent').innerHTML = usersData.map(d => {
                 if (!d.exists) return '';
@@ -618,7 +626,6 @@
         }
     }
 
-    // ===== FOLLOW / UNFOLLOW =====
     async function toggleFollow(targetUid) {
         if (targetUid === user.uid) return;
         try {
@@ -632,15 +639,12 @@
             const isFollowing = (myData.following || []).includes(targetUid);
 
             if (isFollowing) {
-                // Unfollow
                 await myRef.update({ following: firebase.firestore.FieldValue.arrayRemove(targetUid) });
                 await targetRef.update({ followers: firebase.firestore.FieldValue.arrayRemove(user.uid) });
             } else {
-                // Follow
                 await myRef.update({ following: firebase.firestore.FieldValue.arrayUnion(targetUid) });
                 await targetRef.update({ followers: firebase.firestore.FieldValue.arrayUnion(user.uid) });
                 
-                // Notification
                 db.collection('notifications').add({
                     userId: targetUid,
                     text: `${myData.name || user.email.split('@')[0]} σε ακολούθησε`,
@@ -651,6 +655,23 @@
         } catch (err) {
             console.error(err);
             alert("Σφάλμα");
+        }
+    }
+
+    // ===== Κοινοποίηση Προφίλ =====
+    function shareProfile(uid, name) {
+        const url = window.location.origin + window.location.pathname + "?user=" + uid;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: name + ' | John Ross Social',
+                text: 'Δες το προφίλ του/της ' + name + ' στο John Ross Social',
+                url: url
+            }).catch(() => {
+                navigator.clipboard.writeText(url).then(() => alert("Το link του προφίλ αντιγράφηκε!"));
+            });
+        } else {
+            navigator.clipboard.writeText(url).then(() => alert("Το link του προφίλ αντιγράφηκε!"));
         }
     }
 
@@ -794,16 +815,12 @@
         location.reload();
     }
 
-    // ===== ΕΚΚΑΘΑΡΙΣΗ CACHE =====
     function clearCache() {
         if (confirm("Θέλεις να καθαρίσεις την προσωρινή μνήμη;\n\nΘα διαγραφούν οι ρυθμίσεις θέματος και γλώσσας.")) {
             localStorage.clear();
             sessionStorage.clear();
-            // Καθαρισμός caches αν υπάρχουν
             if ('caches' in window) {
-                caches.keys().then(names => {
-                    names.forEach(name => caches.delete(name));
-                });
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
             alert("Η cache καθαρίστηκε!");
             location.reload();
