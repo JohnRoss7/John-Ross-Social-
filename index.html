@@ -73,7 +73,10 @@
         .admin-badge { background:var(--accent); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:900; margin-left:5px; }
         .pin-badge { background:#f59e0b; color:#000; padding:2px 7px; border-radius:6px; font-size:10px; font-weight:800; margin-left:6px; }
         
-        .notif-item { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .notif-item { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition:0.15s; }
+        .notif-item.unread { background:rgba(220, 38, 38, 0.12); border-left:3px solid var(--accent); }
+        .notif-item.read { opacity:0.65; }
+        .notif-item:active { background:rgba(255,255,255,0.05); }
         
         .quote-box { border:1px solid var(--border); border-radius:14px; padding:12px; margin-top:12px; background:rgba(255,255,255,0.03); }
         .quote-box .q-name { font-weight:700; font-size:14px; margin-bottom:4px; }
@@ -121,7 +124,7 @@
         <div onclick="auth.signOut();location.reload()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> <span data-t="logout">Αποσύνδεση</span></div>
     </div>
     <div style="padding:16px 15px; color:var(--muted); font-size:12px; text-align:center; border-top:1px solid var(--border);">
-        John Ross Social · v1.1
+        John Ross Social · v1.2
     </div>
 </aside>
 
@@ -668,6 +671,7 @@
         } catch (err) { alert("Σφάλμα δημοσίευσης"); }
     }
 
+    // ===== ΒΕΛΤΙΩΜΕΝΟ LIKE με σωστό όνομα =====
     async function like(id) {
         if (!user) return;
         playPop();
@@ -676,6 +680,11 @@
             const doc = await ref.get();
             if (!doc.exists) return;
             const p = doc.data();
+            
+            // Παίρνουμε το σωστό όνομα του χρήστη που κάνει like
+            const myDoc = await db.collection('users').doc(user.uid).get();
+            const myName = myDoc.exists ? (myDoc.data().name || user.email.split('@')[0]) : user.email.split('@')[0];
+
             if ((p.likedBy || []).includes(user.uid)) {
                 ref.update({ likes: firebase.firestore.FieldValue.increment(-1), likedBy: firebase.firestore.FieldValue.arrayRemove(user.uid) });
             } else {
@@ -683,8 +692,11 @@
                 if (p.uid !== user.uid) {
                     db.collection('notifications').add({
                         userId: p.uid,
-                        text: `${user.email.split('@')[0]} έκανε like`,
-                        read: false, createdAt: Date.now()
+                        text: `${myName} έκανε like`,
+                        type: 'like',
+                        fromUid: user.uid,
+                        read: false, 
+                        createdAt: Date.now()
                     });
                 }
             }
@@ -811,6 +823,7 @@
         }
     }
 
+    // ===== ΒΕΛΤΙΩΜΕΝΟ FOLLOW με σωστό όνομα =====
     async function toggleFollow(targetUid) {
         if (!user || targetUid === user.uid) return;
         try {
@@ -819,6 +832,7 @@
             const myDoc = await myRef.get();
             const myData = myDoc.data() || {};
             const isFollowing = (myData.following || []).includes(targetUid);
+            const myName = myData.name || user.email.split('@')[0];
 
             if (isFollowing) {
                 await myRef.update({ following: firebase.firestore.FieldValue.arrayRemove(targetUid) });
@@ -828,7 +842,9 @@
                 await targetRef.update({ followers: firebase.firestore.FieldValue.arrayUnion(user.uid) });
                 db.collection('notifications').add({
                     userId: targetUid,
-                    text: `${myData.name || user.email.split('@')[0]} σε ακολούθησε`,
+                    text: `${myName} σε ακολούθησε`,
+                    type: 'follow',
+                    fromUid: user.uid,
                     read: false,
                     createdAt: Date.now()
                 });
@@ -1038,29 +1054,56 @@
             .where('userId', '==', user.uid)
             .where('read', '==', false)
             .onSnapshot(s => {
-                document.getElementById('notif-badge').style.display = s.empty ? 'none' : 'block';
+                const badge = document.getElementById('notif-badge');
+                if (badge) badge.style.display = s.empty ? 'none' : 'block';
             });
     }
 
+    // ===== ΒΕΛΤΙΩΜΕΝΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ =====
     function renderNotifs(m) {
-        m.innerHTML = '<h2 style="padding:20px">Ειδοποιήσεις</h2><div id="nL"></div>';
+        // Κρύβουμε αμέσως το badge
+        const badge = document.getElementById('notif-badge');
+        if (badge) badge.style.display = 'none';
+
+        m.innerHTML = '<h2 style="padding:20px 20px 10px">Ειδοποιήσεις</h2><div id="nL"></div>';
+        
         db.collection('notifications')
             .where('userId', '==', user.uid)
             .orderBy('createdAt', 'desc')
-            .limit(30)
+            .limit(40)
             .onSnapshot(s => {
                 const el = document.getElementById('nL');
                 if (!el) return;
+                
                 if (s.empty) {
-                    el.innerHTML = '<p style="padding:20px;color:var(--muted)">Καμία ειδοποίηση</p>';
+                    el.innerHTML = '<p style="padding:30px 20px; color:var(--muted); text-align:center">Καμία ειδοποίηση ακόμα</p>';
                     return;
                 }
+
                 el.innerHTML = s.docs.map(d => {
                     const data = d.data();
-                    return `<div class="notif-item"><span>${data.text}</span>${!data.read ? '<div class="red-dot" style="position:static"></div>' : ''}</div>`;
+                    const isUnread = !data.read;
+                    return `
+                    <div class="notif-item ${isUnread ? 'unread' : 'read'}" onclick="markNotifRead('${d.id}')">
+                        <div>
+                            <div style="font-size:15px">${data.text}</div>
+                            <div style="font-size:12px; color:var(--muted); margin-top:4px">${formatTime(data.createdAt)}</div>
+                        </div>
+                        ${isUnread ? '<div style="width:8px; height:8px; background:var(--accent); border-radius:50%; flex-shrink:0;"></div>' : ''}
+                    </div>`;
                 }).join('');
-                s.docs.forEach(d => { if (!d.data().read) d.ref.update({ read: true }); });
+
+                // Σημειώνουμε όλες ως διαβασμένες
+                s.docs.forEach(d => {
+                    if (!d.data().read) {
+                        d.ref.update({ read: true });
+                    }
+                });
             });
+    }
+
+    function markNotifRead(id) {
+        db.collection('notifications').doc(id).update({ read: true });
     }
 
     function openProfile(uid) {
