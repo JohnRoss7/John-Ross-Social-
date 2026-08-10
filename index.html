@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- SEO -->
     <title>John Ross Social</title>
     <meta name="description" content="John Ross Social - Your space. Your voice. Η δική σου social εφαρμογή.">
     <meta name="theme-color" content="#dc2626">
@@ -12,7 +11,6 @@
     <meta property="og:description" content="Your space. Your voice.">
     <meta property="og:type" content="website">
     
-    <!-- Επαγγελματικό κόκκινο εικονίδιο JRS -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23dc2626'/><text x='50' y='64' font-family='Arial Black, Arial, sans-serif' font-size='34' font-weight='900' fill='white' text-anchor='middle'>JRS</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23dc2626'/><text x='50' y='64' font-family='Arial Black, Arial, sans-serif' font-size='34' font-weight='900' fill='white' text-anchor='middle'>JRS</text></svg>">
     
@@ -124,7 +122,7 @@
         <div onclick="auth.signOut();location.reload()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> <span data-t="logout">Αποσύνδεση</span></div>
     </div>
     <div style="padding:16px 15px; color:var(--muted); font-size:12px; text-align:center; border-top:1px solid var(--border);">
-        John Ross Social · v1.2
+        John Ross Social · v1.3
     </div>
 </aside>
 
@@ -358,6 +356,13 @@
         const btn = document.getElementById('btn-' + t);
         if (btn) btn.classList.add('active');
         document.getElementById('home-tabs').style.display = (t === 'home') ? 'flex' : 'none';
+        
+        // Αν μπαίνουμε στις ειδοποιήσεις → κρύβουμε αμέσως το badge
+        if (t === 'notif') {
+            const badge = document.getElementById('notif-badge');
+            if (badge) badge.style.display = 'none';
+        }
+        
         render();
     }
 
@@ -671,7 +676,6 @@
         } catch (err) { alert("Σφάλμα δημοσίευσης"); }
     }
 
-    // ===== ΒΕΛΤΙΩΜΕΝΟ LIKE με σωστό όνομα =====
     async function like(id) {
         if (!user) return;
         playPop();
@@ -681,7 +685,6 @@
             if (!doc.exists) return;
             const p = doc.data();
             
-            // Παίρνουμε το σωστό όνομα του χρήστη που κάνει like
             const myDoc = await db.collection('users').doc(user.uid).get();
             const myName = myDoc.exists ? (myDoc.data().name || user.email.split('@')[0]) : user.email.split('@')[0];
 
@@ -823,7 +826,6 @@
         }
     }
 
-    // ===== ΒΕΛΤΙΩΜΕΝΟ FOLLOW με σωστό όνομα =====
     async function toggleFollow(targetUid) {
         if (!user || targetUid === user.uid) return;
         try {
@@ -1055,11 +1057,17 @@
             .where('read', '==', false)
             .onSnapshot(s => {
                 const badge = document.getElementById('notif-badge');
-                if (badge) badge.style.display = s.empty ? 'none' : 'block';
+                if (badge) {
+                    // Αν είμαστε ήδη στις ειδοποιήσεις, μην δείχνεις badge
+                    if (currentTab === 'notif') {
+                        badge.style.display = 'none';
+                    } else {
+                        badge.style.display = s.empty ? 'none' : 'block';
+                    }
+                }
             });
     }
 
-    // ===== ΒΕΛΤΙΩΜΕΝΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ =====
     function renderNotifs(m) {
         // Κρύβουμε αμέσως το badge
         const badge = document.getElementById('notif-badge');
@@ -1071,7 +1079,8 @@
             .where('userId', '==', user.uid)
             .orderBy('createdAt', 'desc')
             .limit(40)
-            .onSnapshot(s => {
+            .get()
+            .then(s => {
                 const el = document.getElementById('nL');
                 if (!el) return;
                 
@@ -1080,30 +1089,30 @@
                     return;
                 }
 
+                // Μαρκάρουμε όλες ως διαβασμένες με batch
+                const batch = db.batch();
+                s.docs.forEach(d => {
+                    if (d.data().read !== true) {
+                        batch.update(d.ref, { read: true });
+                    }
+                });
+                batch.commit().catch(() => {});
+
                 el.innerHTML = s.docs.map(d => {
                     const data = d.data();
-                    const isUnread = !data.read;
                     return `
-                    <div class="notif-item ${isUnread ? 'unread' : 'read'}" onclick="markNotifRead('${d.id}')">
+                    <div class="notif-item read">
                         <div>
                             <div style="font-size:15px">${data.text}</div>
                             <div style="font-size:12px; color:var(--muted); margin-top:4px">${formatTime(data.createdAt)}</div>
                         </div>
-                        ${isUnread ? '<div style="width:8px; height:8px; background:var(--accent); border-radius:50%; flex-shrink:0;"></div>' : ''}
                     </div>`;
                 }).join('');
-
-                // Σημειώνουμε όλες ως διαβασμένες
-                s.docs.forEach(d => {
-                    if (!d.data().read) {
-                        d.ref.update({ read: true });
-                    }
-                });
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('nL').innerHTML = '<p style="padding:20px;color:#dc2626">Σφάλμα φόρτωσης</p>';
             });
-    }
-
-    function markNotifRead(id) {
-        db.collection('notifications').doc(id).update({ read: true });
     }
 
     function openProfile(uid) {
