@@ -26,6 +26,7 @@
         .post-header { display:flex; gap:12px; margin-bottom:8px; align-items: flex-start; }
         .avatar { width:48px; height:48px; border-radius:12px; background:#333; background-size:cover; background-position:center; flex-shrink:0; cursor:pointer; border:1px solid var(--border); }
         .username { font-weight:700; font-size:15px; color:var(--text); cursor:pointer; }
+        .post-time { font-size:12px; color:var(--muted); margin-top:2px; }
         .post-text { font-size:16px; line-height:1.5; white-space:pre-wrap; word-wrap:break-word; margin:5px 0; cursor:pointer; }
         .hashtag, .mention { color:var(--accent) !important; font-weight:600; cursor:pointer; }
         .post-img { width:100%; max-height:350px; object-fit:cover; border-radius:14px; margin-top:12px; border:1px solid var(--border); cursor:pointer; display:block; background:#111; }
@@ -106,6 +107,9 @@
         <hr style="border:none; border-top:1px solid var(--border); margin:10px 0;">
         <div onclick="clearCache()" style="padding:15px; color:orange; cursor:pointer"><i data-lucide="trash-2"></i> <span data-t="clearCache">Εκκαθάριση Cache</span></div>
         <div onclick="auth.signOut();location.reload()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> <span data-t="logout">Αποσύνδεση</span></div>
+    </div>
+    <div style="padding:16px 15px; color:var(--muted); font-size:12px; text-align:center; border-top:1px solid var(--border);">
+        John Ross Social · v1.0
     </div>
 </aside>
 
@@ -233,6 +237,18 @@
         } catch(e) {}
     }
 
+    function formatTime(ts) {
+        if (!ts) return '';
+        const d = new Date(ts);
+        const now = new Date();
+        const diff = (now - d) / 1000;
+        if (diff < 60) return 'τώρα';
+        if (diff < 3600) return Math.floor(diff/60) + 'λ';
+        if (diff < 86400) return Math.floor(diff/3600) + 'ώ';
+        return d.toLocaleDateString('el-GR', { day: 'numeric', month: 'short' }) + ' · ' + 
+               d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+    }
+
     function checkUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const userId = params.get('user');
@@ -354,7 +370,6 @@
         }, 300);
     }
 
-    // ===== ΔΙΟΡΘΩΜΕΝΟ MENTION =====
     function handleMention(uname) {
         const clean = (uname || '').toLowerCase().trim();
         if (!clean) return;
@@ -391,6 +406,10 @@
 
     function render() {
         const c = document.getElementById('content');
+        
+        // Σημαντικό: εμφάνιση tabs όταν είμαστε στην αρχική
+        document.getElementById('home-tabs').style.display = (user && currentTab === 'home') ? 'flex' : 'none';
+        
         if (!user) {
             c.innerHTML = `
                 <div class="login-screen">
@@ -551,6 +570,7 @@
                             ${p._isPinned ? '<span class="pin-badge">PINNED</span>' : ''}
                             ${user && user.email === adminEmail && p.uid === user.uid ? '<span class="admin-badge">ADMIN</span>' : ''}
                         </div>
+                        <div class="post-time">${formatTime(p.createdAt)}</div>
                         <div class="post-text" onclick="event.stopPropagation(); copyText('${safeText}')">${format(p.text)}</div>
                         ${quoteHtml}
                         ${p.images && p.images[0] ? `<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation(); openLB('${safeImg}')">` : ''}
