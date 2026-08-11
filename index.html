@@ -64,11 +64,15 @@
         .login-logo { font-size:30px; font-weight:900; margin-bottom:6px; }
         .login-tagline { color:var(--accent); font-size:15px; font-style:italic; margin-bottom:35px; }
         .login-form input { width:100%; padding:15px; background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:14px; font-size:16px; margin-bottom:12px; }
+        #mentionBox { position:absolute; background:var(--card); border:1px solid var(--border); border-radius:12px; max-height:180px; overflow-y:auto; z-index:2000; display:none; width:260px; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+        .mention-item { padding:12px 14px; display:flex; align-items:center; gap:10px; cursor:pointer; border-bottom:1px solid var(--border); }
+        .mention-item:hover, .mention-item:active { background:rgba(220,38,38,0.15); }
     </style>
 </head>
 <body class="dark">
 
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
+<div id="mentionBox"></div>
 
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -84,7 +88,7 @@
         <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</div>
         <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
-    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.0</div>
+    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.1</div>
 </aside>
 
 <div class="app-wrapper">
@@ -251,6 +255,7 @@ function closeAll() {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
     document.getElementById('sidebar').classList.remove('show');
     document.getElementById('overlay').style.display = 'none';
+    document.getElementById('mentionBox').style.display = 'none';
 }
 
 function showTab(t, fromBack=false) {
@@ -294,35 +299,92 @@ function handleMention(uname) {
     const clean = (uname || '').toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
     if (!clean) return;
 
-    // 1. Ακριβές στο usernames
     db.collection('usernames').doc(clean).get()
         .then(doc => {
             if (doc.exists && doc.data().uid) {
                 openProfile(doc.data().uid);
                 return null;
             }
-            // 2. Ακριβές username στο users
             return db.collection('users').where('username', '==', clean).limit(1).get();
         })
         .then(snap => {
             if (!snap) return;
             if (!snap.empty) {
                 openProfile(snap.docs[0].id);
-                return null;
+            } else {
+                // Δοκιμάζουμε με startAt για παλιά usernames
+                return db.collection('users').orderBy('username').startAt(clean).endAt(clean+'\uf8ff').limit(3).get();
             }
-            // 3. Ψάχνουμε αν αρχίζει με το clean (για παλιά usernames με αριθμούς)
-            return db.collection('users').orderBy('username').startAt(clean).endAt(clean + '\uf8ff').limit(5).get();
         })
         .then(snap => {
             if (!snap) return;
-            if (!snap.empty) {
-                // Παίρνουμε τον πρώτο που ταιριάζει
-                openProfile(snap.docs[0].id);
-            } else {
-                alert('Ο χρήστης @' + uname + ' δεν βρέθηκε');
-            }
+            if (snap && !snap.empty) openProfile(snap.docs[0].id);
+            else alert('Ο χρήστης @' + uname + ' δεν βρέθηκε');
         })
         .catch(() => alert('Ο χρήστης @' + uname + ' δεν βρέθηκε'));
+}
+
+// ===== AUTOCOMPLETE MENTIONS =====
+let mentionTimeout = null;
+function setupMentionAutocomplete() {
+    const textarea = document.getElementById('postText');
+    if (!textarea) return;
+
+    textarea.addEventListener('input', function() {
+        clearTimeout(mentionTimeout);
+        const val = this.value;
+        const cursor = this.selectionStart;
+        const textBefore = val.substring(0, cursor);
+        const match = textBefore.match(/@(\w*)$/);
+
+        const box = document.getElementById('mentionBox');
+        if (!match || match[1].length < 1) {
+            box.style.display = 'none';
+            return;
+        }
+
+        const query = match[1].toLowerCase();
+        mentionTimeout = setTimeout(() => {
+            db.collection('users').orderBy('username').startAt(query).endAt(query + '\uf8ff').limit(6).get()
+                .then(snap => {
+                    if (snap.empty) {
+                        box.style.display = 'none';
+                        return;
+                    }
+                    box.innerHTML = snap.docs.map(d => {
+                        const u = d.data();
+                        return `<div class="mention-item" onclick="insertMention('${u.username}')">
+                            <div class="avatar" style="width:36px;height:36px;${u.photo?`background-image:url('${u.photo}')`:''}"></div>
+                            <div>
+                                <div style="font-weight:700;font-size:14px">${u.name||'User'}</div>
+                                <div style="font-size:12px;color:var(--muted)">@${u.username}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    
+                    // Position the box
+                    const rect = textarea.getBoundingClientRect();
+                    box.style.left = (rect.left + 10) + 'px';
+                    box.style.top = (rect.bottom + 4) + 'px';
+                    box.style.display = 'block';
+                });
+        }, 200);
+    });
+}
+
+function insertMention(username) {
+    const textarea = document.getElementById('postText');
+    if (!textarea) return;
+    const val = textarea.value;
+    const cursor = textarea.selectionStart;
+    const textBefore = val.substring(0, cursor);
+    const textAfter = val.substring(cursor);
+    const newBefore = textBefore.replace(/@\w*$/, '@' + username + ' ');
+    textarea.value = newBefore + textAfter;
+    textarea.focus();
+    const newPos = newBefore.length;
+    textarea.setSelectionRange(newPos, newPos);
+    document.getElementById('mentionBox').style.display = 'none';
 }
 
 function render() {
@@ -373,7 +435,7 @@ async function renderSinglePost(postId) {
 
 function renderHome(m) {
     m.innerHTML = `
-    <div style="padding:16px;border-bottom:1px solid var(--border)">
+    <div style="padding:16px;border-bottom:1px solid var(--border);position:relative">
         <div style="display:flex;gap:12px">
             <div class="avatar" id="myAvH" style="width:40px;height:40px"></div>
             <textarea id="postText" placeholder="Τι συμβαίνει;" style="flex:1;background:none;border:none;color:var(--text);font-size:17px;resize:none;min-height:55px"></textarea>
@@ -390,6 +452,7 @@ function renderHome(m) {
         if (doc.exists && doc.data().photo) document.getElementById('myAvH').style.backgroundImage = `url('${doc.data().photo}')`;
     });
     loadFeed('feed');
+    setTimeout(setupMentionAutocomplete, 100);
 }
 
 function loadFeed(id, uid=null) {
@@ -543,6 +606,7 @@ async function sendPost() {
         document.getElementById('postText').value = '';
         pendingImg = null;
         document.getElementById('imgPrv').innerHTML = '';
+        document.getElementById('mentionBox').style.display = 'none';
     } catch(e) { alert('Σφάλμα δημοσίευσης'); }
 }
 
@@ -715,7 +779,7 @@ function renderSettings(m) {
             <div class="settings-row" onclick="toggleThemeNow()"><span>Θέμα: ${theme==='dark'?'Dark':'Light'}</span><i data-lucide="moon"></i></div>
             <div class="settings-row" onclick="toggleLangNow()">
                 <span>Γλώσσα: ${lang==='el'?'Ελληνικά 🇬🇷':'English 🇬🇧'}</span>
-                <span style="font-size:20px">${lang==='el'?'🇬🇷':'🇬🇧'}</span>
+                <span style="font-size:22px">${lang==='el'?'🇬🇷':'🇬🇧'}</span>
             </div>
         </div>`;
         lucide.createIcons();
