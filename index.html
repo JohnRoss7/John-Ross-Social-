@@ -122,7 +122,7 @@
         <div onclick="auth.signOut();location.reload()" style="padding:15px; color:var(--accent); cursor:pointer"><i data-lucide="log-out"></i> <span data-t="logout">Αποσύνδεση</span></div>
     </div>
     <div style="padding:16px 15px; color:var(--muted); font-size:12px; text-align:center; border-top:1px solid var(--border);">
-        John Ross Social · v1.3
+        John Ross Social · v1.4
     </div>
 </aside>
 
@@ -357,7 +357,6 @@
         if (btn) btn.classList.add('active');
         document.getElementById('home-tabs').style.display = (t === 'home') ? 'flex' : 'none';
         
-        // Αν μπαίνουμε στις ειδοποιήσεις → κρύβουμε αμέσως το badge
         if (t === 'notif') {
             const badge = document.getElementById('notif-badge');
             if (badge) badge.style.display = 'none';
@@ -1058,7 +1057,6 @@
             .onSnapshot(s => {
                 const badge = document.getElementById('notif-badge');
                 if (badge) {
-                    // Αν είμαστε ήδη στις ειδοποιήσεις, μην δείχνεις badge
                     if (currentTab === 'notif') {
                         badge.style.display = 'none';
                     } else {
@@ -1068,17 +1066,16 @@
             });
     }
 
+    // ===== ΔΙΟΡΘΩΜΕΝΗ renderNotifs (χωρίς index) =====
     function renderNotifs(m) {
-        // Κρύβουμε αμέσως το badge
         const badge = document.getElementById('notif-badge');
         if (badge) badge.style.display = 'none';
 
-        m.innerHTML = '<h2 style="padding:20px 20px 10px">Ειδοποιήσεις</h2><div id="nL"></div>';
+        m.innerHTML = '<h2 style="padding:20px 20px 10px">Ειδοποιήσεις</h2><div id="nL"><p style="padding:20px;color:var(--muted)">Φόρτωση...</p></div>';
         
         db.collection('notifications')
             .where('userId', '==', user.uid)
-            .orderBy('createdAt', 'desc')
-            .limit(40)
+            .limit(50)
             .get()
             .then(s => {
                 const el = document.getElementById('nL');
@@ -1089,21 +1086,24 @@
                     return;
                 }
 
-                // Μαρκάρουμε όλες ως διαβασμένες με batch
+                // Ταξινομούμε τοπικά
+                const docs = s.docs.sort((a, b) => (b.data().createdAt || 0) - (a.data().createdAt || 0));
+
+                // Μαρκάρουμε ως διαβασμένες
                 const batch = db.batch();
-                s.docs.forEach(d => {
+                docs.forEach(d => {
                     if (d.data().read !== true) {
                         batch.update(d.ref, { read: true });
                     }
                 });
                 batch.commit().catch(() => {});
 
-                el.innerHTML = s.docs.map(d => {
+                el.innerHTML = docs.map(d => {
                     const data = d.data();
                     return `
                     <div class="notif-item read">
                         <div>
-                            <div style="font-size:15px">${data.text}</div>
+                            <div style="font-size:15px">${data.text || 'Ειδοποίηση'}</div>
                             <div style="font-size:12px; color:var(--muted); margin-top:4px">${formatTime(data.createdAt)}</div>
                         </div>
                     </div>`;
@@ -1111,7 +1111,8 @@
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('nL').innerHTML = '<p style="padding:20px;color:#dc2626">Σφάλμα φόρτωσης</p>';
+                const el = document.getElementById('nL');
+                if (el) el.innerHTML = '<p style="padding:20px;color:#dc2626">Σφάλμα φόρτωσης</p>';
             });
     }
 
