@@ -84,7 +84,7 @@
         <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</div>
         <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
-    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.9</div>
+    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.0</div>
 </aside>
 
 <div class="app-wrapper">
@@ -173,6 +173,7 @@ let activePost = null;
 let historyStack = [];
 let unsubscribeFeed = null;
 let theme = localStorage.getItem('jrs_theme') || 'dark';
+let lang = localStorage.getItem('jrs_lang') || 'el';
 const adminEmail = 'rossrossg7@gmail.com';
 const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000;
 
@@ -290,20 +291,36 @@ function handleHash(h) {
 }
 
 function handleMention(uname) {
-    const clean = (uname || '').toLowerCase().trim();
+    const clean = (uname || '').toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
     if (!clean) return;
+
+    // 1. Ακριβές στο usernames
     db.collection('usernames').doc(clean).get()
         .then(doc => {
             if (doc.exists && doc.data().uid) {
                 openProfile(doc.data().uid);
                 return null;
             }
+            // 2. Ακριβές username στο users
             return db.collection('users').where('username', '==', clean).limit(1).get();
         })
         .then(snap => {
             if (!snap) return;
-            if (!snap.empty) openProfile(snap.docs[0].id);
-            else alert('Ο χρήστης @' + uname + ' δεν βρέθηκε');
+            if (!snap.empty) {
+                openProfile(snap.docs[0].id);
+                return null;
+            }
+            // 3. Ψάχνουμε αν αρχίζει με το clean (για παλιά usernames με αριθμούς)
+            return db.collection('users').orderBy('username').startAt(clean).endAt(clean + '\uf8ff').limit(5).get();
+        })
+        .then(snap => {
+            if (!snap) return;
+            if (!snap.empty) {
+                // Παίρνουμε τον πρώτο που ταιριάζει
+                openProfile(snap.docs[0].id);
+            } else {
+                alert('Ο χρήστης @' + uname + ' δεν βρέθηκε');
+            }
         })
         .catch(() => alert('Ο χρήστης @' + uname + ' δεν βρέθηκε'));
 }
@@ -472,7 +489,7 @@ async function handleFile(inp, target = 'post') {
             image.src = dataUrl;
         });
         const canvas = document.createElement('canvas');
-        const MAX_SIZE = 900;
+        const MAX_SIZE = 800;
         let width = img.width;
         let height = img.height;
         if (width > height) {
@@ -490,7 +507,7 @@ async function handleFile(inp, target = 'post') {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL('image/jpeg', 0.4);
+        const compressed = canvas.toDataURL('image/jpeg', 0.35);
         if (target === 'profile') {
             await db.collection('users').doc(user.uid).update({ photo: compressed });
             updateAllPosts(null, compressed);
@@ -696,6 +713,10 @@ function renderSettings(m) {
                 <button onclick="saveProfile()" class="btn-main">Αποθήκευση</button>
             </div>
             <div class="settings-row" onclick="toggleThemeNow()"><span>Θέμα: ${theme==='dark'?'Dark':'Light'}</span><i data-lucide="moon"></i></div>
+            <div class="settings-row" onclick="toggleLangNow()">
+                <span>Γλώσσα: ${lang==='el'?'Ελληνικά 🇬🇷':'English 🇬🇧'}</span>
+                <span style="font-size:20px">${lang==='el'?'🇬🇷':'🇬🇧'}</span>
+            </div>
         </div>`;
         lucide.createIcons();
     });
@@ -798,6 +819,11 @@ async function submitQuote() {
 }
 
 function toggleThemeNow() { theme = theme==='dark'?'light':'dark'; localStorage.setItem('jrs_theme',theme); location.reload(); }
+function toggleLangNow() { 
+    lang = lang==='el'?'en':'el'; 
+    localStorage.setItem('jrs_lang',lang); 
+    location.reload(); 
+}
 function clearCache() {
     if (confirm('Καθαρισμός cache;')) {
         localStorage.clear(); sessionStorage.clear();
