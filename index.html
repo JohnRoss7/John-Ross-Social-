@@ -84,7 +84,7 @@
         <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</div>
         <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
-    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.5</div>
+    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.6</div>
 </aside>
 
 <div class="app-wrapper">
@@ -111,7 +111,6 @@
     </nav>
 </div>
 
-<!-- Share Modal -->
 <div class="modal" id="shareModal">
     <div class="modal-content">
         <h3>Κοινοποίηση</h3><br>
@@ -123,7 +122,6 @@
     </div>
 </div>
 
-<!-- Quote Modal -->
 <div class="modal" id="quoteModal">
     <div class="modal-content">
         <h3>Παράθεση</h3>
@@ -495,7 +493,6 @@ async function sendPost() {
     } catch(e) { alert('Σφάλμα δημοσίευσης'); }
 }
 
-// ===== ΒΕΛΤΙΩΜΕΝΟ LIKE με postId =====
 async function like(id) {
     if (!user) return;
     playPop();
@@ -786,7 +783,6 @@ function listenNotifs() {
         });
 }
 
-// ===== ΒΕΛΤΙΩΜΕΝΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ =====
 function renderNotifs(m) {
     const badge = document.getElementById('notif-badge');
     if (badge) badge.style.display = 'none';
@@ -803,7 +799,6 @@ function renderNotifs(m) {
             }
             const docs = s.docs.sort((a,b) => (b.data().createdAt||0) - (a.data().createdAt||0));
 
-            // μαρκάρουμε ως διαβασμένες
             const batch = db.batch();
             docs.forEach(d => { if (d.data().read !== true) batch.update(d.ref, {read:true}); });
             batch.commit().catch(()=>{});
@@ -816,13 +811,8 @@ function renderNotifs(m) {
                 const type = data.type || '';
 
                 let action = '';
-                if (type === 'like' && postId) {
-                    action = `openNotifPost('${postId}')`;
-                } else if (fromUid) {
-                    action = `openProfile('${fromUid}')`;
-                } else {
-                    action = '';
-                }
+                if (type === 'like' && postId) action = `openNotifPost('${postId}')`;
+                else if (fromUid) action = `openProfile('${fromUid}')`;
 
                 return `
                 <div class="notif-item ${isUnread?'unread':'read'}" onclick="${action}">
@@ -972,15 +962,34 @@ async function renderAdmin(m) {
 
 async function deleteAllNotifications() {
     if (!confirm('Σίγουρα θέλεις να διαγράψεις ΟΛΕΣ τις ειδοποιήσεις;')) return;
+
     try {
         const snap = await db.collection('notifications').get();
-        const batch = db.batch();
-        snap.docs.forEach(d => batch.delete(d.ref));
-        await batch.commit();
-        alert('Όλες οι ειδοποιήσεις διαγράφηκαν!');
-        if (currentTab === 'notif') renderNotifs(document.getElementById('content'));
-    } catch(e) {
-        alert('Σφάλμα διαγραφής');
+        if (snap.empty) {
+            alert('Δεν υπάρχουν ειδοποιήσεις για διαγραφή');
+            return;
+        }
+
+        // Διαγραφή μία-μία για να είμαστε σίγουροι
+        let count = 0;
+        for (const doc of snap.docs) {
+            await doc.ref.delete();
+            count++;
+        }
+
+        alert(`Διαγράφηκαν ${count} ειδοποιήσεις!`);
+
+        // Ανανέωση
+        const badge = document.getElementById('notif-badge');
+        if (badge) badge.style.display = 'none';
+        
+        if (currentTab === 'notif') {
+            renderNotifs(document.getElementById('content'));
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert('Σφάλμα κατά τη διαγραφή');
     }
 }
 
