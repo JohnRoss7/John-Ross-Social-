@@ -84,7 +84,7 @@
         <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</div>
         <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
-    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.7</div>
+    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.8</div>
 </aside>
 
 <div class="app-wrapper">
@@ -780,6 +780,7 @@ function listenNotifs() {
         });
 }
 
+// ===== ΔΙΟΡΘΩΜΕΝΕΣ ΕΙΔΟΠΟΙΗΣΕΙΣ (μόνο αυτή που πατάς γίνεται διαβασμένη) =====
 function renderNotifs(m) {
     const badge = document.getElementById('notif-badge');
     if (badge) badge.style.display = 'none';
@@ -796,20 +797,18 @@ function renderNotifs(m) {
             }
             const docs = s.docs.sort((a,b) => (b.data().createdAt||0) - (a.data().createdAt||0));
 
-            const batch = db.batch();
-            docs.forEach(d => { if (d.data().read !== true) batch.update(d.ref, {read:true}); });
-            batch.commit().catch(()=>{});
-
             el.innerHTML = docs.map(d => {
                 const data = d.data();
                 const isUnread = data.read !== true;
+                const notifId = d.id;
                 const fromUid = data.fromUid || '';
                 const postId = data.postId || '';
                 const type = data.type || '';
 
-                let action = '';
-                if (type === 'like' && postId) action = `openNotifPost('${postId}')`;
-                else if (fromUid) action = `openProfile('${fromUid}')`;
+                // Μόνο όταν πατάμε μαρκάρουμε αυτήν ως διαβασμένη
+                let action = `markAsRead('${notifId}');`;
+                if (type === 'like' && postId) action += `openNotifPost('${postId}')`;
+                else if (fromUid) action += `openProfile('${fromUid}')`;
 
                 return `
                 <div class="notif-item ${isUnread?'unread':'read'}" onclick="${action}">
@@ -825,6 +824,10 @@ function renderNotifs(m) {
             console.error(err);
             document.getElementById('nL').innerHTML = '<p style="padding:20px;color:#dc2626">Σφάλμα φόρτωσης</p>';
         });
+}
+
+function markAsRead(notifId) {
+    db.collection('notifications').doc(notifId).update({ read: true }).catch(()=>{});
 }
 
 function openNotifPost(postId) {
@@ -911,7 +914,7 @@ function doSearch(q) {
     });
 }
 
-// ===== ΚΑΘΑΡΟ ADMIN PANEL =====
+// ===== ΚΑΘΑΡΟ ADMIN PANEL (μόνο στατιστικά) =====
 async function renderAdmin(m) {
     m.innerHTML = '<div style="padding:20px"><h2>Admin Panel</h2><p style="color:var(--muted)">Φόρτωση...</p></div>';
     try {
@@ -933,36 +936,9 @@ async function renderAdmin(m) {
                 <div class="stat-card"><b>${totalLikes}</b><span>Σύνολο Likes</span></div>
                 <div class="stat-card"><b>${posts.filter(p=>p.images?.length).length}</b><span>Posts με φωτό</span></div>
             </div>
-
-            <button onclick="deleteAllNotifications()" class="btn-main" style="background:#b91c1c;margin-top:10px">
-                Διαγραφή όλων των Ειδοποιήσεων
-            </button>
         </div>`;
     } catch(e) {
         m.innerHTML = '<div style="padding:20px"><h2>Admin Panel</h2><p style="color:#dc2626">Σφάλμα</p></div>';
-    }
-}
-
-async function deleteAllNotifications() {
-    if (!confirm('Σίγουρα θέλεις να διαγράψεις ΟΛΕΣ τις ειδοποιήσεις;')) return;
-    try {
-        const snap = await db.collection('notifications').get();
-        if (snap.empty) {
-            alert('Δεν υπάρχουν ειδοποιήσεις');
-            return;
-        }
-        let count = 0;
-        for (const doc of snap.docs) {
-            await doc.ref.delete();
-            count++;
-        }
-        alert(`Διαγράφηκαν ${count} ειδοποιήσεις!`);
-        const badge = document.getElementById('notif-badge');
-        if (badge) badge.style.display = 'none';
-        if (currentTab === 'notif') renderNotifs(document.getElementById('content'));
-    } catch(e) {
-        console.error(e);
-        alert('Σφάλμα διαγραφής');
     }
 }
 
