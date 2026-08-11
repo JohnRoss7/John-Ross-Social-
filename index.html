@@ -84,7 +84,7 @@
         <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Εκκαθάριση Cache</div>
         <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Αποσύνδεση</div>
     </div>
-    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.6</div>
+    <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v1.7</div>
 </aside>
 
 <div class="app-wrapper">
@@ -172,7 +172,6 @@ let pendingImg = null;
 let activePost = null;
 let historyStack = [];
 let unsubscribeFeed = null;
-let lang = localStorage.getItem('jrs_lang') || 'el';
 let theme = localStorage.getItem('jrs_theme') || 'dark';
 const adminEmail = 'rossrossg7@gmail.com';
 const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000;
@@ -662,7 +661,6 @@ function renderSettings(m) {
                 <button onclick="saveProfile()" class="btn-main">Αποθήκευση</button>
             </div>
             <div class="settings-row" onclick="toggleThemeNow()"><span>Θέμα: ${theme==='dark'?'Dark':'Light'}</span><i data-lucide="moon"></i></div>
-            <div class="settings-row" onclick="toggleLangNow()"><span>Γλώσσα: ${lang==='el'?'Ελληνικά':'English'}</span><i data-lucide="languages"></i></div>
         </div>`;
         lucide.createIcons();
     });
@@ -765,7 +763,6 @@ async function submitQuote() {
 }
 
 function toggleThemeNow() { theme = theme==='dark'?'light':'dark'; localStorage.setItem('jrs_theme',theme); location.reload(); }
-function toggleLangNow() { lang = lang==='el'?'en':'el'; localStorage.setItem('jrs_lang',lang); location.reload(); }
 function clearCache() {
     if (confirm('Καθαρισμός cache;')) {
         localStorage.clear(); sessionStorage.clear();
@@ -789,7 +786,7 @@ function renderNotifs(m) {
 
     m.innerHTML = '<h2 style="padding:20px 20px 12px">Ειδοποιήσεις</h2><div id="nL"><p style="padding:20px;color:var(--muted)">Φόρτωση...</p></div>';
 
-    db.collection('notifications').where('userId','==',user.uid).limit(60).get()
+    db.collection('notifications').where('userId','==',user.uid).limit(80).get()
         .then(s => {
             const el = document.getElementById('nL');
             if (!el) return;
@@ -914,6 +911,7 @@ function doSearch(q) {
     });
 }
 
+// ===== ΚΑΘΑΡΟ ADMIN PANEL =====
 async function renderAdmin(m) {
     m.innerHTML = '<div style="padding:20px"><h2>Admin Panel</h2><p style="color:var(--muted)">Φόρτωση...</p></div>';
     try {
@@ -923,12 +921,11 @@ async function renderAdmin(m) {
         ]);
         const posts = postsSnap.docs.map(d => ({id:d.id, ...d.data()}));
         const totalLikes = posts.reduce((s,p) => s + (p.likes||0), 0);
-        const recent = posts.sort((a,b)=>b.createdAt-a.createdAt).slice(0,12);
 
         m.innerHTML = `
         <div style="padding:20px">
             <h2 style="margin-bottom:6px">Admin Panel</h2>
-            <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Γεια σου Admin 👋</p>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Γεια σου Admin 👋</p>
             
             <div class="admin-stats">
                 <div class="stat-card"><b>${posts.length}</b><span>Σύνολο Posts</span></div>
@@ -937,24 +934,10 @@ async function renderAdmin(m) {
                 <div class="stat-card"><b>${posts.filter(p=>p.images?.length).length}</b><span>Posts με φωτό</span></div>
             </div>
 
-            <button onclick="deleteAllNotifications()" class="btn-main" style="background:#b91c1c;margin:10px 0 20px">
+            <button onclick="deleteAllNotifications()" class="btn-main" style="background:#b91c1c;margin-top:10px">
                 Διαγραφή όλων των Ειδοποιήσεων
             </button>
-
-            <h3 style="margin:10px 0 12px">Πρόσφατες αναρτήσεις</h3>
-            <div id="adminPosts"></div>
         </div>`;
-
-        document.getElementById('adminPosts').innerHTML = recent.map(p => `
-            <div style="padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;background:var(--card)">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                    <strong>${p.name||'User'}</strong>
-                    <button onclick="adminDeletePost('${p.id}')" style="background:#dc2626;color:#fff;border:none;padding:5px 10px;border-radius:8px;font-size:12px;cursor:pointer">Διαγραφή</button>
-                </div>
-                <div style="font-size:14px;color:var(--muted);white-space:pre-wrap">${(p.text||'').substring(0,110)}${(p.text||'').length>110?'...':''}</div>
-                <div style="font-size:12px;color:var(--muted);margin-top:6px">${p.likes||0} likes · ${new Date(p.createdAt).toLocaleString('el-GR')}</div>
-            </div>
-        `).join('') || '<p style="color:var(--muted)">Καμία</p>';
     } catch(e) {
         m.innerHTML = '<div style="padding:20px"><h2>Admin Panel</h2><p style="color:#dc2626">Σφάλμα</p></div>';
     }
@@ -962,43 +945,24 @@ async function renderAdmin(m) {
 
 async function deleteAllNotifications() {
     if (!confirm('Σίγουρα θέλεις να διαγράψεις ΟΛΕΣ τις ειδοποιήσεις;')) return;
-
     try {
         const snap = await db.collection('notifications').get();
         if (snap.empty) {
-            alert('Δεν υπάρχουν ειδοποιήσεις για διαγραφή');
+            alert('Δεν υπάρχουν ειδοποιήσεις');
             return;
         }
-
-        // Διαγραφή μία-μία για να είμαστε σίγουροι
         let count = 0;
         for (const doc of snap.docs) {
             await doc.ref.delete();
             count++;
         }
-
         alert(`Διαγράφηκαν ${count} ειδοποιήσεις!`);
-
-        // Ανανέωση
         const badge = document.getElementById('notif-badge');
         if (badge) badge.style.display = 'none';
-        
-        if (currentTab === 'notif') {
-            renderNotifs(document.getElementById('content'));
-        }
-
-    } catch (e) {
+        if (currentTab === 'notif') renderNotifs(document.getElementById('content'));
+    } catch(e) {
         console.error(e);
-        alert('Σφάλμα κατά τη διαγραφή');
-    }
-}
-
-function adminDeletePost(id) {
-    if (confirm('Σίγουρα διαγραφή;')) {
-        db.collection('posts').doc(id).delete().then(() => {
-            alert('Διαγράφηκε');
-            renderAdmin(document.getElementById('content'));
-        });
+        alert('Σφάλμα διαγραφής');
     }
 }
 
