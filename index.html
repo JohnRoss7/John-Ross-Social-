@@ -80,6 +80,10 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .img-btn{width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d9bf0,#0d7ec7);border:none;cursor:pointer;box-shadow:0 4px 12px rgba(29,155,240,.35)}
 .img-btn:active{transform:scale(.95);opacity:.9}
 .img-btn svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px}
+.sec-card h3{font-size:16px;margin-bottom:4px}
+.sec-card p{font-size:13px;color:var(--muted);margin-bottom:14px}
+.sec-label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
 </style>
 </head>
 <body class="dark">
@@ -96,13 +100,14 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
     <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
     <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
     <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
+    <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
     <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
     <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
     <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
     <div class="side-item" onclick="clearCache()" style="color:orange"><i data-lucide="trash-2"></i> Cache</div>
     <div class="side-item" onclick="auth.signOut();location.reload()" style="color:var(--accent)"><i data-lucide="log-out"></i> Logout</div>
   </div>
-  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.2</div>
+  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.3</div>
 </aside>
 
 <div class="app-wrapper">
@@ -317,7 +322,6 @@ function handleMention(uname){
     .catch(()=>alert('Ο χρήστης @'+uname+' δεν βρέθηκε'));
 }
 
-/* Autocomplete για ΟΠΟΙΟΔΗΠΟΤΕ textarea */
 function setupMentionAutocompleteFor(textareaId){
   const ta=document.getElementById(textareaId);
   if(!ta||ta._mentionBound)return;
@@ -381,6 +385,86 @@ async function notifyMentions(text,postId,myName){
   }
 }
 
+/* ========== SECURITY ========== */
+function renderSecurity(m){
+  const email = (user && user.email) ? user.email : '';
+  m.innerHTML=`
+  <div style="padding:20px">
+    <h2 style="margin-bottom:6px">Security</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Ασφάλεια λογαριασμού · Account security</p>
+
+    <div class="sec-card">
+      <h3>Αλλαγή κωδικού · Change Password</h3>
+      <p>Για ασφάλεια ζητείται ο τρέχων κωδικός.</p>
+      <label class="sec-label">Τρέχων κωδικός / Current password</label>
+      <input type="password" id="sec-curr-pass" class="input-box" autocomplete="current-password">
+      <label class="sec-label">Νέος κωδικός / New password</label>
+      <input type="password" id="sec-new-pass" class="input-box" autocomplete="new-password">
+      <label class="sec-label">Επιβεβαίωση / Confirm</label>
+      <input type="password" id="sec-new-pass2" class="input-box" autocomplete="new-password">
+      <button onclick="doChangePassword()" class="btn-main">Αποθήκευση κωδικού</button>
+    </div>
+
+    <div class="sec-card">
+      <h3>Αλλαγή email · Change Email</h3>
+      <p>Τρέχον: <b style="color:var(--text)">${email}</b></p>
+      <label class="sec-label">Τρέχων κωδικός / Current password</label>
+      <input type="password" id="sec-email-pass" class="input-box" autocomplete="current-password">
+      <label class="sec-label">Νέο email / New email</label>
+      <input type="email" id="sec-new-email" class="input-box" placeholder="new@email.com" autocomplete="email">
+      <button onclick="doChangeEmail()" class="btn-main">Αποθήκευση email</button>
+    </div>
+  </div>`;
+}
+
+async function doChangePassword(){
+  if(!user)return;
+  const curr=document.getElementById('sec-curr-pass').value;
+  const neu=document.getElementById('sec-new-pass').value;
+  const neu2=document.getElementById('sec-new-pass2').value;
+  if(!curr||!neu||!neu2) return alert('Συμπλήρωσε όλα τα πεδία');
+  if(neu.length<6) return alert('Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες');
+  if(neu!==neu2) return alert('Οι νέοι κωδικοί δεν ταιριάζουν');
+  try{
+    const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(neu);
+    document.getElementById('sec-curr-pass').value='';
+    document.getElementById('sec-new-pass').value='';
+    document.getElementById('sec-new-pass2').value='';
+    alert('Ο κωδικός άλλαξε επιτυχώς!');
+  }catch(e){
+    if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') alert('Λάθος τρέχων κωδικός');
+    else if(e.code==='auth/weak-password') alert('Αδύναμος κωδικός');
+    else if(e.code==='auth/requires-recent-login') alert('Για ασφάλεια, κάνε logout και ξανά login, μετά δοκίμασε πάλι');
+    else alert('Σφάλμα: '+(e.message||'unknown'));
+  }
+}
+
+async function doChangeEmail(){
+  if(!user)return;
+  const curr=document.getElementById('sec-email-pass').value;
+  const neu=document.getElementById('sec-new-email').value.trim();
+  if(!curr||!neu) return alert('Συμπλήρωσε όλα τα πεδία');
+  if(!neu.includes('@')||!neu.includes('.')) return alert('Μη έγκυρο email');
+  if(neu.toLowerCase()===user.email.toLowerCase()) return alert('Είναι ήδη το τρέχον email');
+  try{
+    const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);
+    await user.reauthenticateWithCredential(cred);
+    await user.updateEmail(neu);
+    document.getElementById('sec-email-pass').value='';
+    document.getElementById('sec-new-email').value='';
+    alert('Το email άλλαξε επιτυχώς!\nΝέο: '+neu);
+    renderSecurity(document.getElementById('content'));
+  }catch(e){
+    if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') alert('Λάθος τρέχων κωδικός');
+    else if(e.code==='auth/email-already-in-use') alert('Το email χρησιμοποιείται ήδη');
+    else if(e.code==='auth/invalid-email') alert('Μη έγκυρο email');
+    else if(e.code==='auth/requires-recent-login') alert('Για ασφάλεια, κάνε logout και ξανά login, μετά δοκίμασε πάλι');
+    else alert('Σφάλμα: '+(e.message||'unknown'));
+  }
+}
+
 function render(){
   const c=document.getElementById('content');
   document.getElementById('home-tabs').style.display=(user&&currentTab==='home')?'flex':'none';
@@ -392,6 +476,7 @@ function render(){
   if(currentTab==='home')renderHome(c);
   else if(currentTab==='profile')renderProfile(c,user.uid);
   else if(currentTab==='settings')renderSettings(c);
+  else if(currentTab==='security')renderSecurity(c);
   else if(currentTab==='notif')renderNotifs(c);
   else if(currentTab==='search')renderSearch(c);
   else if(currentTab==='admin')renderAdmin(c);
