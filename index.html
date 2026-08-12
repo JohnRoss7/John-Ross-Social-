@@ -86,11 +86,14 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .sec-card p{font-size:13px;color:var(--muted);margin-bottom:14px}
 .sec-label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
 .comment-item{padding:12px 0;border-bottom:1px solid var(--border)}
-.comment-actions{display:flex;gap:16px;margin-top:8px;align-items:center;color:var(--muted);font-size:13px}
+.comment-actions{display:flex;gap:12px;margin-top:8px;align-items:center;color:var(--muted);font-size:13px}
 .comment-actions span{cursor:pointer;display:flex;align-items:center;gap:4px}
+.c-like-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:rgba(255,255,255,.05);font-size:13px;cursor:pointer;user-select:none}
+.c-like-btn.liked{border-color:var(--accent);color:var(--accent);background:rgba(220,38,38,.12)}
 #commentsList{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 4px}
 .comment-input-row{display:flex;gap:8px;align-items:flex-end;padding-top:10px;border-top:1px solid var(--border);flex-shrink:0}
-.char-count{font-size:12px;color:var(--muted);text-align:right;margin-top:-6px;margin-bottom:6px}
+.char-count{font-size:12px;color:var(--muted);text-align:right;margin-top:2px}
+.char-count.warn{color:var(--accent)}
 </style>
 </head>
 <body class="dark">
@@ -114,7 +117,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
     <div class="side-item" onclick="clearCache()" style="color:orange"><i data-lucide="trash-2"></i> Cache</div>
     <div class="side-item" onclick="auth.signOut();location.reload()" style="color:var(--accent)"><i data-lucide="log-out"></i> Logout</div>
   </div>
-  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.4</div>
+  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.5</div>
 </aside>
 
 <div class="app-wrapper">
@@ -155,7 +158,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 <div class="modal" id="quoteModal">
   <div class="modal-content center">
     <h3>Παράθεση</h3>
-    <textarea id="quoteText" class="input-box" style="height:100px" placeholder="Πρόσθεσε σχόλιο..."></textarea>
+    <textarea id="quoteText" class="input-box" style="height:100px" placeholder="Πρόσθεσε σχόλιο..." maxlength="500"></textarea>
     <div id="quotePreview" class="quote-box"></div>
     <div style="display:flex;gap:10px;margin-top:14px">
       <button onclick="closeAll()" class="btn-main" style="background:#333;flex:1">Ακύρωση</button>
@@ -188,7 +191,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 <div class="modal" id="editPostModal">
   <div class="modal-content center">
     <h3 style="margin-bottom:12px">Επεξεργασία / Edit</h3>
-    <textarea id="editPostText" class="input-box" style="height:140px" placeholder="Κείμενο..."></textarea>
+    <textarea id="editPostText" class="input-box" style="height:140px" placeholder="Κείμενο..." maxlength="500"></textarea>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button onclick="closeAll()" class="btn-main" style="background:#333;flex:1">Ακύρωση</button>
       <button onclick="saveEditPost()" class="btn-main" style="flex:1">Αποθήκευση</button>
@@ -196,7 +199,6 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
   </div>
 </div>
 
-<!-- COMMENTS MODAL -->
 <div class="modal" id="commentsModal">
   <div class="modal-content" style="padding-bottom:calc(16px + env(safe-area-inset-bottom))">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0">
@@ -242,6 +244,7 @@ let theme = localStorage.getItem('jrs_theme') || 'dark';
 let lang = localStorage.getItem('jrs_lang') || 'el';
 const adminEmail = 'rossrossg7@gmail.com';
 const USERNAME_COOLDOWN = 30 * 24 * 60 * 60 * 1000;
+const MAX_CHARS = 500;
 
 const IMG_ICON = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>`;
 
@@ -362,6 +365,8 @@ function setupMentionAutocompleteFor(textareaId){
   ta.addEventListener('input',function(){
     mentionTarget=this;
     clearTimeout(mentionTimer);
+    if(this.id==='postText') updatePostCount();
+    if(this.id==='commentText') updateCommentCount();
     const val=this.value,cursor=this.selectionStart||0;
     const textBefore=val.substring(0,cursor);
     const match=textBefore.match(/@([a-zA-Z0-9_]*)$/);
@@ -400,6 +405,7 @@ function insertMention(username){
   ta.setSelectionRange(newBefore.length,newBefore.length);
   document.getElementById('mentionBox').style.display='none';
   if(ta.id==='commentText') updateCommentCount();
+  if(ta.id==='postText') updatePostCount();
 }
 
 async function notifyMentions(text,postId,myName){
@@ -419,11 +425,15 @@ async function notifyMentions(text,postId,myName){
   }
 }
 
-/* ========== COMMENTS ========== */
 function updateCommentCount(){
   const ta=document.getElementById('commentText');
   const el=document.getElementById('commentCharCount');
-  if(ta&&el) el.textContent=ta.value.length;
+  if(ta&&el){el.textContent=ta.value.length;el.parentElement.classList.toggle('warn',ta.value.length>450)}
+}
+function updatePostCount(){
+  const ta=document.getElementById('postText');
+  const el=document.getElementById('postCharCount');
+  if(ta&&el){el.textContent=ta.value.length;el.parentElement.classList.toggle('warn',ta.value.length>450)}
 }
 
 function openComments(postId, postUid){
@@ -464,8 +474,8 @@ function loadComments(postId){
               <div style="font-weight:700;font-size:14px;cursor:pointer" onclick="closeAll();openProfile('${safeUid}')">${c.name||'User'} <span style="font-weight:400;color:var(--muted);font-size:12px">· ${formatTime(c.createdAt)}</span></div>
               <div style="font-size:15px;line-height:1.45;margin-top:4px;white-space:pre-wrap">${format(c.text)}</div>
               <div class="comment-actions">
-                <span onclick="likeComment('${safeId}')" style="${isLiked?'color:var(--accent)':''}">👍 ${c.likes||0}</span>
-                ${canDelete?`<span onclick="deleteComment('${safeId}')" style="color:var(--accent)">Διαγραφή</span>`:''}
+                <span class="c-like-btn${isLiked?' liked':''}" onclick="likeComment('${safeId}')">👍 ${c.likes||0}</span>
+                ${canDelete?`<span onclick="deleteComment('${safeId}')" style="color:var(--accent);font-weight:600">Διαγραφή</span>`:''}
               </div>
             </div>
           </div>
@@ -473,7 +483,7 @@ function loadComments(postId){
       }).join('');
     },err=>{
       const list=document.getElementById('commentsList');
-      if(list) list.innerHTML='<p style="text-align:center;color:#dc2626;padding:20px">Σφάλμα φόρτωσης σχολίων.<br><small>Μπορεί να χρειάζεται index στο Firestore.</small></p>';
+      if(list) list.innerHTML='<p style="text-align:center;color:#dc2626;padding:20px">Σφάλμα φόρτωσης σχολίων</p>';
     });
 }
 
@@ -482,35 +492,22 @@ async function sendComment(){
   const ta=document.getElementById('commentText');
   const text=(ta.value||'').trim();
   if(!text)return alert('Γράψε κάτι');
-  if(text.length>500)return alert('Μέγιστο 500 χαρακτήρες');
+  if(text.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{
     const uDoc=await db.collection('users').doc(user.uid).get();
     const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
     await db.collection('comments').add({
-      postId:activeCommentPostId,
-      uid:user.uid,
-      name:myName,
-      username:u.username||'',
-      photo:u.photo||'',
-      text:text,
-      likes:0,
-      likedBy:[],
-      createdAt:Date.now()
+      postId:activeCommentPostId,uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',
+      text:text,likes:0,likedBy:[],createdAt:Date.now()
     });
     await db.collection('posts').doc(activeCommentPostId).update({
       commentsCount:firebase.firestore.FieldValue.increment(1)
     }).catch(()=>{});
-    // notify post owner
     if(activeCommentPostUid&&activeCommentPostUid!==user.uid){
       db.collection('notifications').add({
-        userId:activeCommentPostUid,
-        text:`${myName} σχολίασε στο post σου`,
-        type:'comment',
-        fromUid:user.uid,
-        postId:activeCommentPostId,
-        read:false,
-        createdAt:Date.now()
+        userId:activeCommentPostUid,text:`${myName} σχολίασε στο post σου`,type:'comment',
+        fromUid:user.uid,postId:activeCommentPostId,read:false,createdAt:Date.now()
       });
     }
     if(text.includes('@')) notifyMentions(text,activeCommentPostId,myName);
@@ -548,7 +545,6 @@ async function deleteComment(commentId){
   }catch(e){alert('Σφάλμα διαγραφής')}
 }
 
-/* ========== SECURITY ========== */
 function renderSecurity(m){
   const email = (user && user.email) ? user.email : '';
   m.innerHTML=`
@@ -646,7 +642,7 @@ function render(){
 }
 
 function renderHome(m){
-  m.innerHTML=`<div style="padding:16px;border-bottom:1px solid var(--border);position:relative"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${t('whatsHappening')}" style="flex:1;background:none;border:none;color:var(--text);font-size:17px;resize:none;min-height:55px"></textarea></div><div id="imgPrv"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-left:52px"><button type="button" class="img-btn" onclick="document.getElementById('fInp').click()" title="Προσθήκη φωτογραφίας">${IMG_ICON}</button><input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto;padding:9px 18px">${t('post')}</button></div></div><div id="feed"></div>`;
+  m.innerHTML=`<div style="padding:16px;border-bottom:1px solid var(--border);position:relative"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${t('whatsHappening')}" maxlength="${MAX_CHARS}" style="flex:1;background:none;border:none;color:var(--text);font-size:17px;resize:none;min-height:55px" oninput="updatePostCount()"></textarea></div><div class="char-count" style="padding-left:52px"><span id="postCharCount">0</span>/${MAX_CHARS}</div><div id="imgPrv"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-left:52px"><button type="button" class="img-btn" onclick="document.getElementById('fInp').click()" title="Προσθήκη φωτογραφίας">${IMG_ICON}</button><input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto;padding:9px 18px">${t('post')}</button></div></div><div id="feed"></div>`;
   db.collection('users').doc(user.uid).get().then(doc=>{if(doc.exists&&doc.data().photo){const av=document.getElementById('myAvH');if(av)av.style.backgroundImage=`url('${doc.data().photo}')`}});
   loadMyBlocked().then(()=>loadFeed('feed'));
   setTimeout(()=>setupMentionAutocompleteFor('postText'),120);
@@ -715,12 +711,14 @@ async function handleFile(inp,target='post'){
 async function sendPost(){
   const txt=document.getElementById('postText').value;
   if(!txt.trim()&&!pendingImg)return;
+  if(txt.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{
     const uDoc=await db.collection('users').doc(user.uid).get();
     const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
     const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:txt,images:pendingImg?[pendingImg]:[],likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
     document.getElementById('postText').value='';pendingImg=null;document.getElementById('imgPrv').innerHTML='';document.getElementById('mentionBox').style.display='none';
+    updatePostCount();
     if(txt.includes('@')) notifyMentions(txt,ref.id,myName);
   }catch(e){alert('Σφάλμα δημοσίευσης')}
 }
@@ -898,6 +896,7 @@ function openQuoteModal(){
 async function submitQuote(){
   const comment=document.getElementById('quoteText').value.trim();
   if(!comment)return alert('Γράψε κάτι!');
+  if(comment.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{
     const uDoc=await db.collection('users').doc(user.uid).get();
     const u=uDoc.exists?uDoc.data():{};
@@ -964,7 +963,12 @@ function doMenuEdit(){
   document.getElementById('overlay').style.display='block';
   setTimeout(()=>setupMentionAutocompleteFor('editPostText'),100);
 }
-async function saveEditPost(){if(!menuPost)return;try{await db.collection('posts').doc(menuPost.id).update({text:document.getElementById('editPostText').value});closeAll();alert('Αποθηκεύτηκε!')}catch(e){alert('Σφάλμα')}}
+async function saveEditPost(){
+  if(!menuPost)return;
+  const text=document.getElementById('editPostText').value;
+  if(text.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
+  try{await db.collection('posts').doc(menuPost.id).update({text});closeAll();alert('Αποθηκεύτηκε!')}catch(e){alert('Σφάλμα')}
+}
 async function doMenuDelete(){if(!menuPost)return;if(!confirm('Σίγουρα διαγραφή;'))return;try{await db.collection('posts').doc(menuPost.id).delete();closeAll()}catch(e){alert('Σφάλμα')}}
 async function togglePin(postId,postUid,currentlyPinned){
   try{
