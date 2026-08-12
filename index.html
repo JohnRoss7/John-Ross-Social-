@@ -63,6 +63,15 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .login-logo{font-size:30px;font-weight:900;margin-bottom:6px}
 .login-tagline{color:var(--accent);font-size:15px;font-style:italic;margin-bottom:35px}
 .login-form input{width:100%;padding:15px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:14px;font-size:16px;margin-bottom:12px}
+.menu-action{display:flex;align-items:center;gap:14px;padding:16px 14px;border-radius:14px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);cursor:pointer}
+.menu-action:active{opacity:.75}
+.menu-action .menu-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);flex-shrink:0}
+.menu-action .menu-txt{flex:1;min-width:0}
+.menu-action .menu-title{font-weight:700;font-size:15px}
+.menu-action .menu-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.menu-action.danger{border-color:rgba(220,38,38,.35)}
+.menu-action.danger .menu-title{color:var(--accent)}
+.menu-action.danger .menu-ico{background:rgba(220,38,38,.12);color:var(--accent)}
 </style>
 </head>
 <body class="dark">
@@ -83,7 +92,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
     <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Cache</div>
     <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Logout</div>
   </div>
-  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.7</div>
+  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.8</div>
 </aside>
 
 <div class="app-wrapper">
@@ -143,6 +152,30 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
   </div>
 </div>
 
+<!-- Μοντέρνο μενού post (3 τελείες) -->
+<div class="modal" id="postMenuModal">
+  <div class="modal-content" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:18px">Επιλογές / Options</h3>
+      <i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i>
+    </div>
+    <div id="postMenuBody"></div>
+    <button onclick="closeAll()" class="btn-main" style="background:#333;margin-top:6px">Κλείσιμο / Close</button>
+  </div>
+</div>
+
+<!-- Επεξεργασία post -->
+<div class="modal" id="editPostModal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:12px">Επεξεργασία / Edit</h3>
+    <textarea id="editPostText" class="input-box" style="height:140px" placeholder="Κείμενο..."></textarea>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button onclick="closeAll()" class="btn-main" style="background:#333;flex:1">Ακύρωση</button>
+      <button onclick="saveEditPost()" class="btn-main" style="flex:1">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
 <div class="lightbox" id="lightbox" onclick="this.style.display='none'">
   <button class="close-lb" onclick="event.stopPropagation();this.parentElement.style.display='none'">X</button>
   <img id="lb-img" style="max-width:95%;max-height:90%;object-fit:contain">
@@ -165,6 +198,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let user = null, currentTab = 'home', feedType = 'foryou', pendingImg = null, activePost = null, historyStack = [], unsubscribeFeed = null;
+let menuPost = null;
 let theme = localStorage.getItem('jrs_theme') || 'dark';
 let lang = localStorage.getItem('jrs_lang') || 'el';
 const adminEmail = 'rossrossg7@gmail.com';
@@ -298,7 +332,7 @@ function displayPosts(posts,container){
     const safeImg=(p.images&&p.images[0])?String(p.images[0]).replace(/'/g,"\\'"):'';
     let quoteHtml='';
     if(p.quote)quoteHtml=`<div class="quote-box"><div style="font-weight:700;font-size:14px">${p.quote.name||'User'}</div><div style="font-size:14px;color:var(--muted)">${format(p.quote.text||'')}</div>${p.quote.image?`<img src="${p.quote.image}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px">`:''}</div>`;
-    return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation();if(!event.target.closest('.hashtag'))copyText('${safeText}')">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();alert('Comments soon')"><i data-lucide="message-circle"></i></span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`;
+    return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="event.stopPropagation();postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation();if(!event.target.closest('.hashtag'))copyText('${safeText}')">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();alert('Comments soon')"><i data-lucide="message-circle"></i></span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`;
   }).join('');
   lucide.createIcons();
 }
@@ -473,14 +507,64 @@ function openNotifPost(postId){renderSinglePost(postId)}
 function openProfile(uid){if(user){historyStack.push(currentTab);history.pushState({tab:'profile'},'');currentTab='profile';document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));document.getElementById('btn-profile')?.classList.add('active');document.getElementById('home-tabs').style.display='none'}renderProfile(document.getElementById('content'),uid)}
 function openLB(src){if(!src)return;document.getElementById('lb-img').src=src;document.getElementById('lightbox').style.display='flex'}
 
-async function postOp(id,text,postUid,isPinned){
+function postOp(id,text,postUid,isPinned){
   if(!user)return;
   const isOwner=user.uid===postUid,isAdmin=user.email===adminEmail;
   if(!isOwner&&!isAdmin)return;
-  const choice=prompt(`1 = ${isPinned?'Unpin':'Pin'}\n2 = Επεξεργασία\n3 = Διαγραφή\n\nΓράψε 1, 2 ή 3:`);
-  if(choice==='1')await togglePin(id,postUid,isPinned);
-  else if(choice==='2'){const nt=prompt('Νέο κείμενο:',text.replace(/\\n/g,'\n'));if(nt!==null)db.collection('posts').doc(id).update({text:nt})}
-  else if(choice==='3'){if(confirm('Σίγουρα διαγραφή;'))db.collection('posts').doc(id).delete()}
+  menuPost={id,text,postUid,isPinned:!!isPinned};
+  const pinTitle=isPinned?'Unpin':'Pin';
+  const pinSub=isPinned?'Unpin post · Ξεκαρφίτσωμα':'Pin post · Καρφίτσωμα';
+  const body=document.getElementById('postMenuBody');
+  body.innerHTML=`
+    <div class="menu-action" onclick="doMenuPin()">
+      <div class="menu-ico"><i data-lucide="pin"></i></div>
+      <div class="menu-txt"><div class="menu-title">${pinTitle}</div><div class="menu-sub">${pinSub}</div></div>
+    </div>
+    <div class="menu-action" onclick="doMenuEdit()">
+      <div class="menu-ico"><i data-lucide="pencil"></i></div>
+      <div class="menu-txt"><div class="menu-title">Επεξεργασία · Edit</div><div class="menu-sub">Αλλαγή κειμένου · Edit text</div></div>
+    </div>
+    <div class="menu-action danger" onclick="doMenuDelete()">
+      <div class="menu-ico"><i data-lucide="trash-2"></i></div>
+      <div class="menu-txt"><div class="menu-title">Διαγραφή · Delete Post</div><div class="menu-sub">Μόνιμη διαγραφή · Permanent delete</div></div>
+    </div>`;
+  document.getElementById('postMenuModal').style.display='flex';
+  document.getElementById('overlay').style.display='block';
+  lucide.createIcons();
+}
+
+async function doMenuPin(){
+  if(!menuPost)return;
+  closeAll();
+  await togglePin(menuPost.id,menuPost.postUid,menuPost.isPinned);
+}
+
+function doMenuEdit(){
+  if(!menuPost)return;
+  const raw=(menuPost.text||'').replace(/\\n/g,'\n').replace(/\\'/g,"'");
+  document.getElementById('editPostText').value=raw;
+  document.getElementById('postMenuModal').style.display='none';
+  document.getElementById('editPostModal').style.display='flex';
+  document.getElementById('overlay').style.display='block';
+}
+
+async function saveEditPost(){
+  if(!menuPost)return;
+  const nt=document.getElementById('editPostText').value;
+  try{
+    await db.collection('posts').doc(menuPost.id).update({text:nt});
+    closeAll();
+    alert(lang==='en'?'Saved!':'Αποθηκεύτηκε!');
+  }catch(e){alert('Σφάλμα')}
+}
+
+async function doMenuDelete(){
+  if(!menuPost)return;
+  if(!confirm(lang==='en'?'Delete this post permanently?':'Σίγουρα διαγραφή;'))return;
+  try{
+    await db.collection('posts').doc(menuPost.id).delete();
+    closeAll();
+  }catch(e){alert('Σφάλμα')}
 }
 
 async function togglePin(postId,postUid,currentlyPinned){
@@ -488,8 +572,8 @@ async function togglePin(postId,postUid,currentlyPinned){
     const userRef=db.collection('users').doc(postUid);
     const userDoc=await userRef.get();
     let pinned=(userDoc.data()||{}).pinnedPosts||[];
-    if(currentlyPinned){pinned=pinned.filter(id=>id!==postId);await userRef.update({pinnedPosts:pinned});alert('Αφαιρέθηκε το Pin')}
-    else{if(user.email!==adminEmail&&pinned.length>=2){alert('Μπορείς να έχεις μόνο 2 pinned posts');return}pinned.push(postId);await userRef.update({pinnedPosts:pinned});alert('Έγινε Pin!')}
+    if(currentlyPinned){pinned=pinned.filter(id=>id!==postId);await userRef.update({pinnedPosts:pinned});alert('Unpin ✓')}
+    else{if(user.email!==adminEmail&&pinned.length>=2){alert('Μπορείς να έχεις μόνο 2 pinned posts');return}pinned.push(postId);await userRef.update({pinnedPosts:pinned});alert('Pin ✓')}
   }catch(e){alert('Σφάλμα')}
 }
 
@@ -523,7 +607,6 @@ async function renderSinglePost(postId){
   }catch(e){c.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626">Σφάλμα</div>'}
 }
 
-// Hashtags μόνο (όχι mentions)
 document.addEventListener('click',function(e){
   const hash=e.target.closest('.hashtag');
   if(hash){
@@ -534,22 +617,13 @@ document.addEventListener('click',function(e){
   }
 },true);
 
-// Ισχυρό anti-zoom (pinch + multi-touch)
 document.addEventListener('gesturestart',function(e){e.preventDefault()},{passive:false});
 document.addEventListener('gesturechange',function(e){e.preventDefault()},{passive:false});
 document.addEventListener('gestureend',function(e){e.preventDefault()},{passive:false});
-document.addEventListener('touchstart',function(e){
-  if(e.touches.length>1) e.preventDefault();
-},{passive:false});
-document.addEventListener('touchmove',function(e){
-  if(e.touches.length>1) e.preventDefault();
-},{passive:false});
+document.addEventListener('touchstart',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
+document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
 let lastTouchEnd=0;
-document.addEventListener('touchend',function(e){
-  const now=Date.now();
-  if(now-lastTouchEnd<=350) e.preventDefault();
-  lastTouchEnd=now;
-},{passive:false});
+document.addEventListener('touchend',function(e){const now=Date.now();if(now-lastTouchEnd<=350)e.preventDefault();lastTouchEnd=now},{passive:false});
 
 lucide.createIcons();
 </script>
