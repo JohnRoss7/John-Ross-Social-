@@ -34,10 +34,22 @@ header{background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;
 .post-menu-btn{position:absolute;top:14px;right:12px;color:var(--muted);cursor:pointer;z-index:5}
 .sidebar{position:fixed;top:0;left:-285px;width:280px;height:100%;background:var(--bg);z-index:3000;border-right:1px solid var(--border);transition:.3s;display:flex;flex-direction:column}
 .sidebar.show{left:0}
-.sidebar-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.sidebar-header{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.side-scroll{flex:1;overflow-y:auto;padding:12px}
+.side-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:6px;margin-bottom:12px}
+.side-item{padding:13px 12px;cursor:pointer;display:flex;align-items:center;gap:12px;border-radius:12px;font-size:15px;font-weight:500}
+.side-item:active{background:rgba(255,255,255,.06)}
+.side-item i{width:20px;height:20px;flex-shrink:0}
+.side-cache{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.35);border-radius:16px;padding:6px;margin-bottom:12px}
+.side-cache .side-item{color:#f59e0b}
+.side-danger{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.4);border-radius:16px;padding:6px;margin-bottom:8px}
+.side-danger-title{padding:10px 12px 4px;font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.3px}
+.side-danger .side-item{color:var(--accent)}
+.side-danger .side-item .sub{display:block;font-size:11px;font-weight:400;color:rgba(220,38,38,.75);margin-top:1px}
+.side-footer{padding:12px 16px 20px;text-align:center;font-size:11px;color:var(--muted);border-top:1px solid var(--border)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:5000;display:none;align-items:flex-end;justify-content:center;padding:0}
 .modal-content{background:var(--card);width:100%;max-width:550px;border-radius:20px 20px 0 0;padding:16px 16px 20px;border:1px solid var(--border);max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
-.modal-content.center{align-self:center;border-radius:20px;margin:20px;max-height:85vh}
+.modal-content.center{align-self:center;border-radius:20px;margin:20px;max-height:85vh;overflow-y:auto}
 .input-box{width:100%;padding:14px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:16px;margin:6px 0 12px}
 nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;background:var(--bg);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
 .nav-item{color:var(--muted);position:relative;cursor:pointer;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;min-width:60px}
@@ -77,7 +89,6 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .menu-action.danger{border-color:rgba(220,38,38,.35)}
 .menu-action.danger .menu-title{color:var(--accent)}
 .menu-action.danger .menu-ico{background:rgba(220,38,38,.12);color:var(--accent)}
-.side-item{padding:15px;cursor:pointer;display:flex;align-items:center;gap:10px}
 .unblock-btn{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto}
 .img-btn{width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d9bf0,#0d7ec7);border:none;cursor:pointer;box-shadow:0 4px 12px rgba(29,155,240,.35)}
 .img-btn:active{transform:scale(.95);opacity:.9}
@@ -108,21 +119,37 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <span style="font-weight:800;font-size:20px">John Ross Social</span>
+    <span style="font-weight:800;font-size:18px">John Ross Social</span>
     <i data-lucide="x-circle" style="color:var(--accent);cursor:pointer" onclick="toggleSidebar(false)"></i>
   </div>
-  <div style="padding:10px;flex:1;overflow-y:auto">
-    <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
-    <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
-    <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
-    <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
-    <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
-    <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
-    <div class="side-item" onclick="clearCache()" style="color:orange"><i data-lucide="trash-2"></i> Cache</div>
-    <div class="side-item" onclick="auth.signOut();location.reload()" style="color:var(--accent)"><i data-lucide="log-out"></i> Logout</div>
+  <div class="side-scroll">
+    <!-- MAIN MENU -->
+    <div class="side-card">
+      <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
+      <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
+      <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
+      <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
+      <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
+      <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
+    </div>
+    <!-- CACHE alone -->
+    <div class="side-cache">
+      <div class="side-item" onclick="clearCache()"><i data-lucide="trash-2"></i> <span>Cache</span></div>
+    </div>
+    <!-- DANGER ZONE -->
+    <div class="side-danger">
+      <div class="side-danger-title">DANGER ZONE · Επικίνδυνη ζώνη</div>
+      <div class="side-item" onclick="doLogout()">
+        <i data-lucide="log-out"></i>
+        <span>Log Out<span class="sub">Αποσύνδεση</span></span>
+      </div>
+      <div class="side-item" onclick="deleteAccount()">
+        <i data-lucide="user-x"></i>
+        <span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span>
+      </div>
+    </div>
   </div>
-  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.6</div>
+  <div class="side-footer">John Ross Social · v3.7</div>
 </aside>
 
 <div class="app-wrapper">
@@ -322,6 +349,51 @@ function closeAll(){
   const mb=document.getElementById('mentionBox');if(mb)mb.style.display='none';
   if(unsubscribeComments){unsubscribeComments();unsubscribeComments=null}
   activeCommentPostId=null;activeCommentPostUid=null;
+}
+
+function doLogout(){
+  toggleSidebar(false);
+  auth.signOut().then(()=>location.reload());
+}
+
+async function deleteAccount(){
+  if(!user)return;
+  toggleSidebar(false);
+  if(!confirm('ΔΙΑΓΡΑΦΗ ΛΟΓΑΡΙΑΣΜΟΥ;\nDelete Account?\n\nΘα διαγραφούν οριστικά τα δεδομένα σου.\nThis cannot be undone.'))return;
+  if(!confirm('Σίγουρα; Τελευταία επιβεβαίωση.\nAre you sure? Final confirmation.'))return;
+  try{
+    const uid=user.uid;
+    const uDoc=await db.collection('users').doc(uid).get();
+    const uname=uDoc.exists?(uDoc.data().username||''):'';
+    // delete comments by user
+    const comments=await db.collection('comments').where('uid','==',uid).get();
+    const batch1=db.batch();
+    comments.docs.forEach(d=>batch1.delete(d.ref));
+    if(comments.size) await batch1.commit();
+    // delete posts by user
+    const posts=await db.collection('posts').where('uid','==',uid).get();
+    const batch2=db.batch();
+    posts.docs.forEach(d=>batch2.delete(d.ref));
+    if(posts.size) await batch2.commit();
+    // delete notifications for user
+    const notifs=await db.collection('notifications').where('userId','==',uid).get();
+    const batch3=db.batch();
+    notifs.docs.forEach(d=>batch3.delete(d.ref));
+    if(notifs.size) await batch3.commit();
+    // username + user doc
+    if(uname) await db.collection('usernames').doc(uname).delete().catch(()=>{});
+    await db.collection('users').doc(uid).delete().catch(()=>{});
+    // auth account
+    await user.delete();
+    alert('Ο λογαριασμός διαγράφηκε.\nAccount deleted.');
+    location.reload();
+  }catch(e){
+    if(e.code==='auth/requires-recent-login'){
+      alert('Για ασφάλεια, κάνε Logout και ξανά Login, μετά δοκίμασε Διαγραφή λογαριασμού.\nFor security, Log Out and Log In again, then try Delete Account.');
+    }else{
+      alert('Σφάλμα διαγραφής: '+(e.message||'unknown'));
+    }
+  }
 }
 
 function showTab(t,fromBack=false){
