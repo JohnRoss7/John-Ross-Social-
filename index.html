@@ -10,23 +10,23 @@
 <style>
 :root{--bg:#000;--text:#fff;--muted:#777;--border:#222;--card:#16181c;--accent:#dc2626;--blue:#1d9bf0}
 body.light{--bg:#fff;--text:#000;--muted:#666;--border:#eee;--card:#f7f9f9}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;touch-action:manipulation}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;position:fixed;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none}
-input,textarea{font-size:16px!important}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;position:fixed;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none}
+input,textarea,select,button{font-size:16px!important;touch-action:manipulation}
 .app-wrapper{width:100%;height:100%;display:flex;flex-direction:column;max-width:550px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border);background:var(--bg)}
 header{background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;z-index:1000}
 .header-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
 .tabs{display:flex;border-bottom:1px solid var(--border)}
 .tab{flex:1;padding:14px;text-align:center;font-weight:600;color:var(--muted);cursor:pointer}
 .tab.active{color:var(--text);border-bottom:2px solid var(--accent)}
-#main-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#main-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .post{padding:16px;border-bottom:1px solid var(--border);position:relative}
 .post-header{display:flex;gap:12px}
 .avatar{width:48px;height:48px;border-radius:12px;background:#333;background-size:cover;background-position:center;flex-shrink:0;cursor:pointer;border:1px solid var(--border)}
 .username{font-weight:700;font-size:15px}
 .post-time{font-size:12px;color:var(--muted);margin-top:2px}
 .post-text{font-size:16px;line-height:1.5;white-space:pre-wrap;margin:6px 0}
-.hashtag,.mention{color:var(--accent)!important;font-weight:600;cursor:pointer}
+.hashtag{color:var(--accent)!important;font-weight:600;cursor:pointer}
 .post-img{width:100%;max-height:350px;object-fit:cover;border-radius:14px;margin-top:10px;border:1px solid var(--border);cursor:pointer}
 .post-actions{display:flex;justify-content:space-between;max-width:340px;margin-top:12px;color:var(--muted)}
 .post-actions span{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px}
@@ -63,15 +63,11 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .login-logo{font-size:30px;font-weight:900;margin-bottom:6px}
 .login-tagline{color:var(--accent);font-size:15px;font-style:italic;margin-bottom:35px}
 .login-form input{width:100%;padding:15px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:14px;font-size:16px;margin-bottom:12px}
-#mentionBox{position:fixed;background:var(--card);border:1px solid var(--border);border-radius:14px;max-height:200px;overflow-y:auto;z-index:2500;display:none;width:280px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.mention-item{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border)}
-.mention-item:active{background:rgba(220,38,38,.2)}
 </style>
 </head>
 <body class="dark">
 
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
-<div id="mentionBox"></div>
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
@@ -87,7 +83,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
     <div onclick="clearCache()" style="padding:15px;color:orange;cursor:pointer"><i data-lucide="trash-2"></i> Cache</div>
     <div onclick="auth.signOut();location.reload()" style="padding:15px;color:var(--accent);cursor:pointer"><i data-lucide="log-out"></i> Logout</div>
   </div>
-  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.6</div>
+  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v2.7</div>
 </aside>
 
 <div class="app-wrapper">
@@ -222,7 +218,7 @@ function doLogin(){
 }
 
 function toggleSidebar(s){document.getElementById('sidebar').classList.toggle('show',s);document.getElementById('overlay').style.display=s?'block':'none'}
-function closeAll(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').style.display='none';document.getElementById('mentionBox').style.display='none'}
+function closeAll(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').style.display='none'}
 
 function showTab(t,fromBack=false){
   if(!user) return;
@@ -239,80 +235,11 @@ window.onpopstate=()=>{if(historyStack.length)showTab(historyStack.pop(),true);e
 function format(text){
   if(!text)return'';
   let t=String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  t=t.replace(/@([a-zA-Z0-9_]+)/g,'<span class="mention" data-mention="$1">@$1</span>');
   t=t.replace(/#([a-zA-Z0-9_α-ωΑ-Ωάέήίόύώ]+)/g,'<span class="hashtag" data-hash="#$1">#$1</span>');
   return t;
 }
 
 function handleHash(h){showTab('search');setTimeout(()=>{const i=document.getElementById('searchInp');if(i){i.value=h;doSearch(h)}},250)}
-function handleMention(uname){
-  const clean=(uname||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'');
-  if(!clean)return;
-  db.collection('usernames').doc(clean).get().then(doc=>{
-    if(doc.exists&&doc.data().uid){openProfile(doc.data().uid);return;}
-    return db.collection('users').where('username','==',clean).limit(1).get();
-  }).then(snap=>{
-    if(!snap)return;
-    if(snap&&!snap.empty){
-      const uid=snap.docs[0].id;
-      db.collection('usernames').doc(clean).set({uid}).catch(()=>{});
-      openProfile(uid);
-      return;
-    }
-    return db.collection('users').orderBy('username').startAt(clean).endAt(clean+'\uf8ff').limit(5).get();
-  }).then(snap=>{
-    if(snap&&!snap.empty)openProfile(snap.docs[0].id);
-    else if(snap)alert('Ο χρήστης @'+uname+' δεν βρέθηκε');
-  }).catch(()=>alert('Ο χρήστης @'+uname+' δεν βρέθηκε'));
-}
-
-let mentionTimer=null;
-function setupMentionAutocomplete(){
-  const ta=document.getElementById('postText');
-  if(!ta||ta._mentionBound)return;
-  ta._mentionBound=true;
-  ta.addEventListener('input',function(){
-    clearTimeout(mentionTimer);
-    const val=this.value,cursor=this.selectionStart,textBefore=val.substring(0,cursor);
-    const match=textBefore.match(/@([a-zA-Z0-9_]*)$/);
-    const box=document.getElementById('mentionBox');
-    if(!match||match[1].length<1){box.style.display='none';return}
-    const query=match[1].toLowerCase();
-    mentionTimer=setTimeout(()=>{
-      db.collection('users').orderBy('username').startAt(query).endAt(query+'\uf8ff').limit(8).get().then(snap=>{
-        if(snap.empty){
-          return db.collection('users').limit(40).get().then(all=>{
-            const filtered=all.docs.filter(d=>(d.data().username||'').toLowerCase().startsWith(query)).slice(0,8);
-            if(!filtered.length){box.style.display='none';return}
-            showMentionResults(filtered,ta,box);
-          });
-        }
-        showMentionResults(snap.docs,ta,box);
-      }).catch(()=>box.style.display='none');
-    },120);
-  });
-  ta.addEventListener('blur',()=>{setTimeout(()=>{document.getElementById('mentionBox').style.display='none'},200)});
-}
-function showMentionResults(docs,ta,box){
-  box.innerHTML=docs.map(d=>{
-    const u=d.data(),safe=(u.username||'').replace(/'/g,"\\'");
-    return `<div class="mention-item" onclick="insertMention('${safe}')"><div class="avatar" style="width:36px;height:36px;${u.photo?`background-image:url('${u.photo}')`:''}"></div><div><div style="font-weight:700;font-size:14px">${u.name||'User'}</div><div style="font-size:12px;color:var(--muted)">@${u.username}</div></div></div>`;
-  }).join('');
-  const rect=ta.getBoundingClientRect();
-  box.style.left=Math.min(Math.max(8,rect.left),window.innerWidth-300)+'px';
-  box.style.top=(rect.bottom+6)+'px';
-  box.style.display='block';
-}
-function insertMention(username){
-  const ta=document.getElementById('postText');
-  if(!ta)return;
-  const val=ta.value,cursor=ta.selectionStart,textBefore=val.substring(0,cursor),textAfter=val.substring(cursor);
-  const newBefore=textBefore.replace(/@[a-zA-Z0-9_]*$/,'@'+username+' ');
-  ta.value=newBefore+textAfter;
-  ta.focus();
-  ta.setSelectionRange(newBefore.length,newBefore.length);
-  document.getElementById('mentionBox').style.display='none';
-}
 
 function render(){
   const c=document.getElementById('content');
@@ -335,7 +262,6 @@ function renderHome(m){
   m.innerHTML=`<div style="padding:16px;border-bottom:1px solid var(--border);position:relative"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${t('whatsHappening')}" style="flex:1;background:none;border:none;color:var(--text);font-size:17px;resize:none;min-height:55px"></textarea></div><div id="imgPrv"></div><div style="display:flex;justify-content:space-between;margin-top:10px;padding-left:52px"><i data-lucide="image" onclick="document.getElementById('fInp').click()" style="color:var(--blue);cursor:pointer"></i><input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto;padding:9px 18px">${t('post')}</button></div></div><div id="feed"></div>`;
   db.collection('users').doc(user.uid).get().then(doc=>{if(doc.exists&&doc.data().photo){const av=document.getElementById('myAvH');if(av)av.style.backgroundImage=`url('${doc.data().photo}')`}});
   loadFeed('feed');
-  setTimeout(setupMentionAutocomplete,120);
 }
 
 function loadFeed(id,uid=null){
@@ -372,7 +298,7 @@ function displayPosts(posts,container){
     const safeImg=(p.images&&p.images[0])?String(p.images[0]).replace(/'/g,"\\'"):'';
     let quoteHtml='';
     if(p.quote)quoteHtml=`<div class="quote-box"><div style="font-weight:700;font-size:14px">${p.quote.name||'User'}</div><div style="font-size:14px;color:var(--muted)">${format(p.quote.text||'')}</div>${p.quote.image?`<img src="${p.quote.image}" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px">`:''}</div>`;
-    return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation();if(!event.target.closest('.mention,.hashtag'))copyText('${safeText}')">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();alert('Comments soon')"><i data-lucide="message-circle"></i></span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`;
+    return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation();if(!event.target.closest('.hashtag'))copyText('${safeText}')">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();alert('Comments soon')"><i data-lucide="message-circle"></i></span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`;
   }).join('');
   lucide.createIcons();
 }
@@ -405,7 +331,7 @@ async function sendPost(){
     const uDoc=await db.collection('users').doc(user.uid).get();
     const u=uDoc.exists?uDoc.data():{};
     await db.collection('posts').add({uid:user.uid,name:u.name||user.email.split('@')[0],username:u.username||'',photo:u.photo||'',text:txt,images:pendingImg?[pendingImg]:[],likes:0,likedBy:[],createdAt:Date.now()});
-    document.getElementById('postText').value='';pendingImg=null;document.getElementById('imgPrv').innerHTML='';document.getElementById('mentionBox').style.display='none';
+    document.getElementById('postText').value='';pendingImg=null;document.getElementById('imgPrv').innerHTML='';
   }catch(e){alert('Σφάλμα δημοσίευσης')}
 }
 
@@ -568,7 +494,7 @@ async function togglePin(postId,postUid,currentlyPinned){
 }
 
 function setFeed(f){feedType=f;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+f)?.classList.add('active');loadFeed('feed')}
-function renderSearch(m){m.innerHTML=`<div style="padding:16px"><input id="searchInp" class="input-box" placeholder="Αναζήτηση #hashtag ή @username..." oninput="doSearch(this.value)"><div id="searchResults" style="margin-top:12px"></div></div>`}
+function renderSearch(m){m.innerHTML=`<div style="padding:16px"><input id="searchInp" class="input-box" placeholder="Αναζήτηση #hashtag ή κείμενο..." oninput="doSearch(this.value)"><div id="searchResults" style="margin-top:12px"></div></div>`}
 function doSearch(q){const results=document.getElementById('searchResults');if(!results)return;if(!q||q.trim().length<2){results.innerHTML='';return}const term=q.toLowerCase().trim().replace(/^#/,'').replace(/^@/,'');db.collection('posts').orderBy('createdAt','desc').limit(60).get().then(snap=>{const posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>(p.text||'').toLowerCase().includes(term)||(p.name||'').toLowerCase().includes(term)||(p.username||'').toLowerCase().includes(term));displayPosts(posts,results)})}
 
 async function renderAdmin(m){
@@ -597,15 +523,8 @@ async function renderSinglePost(postId){
   }catch(e){c.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626">Σφάλμα</div>'}
 }
 
+// Hashtags μόνο (όχι mentions)
 document.addEventListener('click',function(e){
-  const mention=e.target.closest('.mention');
-  if(mention){
-    e.preventDefault();
-    e.stopPropagation();
-    const uname=mention.getAttribute('data-mention')||mention.textContent.replace('@','');
-    handleMention(uname);
-    return;
-  }
   const hash=e.target.closest('.hashtag');
   if(hash){
     e.preventDefault();
@@ -615,13 +534,20 @@ document.addEventListener('click',function(e){
   }
 },true);
 
-document.addEventListener('gesturestart',e=>e.preventDefault());
-document.addEventListener('gesturechange',e=>e.preventDefault());
-document.addEventListener('gestureend',e=>e.preventDefault());
+// Ισχυρό anti-zoom (pinch + multi-touch)
+document.addEventListener('gesturestart',function(e){e.preventDefault()},{passive:false});
+document.addEventListener('gesturechange',function(e){e.preventDefault()},{passive:false});
+document.addEventListener('gestureend',function(e){e.preventDefault()},{passive:false});
+document.addEventListener('touchstart',function(e){
+  if(e.touches.length>1) e.preventDefault();
+},{passive:false});
+document.addEventListener('touchmove',function(e){
+  if(e.touches.length>1) e.preventDefault();
+},{passive:false});
 let lastTouchEnd=0;
 document.addEventListener('touchend',function(e){
   const now=Date.now();
-  if(now-lastTouchEnd<=300)e.preventDefault();
+  if(now-lastTouchEnd<=350) e.preventDefault();
   lastTouchEnd=now;
 },{passive:false});
 
