@@ -34,8 +34,9 @@ header{background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;
 .sidebar{position:fixed;top:0;left:-285px;width:280px;height:100%;background:var(--bg);z-index:3000;border-right:1px solid var(--border);transition:.3s;display:flex;flex-direction:column}
 .sidebar.show{left:0}
 .sidebar-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-content{background:var(--card);width:100%;max-width:400px;border-radius:20px;padding:20px;border:1px solid var(--border);max-height:85vh;overflow-y:auto}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:5000;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-content{background:var(--card);width:100%;max-width:550px;border-radius:20px 20px 0 0;padding:16px 16px 20px;border:1px solid var(--border);max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-content.center{align-self:center;border-radius:20px;margin:20px;max-height:85vh}
 .input-box{width:100%;padding:14px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:16px;margin:6px 0 12px}
 nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;background:var(--bg);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
 .nav-item{color:var(--muted);position:relative;cursor:pointer;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;min-width:60px}
@@ -84,6 +85,12 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .sec-card h3{font-size:16px;margin-bottom:4px}
 .sec-card p{font-size:13px;color:var(--muted);margin-bottom:14px}
 .sec-label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+.comment-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.comment-actions{display:flex;gap:16px;margin-top:8px;align-items:center;color:var(--muted);font-size:13px}
+.comment-actions span{cursor:pointer;display:flex;align-items:center;gap:4px}
+#commentsList{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 4px}
+.comment-input-row{display:flex;gap:8px;align-items:flex-end;padding-top:10px;border-top:1px solid var(--border);flex-shrink:0}
+.char-count{font-size:12px;color:var(--muted);text-align:right;margin-top:-6px;margin-bottom:6px}
 </style>
 </head>
 <body class="dark">
@@ -107,7 +114,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
     <div class="side-item" onclick="clearCache()" style="color:orange"><i data-lucide="trash-2"></i> Cache</div>
     <div class="side-item" onclick="auth.signOut();location.reload()" style="color:var(--accent)"><i data-lucide="log-out"></i> Logout</div>
   </div>
-  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.3</div>
+  <div style="padding:16px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--border)">John Ross Social · v3.4</div>
 </aside>
 
 <div class="app-wrapper">
@@ -135,7 +142,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </div>
 
 <div class="modal" id="shareModal">
-  <div class="modal-content">
+  <div class="modal-content center">
     <h3>Κοινοποίηση</h3><br>
     <div onclick="doNativeShare()" class="settings-row"><span>Σε εφαρμογές</span><i data-lucide="share"></i></div>
     <div onclick="copyLink()" class="settings-row"><span>Αντιγραφή Συνδέσμου</span><i data-lucide="link"></i></div>
@@ -146,7 +153,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </div>
 
 <div class="modal" id="quoteModal">
-  <div class="modal-content">
+  <div class="modal-content center">
     <h3>Παράθεση</h3>
     <textarea id="quoteText" class="input-box" style="height:100px" placeholder="Πρόσθεσε σχόλιο..."></textarea>
     <div id="quotePreview" class="quote-box"></div>
@@ -158,7 +165,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </div>
 
 <div class="modal" id="listModal">
-  <div class="modal-content">
+  <div class="modal-content center">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3 id="listModalTitle">Λίστα</h3>
       <i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i>
@@ -168,7 +175,7 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </div>
 
 <div class="modal" id="postMenuModal">
-  <div class="modal-content" style="padding:18px">
+  <div class="modal-content center" style="padding:18px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="font-size:18px">Επιλογές / Options</h3>
       <i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i>
@@ -179,12 +186,30 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </div>
 
 <div class="modal" id="editPostModal">
-  <div class="modal-content">
+  <div class="modal-content center">
     <h3 style="margin-bottom:12px">Επεξεργασία / Edit</h3>
     <textarea id="editPostText" class="input-box" style="height:140px" placeholder="Κείμενο..."></textarea>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button onclick="closeAll()" class="btn-main" style="background:#333;flex:1">Ακύρωση</button>
       <button onclick="saveEditPost()" class="btn-main" style="flex:1">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMMENTS MODAL -->
+<div class="modal" id="commentsModal">
+  <div class="modal-content" style="padding-bottom:calc(16px + env(safe-area-inset-bottom))">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0">
+      <h3 style="font-size:17px">Σχόλια</h3>
+      <i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i>
+    </div>
+    <div id="commentsList"><p style="text-align:center;color:var(--muted);padding:30px">Φόρτωση...</p></div>
+    <div class="comment-input-row">
+      <div style="flex:1">
+        <textarea id="commentText" class="input-box" style="margin:0;height:48px;resize:none;padding:12px" placeholder="Γράψε σχόλιο... (max 500)" maxlength="500" oninput="updateCommentCount()"></textarea>
+        <div class="char-count"><span id="commentCharCount">0</span>/500</div>
+      </div>
+      <button onclick="sendComment()" class="btn-main" style="width:auto;padding:12px 16px;margin-bottom:18px">Αποστολή</button>
     </div>
   </div>
 </div>
@@ -212,6 +237,7 @@ const db = firebase.firestore();
 
 let user = null, currentTab = 'home', feedType = 'foryou', pendingImg = null, activePost = null, historyStack = [], unsubscribeFeed = null;
 let menuPost = null, myBlocked = [], mentionTarget = null, mentionTimer = null;
+let activeCommentPostId = null, unsubscribeComments = null, activeCommentPostUid = null;
 let theme = localStorage.getItem('jrs_theme') || 'dark';
 let lang = localStorage.getItem('jrs_lang') || 'el';
 const adminEmail = 'rossrossg7@gmail.com';
@@ -280,7 +306,14 @@ function doLogin(){
 }
 
 function toggleSidebar(s){document.getElementById('sidebar').classList.toggle('show',s);document.getElementById('overlay').style.display=s?'block':'none'}
-function closeAll(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none');document.getElementById('sidebar').classList.remove('show');document.getElementById('overlay').style.display='none';const mb=document.getElementById('mentionBox');if(mb)mb.style.display='none'}
+function closeAll(){
+  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
+  document.getElementById('sidebar').classList.remove('show');
+  document.getElementById('overlay').style.display='none';
+  const mb=document.getElementById('mentionBox');if(mb)mb.style.display='none';
+  if(unsubscribeComments){unsubscribeComments();unsubscribeComments=null}
+  activeCommentPostId=null;activeCommentPostUid=null;
+}
 
 function showTab(t,fromBack=false){
   if(!user) return;
@@ -366,6 +399,7 @@ function insertMention(username){
   ta.focus();
   ta.setSelectionRange(newBefore.length,newBefore.length);
   document.getElementById('mentionBox').style.display='none';
+  if(ta.id==='commentText') updateCommentCount();
 }
 
 async function notifyMentions(text,postId,myName){
@@ -385,6 +419,135 @@ async function notifyMentions(text,postId,myName){
   }
 }
 
+/* ========== COMMENTS ========== */
+function updateCommentCount(){
+  const ta=document.getElementById('commentText');
+  const el=document.getElementById('commentCharCount');
+  if(ta&&el) el.textContent=ta.value.length;
+}
+
+function openComments(postId, postUid){
+  if(!user){location.href=location.pathname;return}
+  activeCommentPostId=postId;
+  activeCommentPostUid=postUid||null;
+  document.getElementById('commentText').value='';
+  updateCommentCount();
+  document.getElementById('commentsList').innerHTML='<p style="text-align:center;color:var(--muted);padding:30px">Φόρτωση...</p>';
+  document.getElementById('commentsModal').style.display='flex';
+  document.getElementById('overlay').style.display='block';
+  loadComments(postId);
+  setTimeout(()=>{
+    const ta=document.getElementById('commentText');
+    if(ta){ta._mentionBound=false;setupMentionAutocompleteFor('commentText')}
+  },150);
+  lucide.createIcons();
+}
+
+function loadComments(postId){
+  if(unsubscribeComments){unsubscribeComments();unsubscribeComments=null}
+  unsubscribeComments=db.collection('comments').where('postId','==',postId).orderBy('createdAt','asc').limit(100)
+    .onSnapshot(snap=>{
+      const list=document.getElementById('commentsList');
+      if(!list)return;
+      if(snap.empty){list.innerHTML='<p style="text-align:center;color:var(--muted);padding:40px 20px">Κανένα σχόλιο ακόμα.<br>Γράψε το πρώτο!</p>';return}
+      const comments=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>!myBlocked.includes(c.uid));
+      if(!comments.length){list.innerHTML='<p style="text-align:center;color:var(--muted);padding:40px 20px">Κανένα σχόλιο ακόμα.</p>';return}
+      list.innerHTML=comments.map(c=>{
+        const isLiked=user&&(c.likedBy||[]).includes(user.uid);
+        const canDelete=user&&(user.uid===c.uid||user.email===adminEmail);
+        const safeId=c.id.replace(/'/g,"\\'");
+        const safeUid=(c.uid||'').replace(/'/g,"\\'");
+        return `<div class="comment-item">
+          <div style="display:flex;gap:10px">
+            <div class="avatar" style="width:36px;height:36px;${c.photo?`background-image:url('${c.photo}')`:''}" onclick="closeAll();openProfile('${safeUid}')"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:14px;cursor:pointer" onclick="closeAll();openProfile('${safeUid}')">${c.name||'User'} <span style="font-weight:400;color:var(--muted);font-size:12px">· ${formatTime(c.createdAt)}</span></div>
+              <div style="font-size:15px;line-height:1.45;margin-top:4px;white-space:pre-wrap">${format(c.text)}</div>
+              <div class="comment-actions">
+                <span onclick="likeComment('${safeId}')" style="${isLiked?'color:var(--accent)':''}">👍 ${c.likes||0}</span>
+                ${canDelete?`<span onclick="deleteComment('${safeId}')" style="color:var(--accent)">Διαγραφή</span>`:''}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    },err=>{
+      const list=document.getElementById('commentsList');
+      if(list) list.innerHTML='<p style="text-align:center;color:#dc2626;padding:20px">Σφάλμα φόρτωσης σχολίων.<br><small>Μπορεί να χρειάζεται index στο Firestore.</small></p>';
+    });
+}
+
+async function sendComment(){
+  if(!user||!activeCommentPostId)return;
+  const ta=document.getElementById('commentText');
+  const text=(ta.value||'').trim();
+  if(!text)return alert('Γράψε κάτι');
+  if(text.length>500)return alert('Μέγιστο 500 χαρακτήρες');
+  try{
+    const uDoc=await db.collection('users').doc(user.uid).get();
+    const u=uDoc.exists?uDoc.data():{};
+    const myName=u.name||user.email.split('@')[0];
+    await db.collection('comments').add({
+      postId:activeCommentPostId,
+      uid:user.uid,
+      name:myName,
+      username:u.username||'',
+      photo:u.photo||'',
+      text:text,
+      likes:0,
+      likedBy:[],
+      createdAt:Date.now()
+    });
+    await db.collection('posts').doc(activeCommentPostId).update({
+      commentsCount:firebase.firestore.FieldValue.increment(1)
+    }).catch(()=>{});
+    // notify post owner
+    if(activeCommentPostUid&&activeCommentPostUid!==user.uid){
+      db.collection('notifications').add({
+        userId:activeCommentPostUid,
+        text:`${myName} σχολίασε στο post σου`,
+        type:'comment',
+        fromUid:user.uid,
+        postId:activeCommentPostId,
+        read:false,
+        createdAt:Date.now()
+      });
+    }
+    if(text.includes('@')) notifyMentions(text,activeCommentPostId,myName);
+    ta.value='';
+    updateCommentCount();
+    document.getElementById('mentionBox').style.display='none';
+  }catch(e){alert('Σφάλμα αποστολής σχολίου')}
+}
+
+async function likeComment(commentId){
+  if(!user)return;
+  playPop();
+  try{
+    const ref=db.collection('comments').doc(commentId);
+    const doc=await ref.get();
+    if(!doc.exists)return;
+    const c=doc.data();
+    if((c.likedBy||[]).includes(user.uid)){
+      await ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+    }else{
+      await ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
+    }
+  }catch(e){}
+}
+
+async function deleteComment(commentId){
+  if(!user||!confirm('Διαγραφή σχολίου;'))return;
+  try{
+    await db.collection('comments').doc(commentId).delete();
+    if(activeCommentPostId){
+      await db.collection('posts').doc(activeCommentPostId).update({
+        commentsCount:firebase.firestore.FieldValue.increment(-1)
+      }).catch(()=>{});
+    }
+  }catch(e){alert('Σφάλμα διαγραφής')}
+}
+
 /* ========== SECURITY ========== */
 function renderSecurity(m){
   const email = (user && user.email) ? user.email : '';
@@ -392,7 +555,6 @@ function renderSecurity(m){
   <div style="padding:20px">
     <h2 style="margin-bottom:6px">Security</h2>
     <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Ασφάλεια λογαριασμού · Account security</p>
-
     <div class="sec-card">
       <h3>Αλλαγή κωδικού · Change Password</h3>
       <p>Για ασφάλεια ζητείται ο τρέχων κωδικός.</p>
@@ -404,7 +566,6 @@ function renderSecurity(m){
       <input type="password" id="sec-new-pass2" class="input-box" autocomplete="new-password">
       <button onclick="doChangePassword()" class="btn-main">Αποθήκευση κωδικού</button>
     </div>
-
     <div class="sec-card">
       <h3>Αλλαγή email · Change Email</h3>
       <p>Τρέχον: <b style="color:var(--text)">${email}</b></p>
@@ -524,9 +685,10 @@ function displayPosts(posts,container){
     const safeUid=String(p.uid).replace(/'/g,"\\'");
     const safeText=String(p.text||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n');
     const safeImg=(p.images&&p.images[0])?String(p.images[0]).replace(/'/g,"\\'"):'';
+    const cCount=p.commentsCount||0;
     let quoteHtml='';
     if(p.quote)quoteHtml=`<div class="quote-box"><div style="font-weight:700;font-size:14px">${p.quote.name||'User'}</div><div style="font-size:14px;color:var(--muted)">${format(p.quote.text||'')}</div>${p.quote.image?`<img src="${p.quote.image}" style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-top:8px;background:#0a0a0a">`:''}</div>`;
-    return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="event.stopPropagation();postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation()">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();alert('Comments soon')"><i data-lucide="message-circle"></i></span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`;
+    return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="event.stopPropagation();postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation()">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();${user?`openComments('${safeId}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="message-circle"></i> ${cCount}</span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`;
   }).join('');
   lucide.createIcons();
 }
@@ -557,7 +719,7 @@ async function sendPost(){
     const uDoc=await db.collection('users').doc(user.uid).get();
     const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
-    const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:txt,images:pendingImg?[pendingImg]:[],likes:0,likedBy:[],createdAt:Date.now()});
+    const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:txt,images:pendingImg?[pendingImg]:[],likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
     document.getElementById('postText').value='';pendingImg=null;document.getElementById('imgPrv').innerHTML='';document.getElementById('mentionBox').style.display='none';
     if(txt.includes('@')) notifyMentions(txt,ref.id,myName);
   }catch(e){alert('Σφάλμα δημοσίευσης')}
@@ -716,7 +878,7 @@ async function repostNow(){
     const uDoc=await db.collection('users').doc(user.uid).get();
     const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
-    await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:'Repost: '+(activePost.text||''),images:activePost.img?[activePost.img]:[],likes:0,likedBy:[],createdAt:Date.now()});
+    await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:'Repost: '+(activePost.text||''),images:activePost.img?[activePost.img]:[],likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
     if(activePost.uid&&activePost.uid!==user.uid){
       db.collection('notifications').add({userId:activePost.uid,text:`${myName} έκανε repost`,type:'repost',fromUid:user.uid,postId:activePost.id,read:false,createdAt:Date.now()});
     }
@@ -742,7 +904,7 @@ async function submitQuote(){
     const myName=u.name||user.email.split('@')[0];
     const original=await db.collection('posts').doc(activePost.id).get();
     const orig=original.exists?original.data():{};
-    const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:comment,images:[],quote:{id:activePost.id,name:orig.name||'User',text:activePost.text||'',image:activePost.img||null},likes:0,likedBy:[],createdAt:Date.now()});
+    const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:comment,images:[],quote:{id:activePost.id,name:orig.name||'User',text:activePost.text||'',image:activePost.img||null},likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
     if(orig.uid&&orig.uid!==user.uid){
       db.collection('notifications').add({userId:orig.uid,text:`${myName} παρέθεσε το post σου`,type:'quote',fromUid:user.uid,postId:ref.id,read:false,createdAt:Date.now()});
     }
@@ -768,7 +930,7 @@ function renderNotifs(m){
     el.innerHTML=docs.map(d=>{
       const data=d.data(),isUnread=data.read!==true,notifId=d.id,fromUid=data.fromUid||'',postId=data.postId||'',type=data.type||'';
       let action=`markAsRead('${notifId}');`;
-      if((type==='like'||type==='mention'||type==='repost'||type==='quote')&&postId) action+=`openNotifPost('${postId}')`;
+      if((type==='like'||type==='mention'||type==='repost'||type==='quote'||type==='comment')&&postId) action+=`openNotifPost('${postId}')`;
       else if(fromUid) action+=`openProfile('${fromUid}')`;
       return `<div class="notif-item ${isUnread?'unread':'read'}" onclick="${action}"><div style="flex:1"><div style="font-size:15px;font-weight:500">${data.text||'Ειδοποίηση'}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${formatTime(data.createdAt)}</div></div>${isUnread?'<div style="width:8px;height:8px;background:var(--accent);border-radius:50%;margin-top:6px;flex-shrink:0"></div>':''}</div>`;
     }).join('');
