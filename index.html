@@ -136,17 +136,11 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
     </div>
     <div class="side-danger">
       <div class="side-danger-title">DANGER ZONE · Επικίνδυνη ζώνη</div>
-      <div class="side-item" onclick="doLogout()">
-        <i data-lucide="log-out"></i>
-        <span>Log Out<span class="sub">Αποσύνδεση</span></span>
-      </div>
-      <div class="side-item" onclick="deleteAccount()">
-        <i data-lucide="user-x"></i>
-        <span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span>
-      </div>
+      <div class="side-item" onclick="doLogout()"><i data-lucide="log-out"></i><span>Log Out<span class="sub">Αποσύνδεση</span></span></div>
+      <div class="side-item" onclick="deleteAccount()"><i data-lucide="user-x"></i><span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span></div>
     </div>
   </div>
-  <div class="side-footer">John Ross Social · v3.8</div>
+  <div class="side-footer">John Ross Social · v3.9</div>
 </aside>
 
 <div class="app-wrapper">
@@ -283,21 +277,16 @@ const T = {
   en: {whatsHappening:"What's happening?", post:"Post", forYou:"For you", following:"Following", home:"Home", search:"Search", notif:"Notif.", profile:"Profile", settings:"Settings"}
 };
 function t(k){return (T[lang]&&T[lang][k])||T.el[k]||k}
-
 function updateUITexts(){
   const map = {'side-home':t('home'),'side-profile':t('profile'),'side-settings':t('settings'),'nav-home':t('home'),'nav-search':t('search'),'nav-notif':t('notif'),'nav-profile':t('profile'),'tab-foryou':t('forYou'),'tab-following':t('following')};
   for(const id in map){const el=document.getElementById(id);if(el)el.textContent=map[id]}
 }
-
 function playPop(){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(520,c.currentTime);o.frequency.exponentialRampToValueAtTime(120,c.currentTime+.1);g.gain.setValueAtTime(.12,c.currentTime);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.1)}catch(e){}}
 function formatTime(ts){if(!ts)return'';const d=new Date(ts),diff=(Date.now()-d)/1000;if(diff<60)return'τώρα';if(diff<3600)return Math.floor(diff/60)+'λ';if(diff<86400)return Math.floor(diff/3600)+'ώ';return d.toLocaleDateString('el-GR',{day:'numeric',month:'short'})+' · '+d.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'})}
 function checkUrlParams(){const p=new URLSearchParams(location.search);if(p.get('post')){renderSinglePost(p.get('post'));history.replaceState({},'',location.pathname);return true}if(p.get('user')){openProfile(p.get('user'));history.replaceState({},'',location.pathname);return true}return false}
-
 function loadMyBlocked(){
   if(!user){myBlocked=[];return Promise.resolve()}
-  return db.collection('users').doc(user.uid).get().then(doc=>{
-    myBlocked=(doc.exists&&doc.data().blocked)?doc.data().blocked:[];
-  }).catch(()=>{myBlocked=[]});
+  return db.collection('users').doc(user.uid).get().then(doc=>{myBlocked=(doc.exists&&doc.data().blocked)?doc.data().blocked:[]}).catch(()=>{myBlocked=[]});
 }
 
 auth.onAuthStateChanged(u=>{
@@ -337,7 +326,6 @@ function doLogin(){
     else alert('Λάθος στοιχεία');
   });
 }
-
 function toggleSidebar(s){document.getElementById('sidebar').classList.toggle('show',s);document.getElementById('overlay').style.display=s?'block':'none'}
 function closeAll(){
   document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
@@ -347,11 +335,7 @@ function closeAll(){
   if(unsubscribeComments){unsubscribeComments();unsubscribeComments=null}
   activeCommentPostId=null;activeCommentPostUid=null;
 }
-
-function doLogout(){
-  toggleSidebar(false);
-  auth.signOut().then(()=>location.reload());
-}
+function doLogout(){toggleSidebar(false);auth.signOut().then(()=>location.reload())}
 
 async function deleteAccount(){
   if(!user)return;
@@ -363,28 +347,19 @@ async function deleteAccount(){
     const uDoc=await db.collection('users').doc(uid).get();
     const uname=uDoc.exists?(uDoc.data().username||''):'';
     const comments=await db.collection('comments').where('uid','==',uid).get();
-    const batch1=db.batch();
-    comments.docs.forEach(d=>batch1.delete(d.ref));
-    if(comments.size) await batch1.commit();
+    const b1=db.batch();comments.docs.forEach(d=>b1.delete(d.ref));if(comments.size)await b1.commit();
     const posts=await db.collection('posts').where('uid','==',uid).get();
-    const batch2=db.batch();
-    posts.docs.forEach(d=>batch2.delete(d.ref));
-    if(posts.size) await batch2.commit();
+    const b2=db.batch();posts.docs.forEach(d=>b2.delete(d.ref));if(posts.size)await b2.commit();
     const notifs=await db.collection('notifications').where('userId','==',uid).get();
-    const batch3=db.batch();
-    notifs.docs.forEach(d=>batch3.delete(d.ref));
-    if(notifs.size) await batch3.commit();
+    const b3=db.batch();notifs.docs.forEach(d=>b3.delete(d.ref));if(notifs.size)await b3.commit();
     if(uname) await db.collection('usernames').doc(uname).delete().catch(()=>{});
     await db.collection('users').doc(uid).delete().catch(()=>{});
     await user.delete();
     alert('Ο λογαριασμός διαγράφηκε.\nAccount deleted.');
     location.reload();
   }catch(e){
-    if(e.code==='auth/requires-recent-login'){
-      alert('Για ασφάλεια, κάνε Logout και ξανά Login, μετά δοκίμασε Διαγραφή λογαριασμού.\nFor security, Log Out and Log In again, then try Delete Account.');
-    }else{
-      alert('Σφάλμα διαγραφής: '+(e.message||'unknown'));
-    }
+    if(e.code==='auth/requires-recent-login') alert('Για ασφάλεια, κάνε Logout και ξανά Login, μετά δοκίμασε Διαγραφή λογαριασμού.');
+    else alert('Σφάλμα διαγραφής: '+(e.message||'unknown'));
   }
 }
 
@@ -393,8 +368,7 @@ function showTab(t,fromBack=false){
   if(!fromBack&&currentTab!==t){historyStack.push(currentTab);history.pushState({tab:t},'')}
   currentTab=t;
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-  const btn=document.getElementById('btn-'+t);
-  if(btn) btn.classList.add('active');
+  const btn=document.getElementById('btn-'+t);if(btn) btn.classList.add('active');
   document.getElementById('home-tabs').style.display=t==='home'?'flex':'none';
   if(t==='notif'){const b=document.getElementById('notif-badge');if(b)b.style.display='none'}
   render();
@@ -408,24 +382,18 @@ function format(text){
   t=t.replace(/#([a-zA-Z0-9_α-ωΑ-Ωάέήίόύώ]+)/g,'<span class="hashtag" data-hash="#$1">#$1</span>');
   return t;
 }
-
 function handleHash(h){showTab('search');setTimeout(()=>{const i=document.getElementById('searchInp');if(i){i.value=h;doSearch(h)}},250)}
-
 function handleMention(uname){
   const clean=(uname||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'');
   if(!clean)return;
   db.collection('users').where('username','==',clean).limit(1).get()
     .then(snap=>{
       if(!snap.empty) openProfile(snap.docs[0].id);
-      else {
-        return db.collection('users').limit(80).get().then(all=>{
-          const found=all.docs.find(d=>(d.data().username||'').toLowerCase()===clean);
-          if(found) openProfile(found.id);
-          else alert('Ο χρήστης @'+uname+' δεν βρέθηκε');
-        });
-      }
-    })
-    .catch(()=>alert('Ο χρήστης @'+uname+' δεν βρέθηκε'));
+      else return db.collection('users').limit(80).get().then(all=>{
+        const found=all.docs.find(d=>(d.data().username||'').toLowerCase()===clean);
+        if(found) openProfile(found.id); else alert('Ο χρήστης @'+uname+' δεν βρέθηκε');
+      });
+    }).catch(()=>alert('Ο χρήστης @'+uname+' δεν βρέθηκε'));
 }
 
 function setupMentionAutocompleteFor(textareaId){
@@ -463,7 +431,6 @@ function setupMentionAutocompleteFor(textareaId){
     },150);
   });
 }
-
 function insertMention(username){
   const ta=mentionTarget||document.getElementById('postText');
   if(!ta)return;
@@ -477,7 +444,6 @@ function insertMention(username){
   if(ta.id==='commentText') updateCommentCount();
   if(ta.id==='postText') updatePostCount();
 }
-
 async function notifyMentions(text,postId,myName){
   const matches=[...String(text).matchAll(/@([a-zA-Z0-9_]+)/g)].map(m=>m[1].toLowerCase());
   const unique=[...new Set(matches)];
@@ -486,220 +452,113 @@ async function notifyMentions(text,postId,myName){
       const snap=await db.collection('users').where('username','==',uname).limit(1).get();
       if(snap.empty)continue;
       const targetUid=snap.docs[0].id;
-      if(targetUid===user.uid)continue;
-      if(myBlocked.includes(targetUid))continue;
-      await db.collection('notifications').add({
-        userId:targetUid,text:`${myName} σε ανέφερε`,type:'mention',fromUid:user.uid,postId:postId,read:false,createdAt:Date.now()
-      });
+      if(targetUid===user.uid||myBlocked.includes(targetUid))continue;
+      await db.collection('notifications').add({userId:targetUid,text:`${myName} σε ανέφερε`,type:'mention',fromUid:user.uid,postId:postId,read:false,createdAt:Date.now()});
     }catch(e){}
   }
 }
-
-function updateCommentCount(){
-  const ta=document.getElementById('commentText');
-  const el=document.getElementById('commentCharCount');
-  if(ta&&el){el.textContent=ta.value.length;el.parentElement.classList.toggle('warn',ta.value.length>450)}
-}
-function updatePostCount(){
-  const ta=document.getElementById('postText');
-  const el=document.getElementById('postCharCount');
-  if(ta&&el){el.textContent=ta.value.length;el.parentElement.classList.toggle('warn',ta.value.length>450)}
-}
+function updateCommentCount(){const ta=document.getElementById('commentText');const el=document.getElementById('commentCharCount');if(ta&&el){el.textContent=ta.value.length;el.parentElement.classList.toggle('warn',ta.value.length>450)}}
+function updatePostCount(){const ta=document.getElementById('postText');const el=document.getElementById('postCharCount');if(ta&&el){el.textContent=ta.value.length;el.parentElement.classList.toggle('warn',ta.value.length>450)}}
 
 function openComments(postId, postUid){
   if(!user){location.href=location.pathname;return}
-  activeCommentPostId=postId;
-  activeCommentPostUid=postUid||null;
-  document.getElementById('commentText').value='';
-  updateCommentCount();
+  activeCommentPostId=postId;activeCommentPostUid=postUid||null;
+  document.getElementById('commentText').value='';updateCommentCount();
   document.getElementById('commentsList').innerHTML='<p style="text-align:center;color:var(--muted);padding:30px">Φόρτωση...</p>';
   document.getElementById('commentsModal').style.display='flex';
   document.getElementById('overlay').style.display='block';
   loadComments(postId);
-  setTimeout(()=>{
-    const ta=document.getElementById('commentText');
-    if(ta){ta._mentionBound=false;setupMentionAutocompleteFor('commentText')}
-  },150);
+  setTimeout(()=>{const ta=document.getElementById('commentText');if(ta){ta._mentionBound=false;setupMentionAutocompleteFor('commentText')}},150);
   lucide.createIcons();
 }
-
 function loadComments(postId){
   if(unsubscribeComments){unsubscribeComments();unsubscribeComments=null}
   unsubscribeComments=db.collection('comments').where('postId','==',postId).orderBy('createdAt','asc').limit(100)
     .onSnapshot(snap=>{
-      const list=document.getElementById('commentsList');
-      if(!list)return;
+      const list=document.getElementById('commentsList');if(!list)return;
       if(snap.empty){list.innerHTML='<p style="text-align:center;color:var(--muted);padding:40px 20px">Κανένα σχόλιο ακόμα.<br>Γράψε το πρώτο!</p>';return}
       const comments=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>!myBlocked.includes(c.uid));
       if(!comments.length){list.innerHTML='<p style="text-align:center;color:var(--muted);padding:40px 20px">Κανένα σχόλιο ακόμα.</p>';return}
       list.innerHTML=comments.map(c=>{
         const isLiked=user&&(c.likedBy||[]).includes(user.uid);
         const canDelete=user&&(user.uid===c.uid||user.email===adminEmail);
-        const safeId=c.id.replace(/'/g,"\\'");
-        const safeUid=(c.uid||'').replace(/'/g,"\\'");
-        return `<div class="comment-item">
-          <div style="display:flex;gap:10px">
-            <div class="avatar" style="width:36px;height:36px;${c.photo?`background-image:url('${c.photo}')`:''}" onclick="closeAll();openProfile('${safeUid}')"></div>
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:14px;cursor:pointer" onclick="closeAll();openProfile('${safeUid}')">${c.name||'User'} <span style="font-weight:400;color:var(--muted);font-size:12px">· ${formatTime(c.createdAt)}</span></div>
-              <div style="font-size:15px;line-height:1.45;margin-top:4px;white-space:pre-wrap">${format(c.text)}</div>
-              <div class="comment-actions">
-                <span class="c-like-btn${isLiked?' liked':''}" onclick="event.preventDefault();likeComment('${safeId}')">${THUMB_SVG} ${c.likes||0}</span>
-                ${canDelete?`<span onclick="deleteComment('${safeId}')" style="color:var(--accent);font-weight:600">Διαγραφή</span>`:''}
-              </div>
-            </div>
-          </div>
-        </div>`;
+        const safeId=c.id.replace(/'/g,"\\'");const safeUid=(c.uid||'').replace(/'/g,"\\'");
+        return `<div class="comment-item"><div style="display:flex;gap:10px"><div class="avatar" style="width:36px;height:36px;${c.photo?`background-image:url('${c.photo}')`:''}" onclick="closeAll();openProfile('${safeUid}')"></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px;cursor:pointer" onclick="closeAll();openProfile('${safeUid}')">${c.name||'User'} <span style="font-weight:400;color:var(--muted);font-size:12px">· ${formatTime(c.createdAt)}</span></div><div style="font-size:15px;line-height:1.45;margin-top:4px;white-space:pre-wrap">${format(c.text)}</div><div class="comment-actions"><span class="c-like-btn${isLiked?' liked':''}" onclick="event.preventDefault();likeComment('${safeId}')">${THUMB_SVG} ${c.likes||0}</span>${canDelete?`<span onclick="deleteComment('${safeId}')" style="color:var(--accent);font-weight:600">Διαγραφή</span>`:''}</div></div></div></div>`;
       }).join('');
-    },err=>{
-      const list=document.getElementById('commentsList');
-      if(list) list.innerHTML='<p style="text-align:center;color:#dc2626;padding:20px">Σφάλμα φόρτωσης σχολίων</p>';
-    });
+    },err=>{const list=document.getElementById('commentsList');if(list) list.innerHTML='<p style="text-align:center;color:#dc2626;padding:20px">Σφάλμα φόρτωσης σχολίων</p>'});
 }
-
 async function sendComment(){
   if(!user||!activeCommentPostId)return;
-  const ta=document.getElementById('commentText');
-  const text=(ta.value||'').trim();
-  if(!text)return alert('Γράψε κάτι');
-  if(text.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
+  const ta=document.getElementById('commentText');const text=(ta.value||'').trim();
+  if(!text)return alert('Γράψε κάτι');if(text.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{
-    const uDoc=await db.collection('users').doc(user.uid).get();
-    const u=uDoc.exists?uDoc.data():{};
+    const uDoc=await db.collection('users').doc(user.uid).get();const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
-    await db.collection('comments').add({
-      postId:activeCommentPostId,uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',
-      text:text,likes:0,likedBy:[],createdAt:Date.now()
-    });
-    await db.collection('posts').doc(activeCommentPostId).update({
-      commentsCount:firebase.firestore.FieldValue.increment(1)
-    }).catch(()=>{});
+    await db.collection('comments').add({postId:activeCommentPostId,uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:text,likes:0,likedBy:[],createdAt:Date.now()});
+    await db.collection('posts').doc(activeCommentPostId).update({commentsCount:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
     if(activeCommentPostUid&&activeCommentPostUid!==user.uid){
-      db.collection('notifications').add({
-        userId:activeCommentPostUid,text:`${myName} σχολίασε στο post σου`,type:'comment',
-        fromUid:user.uid,postId:activeCommentPostId,read:false,createdAt:Date.now()
-      });
+      db.collection('notifications').add({userId:activeCommentPostUid,text:`${myName} σχολίασε στο post σου`,type:'comment',fromUid:user.uid,postId:activeCommentPostId,read:false,createdAt:Date.now()});
     }
     if(text.includes('@')) notifyMentions(text,activeCommentPostId,myName);
-    ta.value='';
-    updateCommentCount();
-    document.getElementById('mentionBox').style.display='none';
+    ta.value='';updateCommentCount();document.getElementById('mentionBox').style.display='none';
   }catch(e){alert('Σφάλμα αποστολής σχολίου')}
 }
-
 async function likeComment(commentId){
-  if(!user)return;
-  playPop();
+  if(!user)return;playPop();
   try{
-    const ref=db.collection('comments').doc(commentId);
-    const doc=await ref.get();
-    if(!doc.exists)return;
+    const ref=db.collection('comments').doc(commentId);const doc=await ref.get();if(!doc.exists)return;
     const c=doc.data();
-    if((c.likedBy||[]).includes(user.uid)){
-      await ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
-    }else{
-      await ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
-    }
+    if((c.likedBy||[]).includes(user.uid)) await ref.update({likes:firebase.firestore.FieldValue.increment(-1),likedBy:firebase.firestore.FieldValue.arrayRemove(user.uid)});
+    else await ref.update({likes:firebase.firestore.FieldValue.increment(1),likedBy:firebase.firestore.FieldValue.arrayUnion(user.uid)});
   }catch(e){}
 }
-
 async function deleteComment(commentId){
   if(!user||!confirm('Διαγραφή σχολίου;'))return;
   try{
     await db.collection('comments').doc(commentId).delete();
-    if(activeCommentPostId){
-      await db.collection('posts').doc(activeCommentPostId).update({
-        commentsCount:firebase.firestore.FieldValue.increment(-1)
-      }).catch(()=>{});
-    }
+    if(activeCommentPostId) await db.collection('posts').doc(activeCommentPostId).update({commentsCount:firebase.firestore.FieldValue.increment(-1)}).catch(()=>{});
   }catch(e){alert('Σφάλμα διαγραφής')}
 }
 
 function renderSecurity(m){
-  const email = (user && user.email) ? user.email : '';
-  m.innerHTML=`
-  <div style="padding:20px">
-    <h2 style="margin-bottom:6px">Security</h2>
-    <p style="color:var(--muted);font-size:14px;margin-bottom:20px">Ασφάλεια λογαριασμού · Account security</p>
-    <div class="sec-card">
-      <h3>Αλλαγή κωδικού · Change Password</h3>
-      <p>Για ασφάλεια ζητείται ο τρέχων κωδικός.</p>
-      <label class="sec-label">Τρέχων κωδικός / Current password</label>
-      <input type="password" id="sec-curr-pass" class="input-box" autocomplete="current-password">
-      <label class="sec-label">Νέος κωδικός / New password</label>
-      <input type="password" id="sec-new-pass" class="input-box" autocomplete="new-password">
-      <label class="sec-label">Επιβεβαίωση / Confirm</label>
-      <input type="password" id="sec-new-pass2" class="input-box" autocomplete="new-password">
-      <button onclick="doChangePassword()" class="btn-main">Αποθήκευση κωδικού</button>
-    </div>
-    <div class="sec-card">
-      <h3>Αλλαγή email · Change Email</h3>
-      <p>Τρέχον: <b style="color:var(--text)">${email}</b></p>
-      <label class="sec-label">Τρέχων κωδικός / Current password</label>
-      <input type="password" id="sec-email-pass" class="input-box" autocomplete="current-password">
-      <label class="sec-label">Νέο email / New email</label>
-      <input type="email" id="sec-new-email" class="input-box" placeholder="new@email.com" autocomplete="email">
-      <button onclick="doChangeEmail()" class="btn-main">Αποθήκευση email</button>
-    </div>
-  </div>`;
+  const email=(user&&user.email)?user.email:'';
+  m.innerHTML=`<div style="padding:20px"><h2 style="margin-bottom:6px">Security</h2><p style="color:var(--muted);font-size:14px;margin-bottom:20px">Ασφάλεια λογαριασμού · Account security</p>
+  <div class="sec-card"><h3>Αλλαγή κωδικού · Change Password</h3><p>Για ασφάλεια ζητείται ο τρέχων κωδικός.</p>
+  <label class="sec-label">Τρέχων κωδικός / Current password</label><input type="password" id="sec-curr-pass" class="input-box" autocomplete="current-password">
+  <label class="sec-label">Νέος κωδικός / New password</label><input type="password" id="sec-new-pass" class="input-box" autocomplete="new-password">
+  <label class="sec-label">Επιβεβαίωση / Confirm</label><input type="password" id="sec-new-pass2" class="input-box" autocomplete="new-password">
+  <button onclick="doChangePassword()" class="btn-main">Αποθήκευση κωδικού</button></div>
+  <div class="sec-card"><h3>Αλλαγή email · Change Email</h3><p>Τρέχον: <b style="color:var(--text)">${email}</b></p>
+  <label class="sec-label">Τρέχων κωδικός / Current password</label><input type="password" id="sec-email-pass" class="input-box" autocomplete="current-password">
+  <label class="sec-label">Νέο email / New email</label><input type="email" id="sec-new-email" class="input-box" placeholder="new@email.com" autocomplete="email">
+  <button onclick="doChangeEmail()" class="btn-main">Αποθήκευση email</button></div></div>`;
 }
-
 async function doChangePassword(){
   if(!user)return;
-  const curr=document.getElementById('sec-curr-pass').value;
-  const neu=document.getElementById('sec-new-pass').value;
-  const neu2=document.getElementById('sec-new-pass2').value;
-  if(!curr||!neu||!neu2) return alert('Συμπλήρωσε όλα τα πεδία');
-  if(neu.length<6) return alert('Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες');
-  if(neu!==neu2) return alert('Οι νέοι κωδικοί δεν ταιριάζουν');
-  try{
-    const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);
-    await user.reauthenticateWithCredential(cred);
-    await user.updatePassword(neu);
-    document.getElementById('sec-curr-pass').value='';
-    document.getElementById('sec-new-pass').value='';
-    document.getElementById('sec-new-pass2').value='';
-    alert('Ο κωδικός άλλαξε επιτυχώς!');
-  }catch(e){
-    if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') alert('Λάθος τρέχων κωδικός');
-    else if(e.code==='auth/weak-password') alert('Αδύναμος κωδικός');
-    else if(e.code==='auth/requires-recent-login') alert('Για ασφάλεια, κάνε logout και ξανά login, μετά δοκίμασε πάλι');
-    else alert('Σφάλμα: '+(e.message||'unknown'));
-  }
+  const curr=document.getElementById('sec-curr-pass').value,neu=document.getElementById('sec-new-pass').value,neu2=document.getElementById('sec-new-pass2').value;
+  if(!curr||!neu||!neu2)return alert('Συμπλήρωσε όλα τα πεδία');
+  if(neu.length<6)return alert('Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες');
+  if(neu!==neu2)return alert('Οι νέοι κωδικοί δεν ταιριάζουν');
+  try{const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);await user.reauthenticateWithCredential(cred);await user.updatePassword(neu);
+    document.getElementById('sec-curr-pass').value='';document.getElementById('sec-new-pass').value='';document.getElementById('sec-new-pass2').value='';alert('Ο κωδικός άλλαξε επιτυχώς!');
+  }catch(e){if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')alert('Λάθος τρέχων κωδικός');else if(e.code==='auth/weak-password')alert('Αδύναμος κωδικός');else if(e.code==='auth/requires-recent-login')alert('Για ασφάλεια, κάνε logout και ξανά login');else alert('Σφάλμα: '+(e.message||''))}
 }
-
 async function doChangeEmail(){
   if(!user)return;
-  const curr=document.getElementById('sec-email-pass').value;
-  const neu=document.getElementById('sec-new-email').value.trim();
-  if(!curr||!neu) return alert('Συμπλήρωσε όλα τα πεδία');
-  if(!neu.includes('@')||!neu.includes('.')) return alert('Μη έγκυρο email');
-  if(neu.toLowerCase()===user.email.toLowerCase()) return alert('Είναι ήδη το τρέχον email');
-  try{
-    const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);
-    await user.reauthenticateWithCredential(cred);
-    await user.updateEmail(neu);
-    document.getElementById('sec-email-pass').value='';
-    document.getElementById('sec-new-email').value='';
-    alert('Το email άλλαξε επιτυχώς!\nΝέο: '+neu);
-    renderSecurity(document.getElementById('content'));
-  }catch(e){
-    if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') alert('Λάθος τρέχων κωδικός');
-    else if(e.code==='auth/email-already-in-use') alert('Το email χρησιμοποιείται ήδη');
-    else if(e.code==='auth/invalid-email') alert('Μη έγκυρο email');
-    else if(e.code==='auth/requires-recent-login') alert('Για ασφάλεια, κάνε logout και ξανά login, μετά δοκίμασε πάλι');
-    else alert('Σφάλμα: '+(e.message||'unknown'));
-  }
+  const curr=document.getElementById('sec-email-pass').value,neu=document.getElementById('sec-new-email').value.trim();
+  if(!curr||!neu)return alert('Συμπλήρωσε όλα τα πεδία');
+  if(!neu.includes('@')||!neu.includes('.'))return alert('Μη έγκυρο email');
+  if(neu.toLowerCase()===user.email.toLowerCase())return alert('Είναι ήδη το τρέχον email');
+  try{const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);await user.reauthenticateWithCredential(cred);await user.updateEmail(neu);
+    document.getElementById('sec-email-pass').value='';document.getElementById('sec-new-email').value='';alert('Το email άλλαξε επιτυχώς!\nΝέο: '+neu);renderSecurity(document.getElementById('content'));
+  }catch(e){if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')alert('Λάθος τρέχων κωδικός');else if(e.code==='auth/email-already-in-use')alert('Το email χρησιμοποιείται ήδη');else if(e.code==='auth/invalid-email')alert('Μη έγκυρο email');else if(e.code==='auth/requires-recent-login')alert('Για ασφάλεια, κάνε logout και ξανά login');else alert('Σφάλμα: '+(e.message||''))}
 }
 
 function render(){
   const c=document.getElementById('content');
   document.getElementById('home-tabs').style.display=(user&&currentTab==='home')?'flex':'none';
   updateUITexts();
-  if(!user){
-    c.innerHTML=`<div class="login-screen"><div class="login-logo">John Ross Social</div><div class="login-tagline">Your space. Your voice.</div><div class="login-form"><input type="email" id="loginEmail" placeholder="Email"><input type="password" id="loginPass" placeholder="Password"><button onclick="doLogin()" class="btn-main">Login / Sign up</button></div></div>`;
-    return;
-  }
+  if(!user){c.innerHTML=`<div class="login-screen"><div class="login-logo">John Ross Social</div><div class="login-tagline">Your space. Your voice.</div><div class="login-form"><input type="email" id="loginEmail" placeholder="Email"><input type="password" id="loginPass" placeholder="Password"><button onclick="doLogin()" class="btn-main">Login / Sign up</button></div></div>`;return}
   if(currentTab==='home')renderHome(c);
   else if(currentTab==='profile')renderProfile(c,user.uid);
   else if(currentTab==='settings')renderSettings(c);
@@ -747,8 +606,7 @@ function displayPosts(posts,container){
   container.innerHTML=posts.map(p=>{
     const isLiked=user&&(p.likedBy||[]).includes(user.uid);
     const canManage=user&&(user.uid===p.uid||user.email===adminEmail);
-    const safeId=String(p.id).replace(/'/g,"\\'");
-    const safeUid=String(p.uid).replace(/'/g,"\\'");
+    const safeId=String(p.id).replace(/'/g,"\\'");const safeUid=String(p.uid).replace(/'/g,"\\'");
     const safeText=String(p.text||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n');
     const safeImg=(p.images&&p.images[0])?String(p.images[0]).replace(/'/g,"\\'"):'';
     const cCount=p.commentsCount||0;
@@ -759,68 +617,65 @@ function displayPosts(posts,container){
   lucide.createIcons();
 }
 
+/* ===== ΒΕΛΤΙΩΜΕΝΗ ΣΥΜΠΙΕΣΗ ΚΑΜΕΡΑΣ (δωρεάν) ===== */
 async function handleFile(inp,target='post'){
   if(!inp.files||!inp.files[0])return;
   const file=inp.files[0];
-  if(file.type && !file.type.startsWith('image/')){
-    alert('Επίλεξε μόνο εικόνα');
-    inp.value='';
-    return;
-  }
-  if(file.size>20*1024*1024){
-    alert('Πολύ μεγάλη φωτογραφία. Χαμήλωσε την ανάλυση κάμερας και ξαναδοκίμασε.');
-    inp.value='';
-    return;
-  }
+  if(file.type && !file.type.startsWith('image/')){alert('Επίλεξε μόνο εικόνα');inp.value='';return}
+  if(file.size>25*1024*1024){alert('Πολύ μεγάλη φωτογραφία. Χαμήλωσε την ανάλυση κάμερας.');inp.value='';return}
+
+  const prv=document.getElementById('imgPrv');
+  if(prv&&target==='post') prv.innerHTML='<p style="padding:10px;color:var(--muted);font-size:13px">Φόρτωση φωτογραφίας...</p>';
+
   try{
-    let source;
+    const MAX=480; // πολύ μικρό για Samsung κάμερα
+    let bitmap=null;
+
+    // 1) decode + resize μαζί (λιγότερη μνήμη)
     try{
-      source=await createImageBitmap(file);
+      bitmap=await createImageBitmap(file,{resizeWidth:MAX,resizeHeight:MAX,resizeQuality:'medium'});
     }catch(e1){
-      const dataUrl=await new Promise((res,rej)=>{
-        const r=new FileReader();
-        r.onload=e=>res(e.target.result);
-        r.onerror=()=>rej(new Error('read'));
-        r.readAsDataURL(file);
-      });
-      source=await new Promise((res,rej)=>{
-        const i=new Image();
-        i.onload=()=>res(i);
-        i.onerror=()=>rej(new Error('img'));
-        i.src=dataUrl;
-      });
+      try{bitmap=await createImageBitmap(file)}catch(e2){bitmap=null}
     }
-    const MAX=720;
-    let w=source.width||1;
-    let h=source.height||1;
-    if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
-    else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+
+    let w,h,source=bitmap;
+    if(!bitmap){
+      // 2) Fallback FileReader
+      const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=()=>rej();r.readAsDataURL(file)});
+      source=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej();i.src=dataUrl});
+    }
+
+    w=source.width||1;h=source.height||1;
+    if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX}}
+
     const canvas=document.createElement('canvas');
-    canvas.width=w;
-    canvas.height=h;
-    const ctx=canvas.getContext('2d');
+    canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d',{alpha:false});
     ctx.drawImage(source,0,0,w,h);
-    if(source.close) try{source.close();}catch(e){}
-    let quality=0.35;
+    if(bitmap&&bitmap.close) try{bitmap.close()}catch(e){}
+
+    let quality=0.28;
     let compressed=canvas.toDataURL('image/jpeg',quality);
-    while(compressed.length>850000 && quality>0.12){
-      quality-=0.07;
+    // μέχρι ~500KB data URL
+    while(compressed.length>700000 && quality>0.1){
+      quality-=0.05;
       compressed=canvas.toDataURL('image/jpeg',quality);
     }
+
     if(target==='profile'){
       await db.collection('users').doc(user.uid).update({photo:compressed});
       updateAllPosts(null,compressed);
       alert('Η φωτογραφία προφίλ ενημερώθηκε!');
     }else{
       pendingImg=compressed;
-      const prv=document.getElementById('imgPrv');
       if(prv){
         prv.innerHTML=`<div style="position:relative;display:inline-block;margin-top:10px"><img src="${compressed}" style="width:90px;height:90px;border-radius:12px;object-fit:cover;border:1px solid var(--border)"><button onclick="pendingImg=null;document.getElementById('imgPrv').innerHTML=''" style="position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-weight:bold;font-size:14px;cursor:pointer">×</button></div>`;
       }
     }
   }catch(e){
     console.error(e);
-    alert('Δεν μπόρεσε να φορτωθεί η φωτογραφία.\nΔοκίμασε από Gallery ή χαμήλωσε την ανάλυση κάμερας.');
+    if(prv&&target==='post') prv.innerHTML='';
+    alert('Δεν μπόρεσε να φορτωθεί η φωτογραφία.\n\nΔοκίμασε:\n1) Από Gallery\n2) Χαμηλή ανάλυση κάμερας');
   }finally{
     inp.value='';
   }
@@ -831,8 +686,7 @@ async function sendPost(){
   if(!txt.trim()&&!pendingImg)return;
   if(txt.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{
-    const uDoc=await db.collection('users').doc(user.uid).get();
-    const u=uDoc.exists?uDoc.data():{};
+    const uDoc=await db.collection('users').doc(user.uid).get();const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
     const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:txt,images:pendingImg?[pendingImg]:[],likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
     document.getElementById('postText').value='';pendingImg=null;document.getElementById('imgPrv').innerHTML='';document.getElementById('mentionBox').style.display='none';
@@ -840,7 +694,6 @@ async function sendPost(){
     if(txt.includes('@')) notifyMentions(txt,ref.id,myName);
   }catch(e){alert('Σφάλμα δημοσίευσης')}
 }
-
 async function like(id){
   if(!user)return;playPop();
   try{
@@ -868,30 +721,23 @@ function renderProfile(m,uid){
     else db.collection('posts').where('uid','==',uid).orderBy('createdAt','desc').limit(20).get().then(snap=>displayPosts(snap.docs.map(d=>({id:d.id,...d.data()})),document.getElementById('p-feed')));
   });
 }
-
 async function blockUser(targetUid){
   if(!user||targetUid===user.uid)return;
   if(!confirm('Να μπλοκαριστεί αυτός ο χρήστης;\nBlock this user?'))return;
   try{
     await db.collection('users').doc(user.uid).update({blocked:firebase.firestore.FieldValue.arrayUnion(targetUid),following:firebase.firestore.FieldValue.arrayRemove(targetUid)});
     await db.collection('users').doc(targetUid).update({followers:firebase.firestore.FieldValue.arrayRemove(user.uid)});
-    myBlocked=[...new Set([...myBlocked,targetUid])];
-    alert('Blocked ✓');
-    showTab('home');
+    myBlocked=[...new Set([...myBlocked,targetUid])];alert('Blocked ✓');showTab('home');
   }catch(e){alert('Σφάλμα block')}
 }
-
 async function unblockUser(targetUid){
   if(!user)return;
   try{
     await db.collection('users').doc(user.uid).update({blocked:firebase.firestore.FieldValue.arrayRemove(targetUid)});
-    myBlocked=myBlocked.filter(id=>id!==targetUid);
-    alert('Unblocked ✓');
-    if(currentTab==='blocked') renderBlocked(document.getElementById('content'));
-    else openProfile(targetUid);
+    myBlocked=myBlocked.filter(id=>id!==targetUid);alert('Unblocked ✓');
+    if(currentTab==='blocked') renderBlocked(document.getElementById('content'));else openProfile(targetUid);
   }catch(e){alert('Σφάλμα')}
 }
-
 function renderBlocked(m){
   m.innerHTML=`<div style="padding:20px"><h2 style="margin-bottom:6px">Blocked</h2><p style="color:var(--muted);font-size:14px;margin-bottom:16px">Χρήστες που έχεις μπλοκάρει</p><div id="blockedList"><p style="color:var(--muted)">Φόρτωση...</p></div></div>`;
   loadMyBlocked().then(async()=>{
@@ -905,25 +751,21 @@ function renderBlocked(m){
     }).join('');
   });
 }
-
 async function showUserList(uid,type){
   if(!user)return;
   document.getElementById('listModalTitle').innerText=type==='followers'?'Followers':'Following';
   document.getElementById('listModalContent').innerHTML='<p style="text-align:center;color:var(--muted);padding:20px">Φόρτωση...</p>';
   document.getElementById('listModal').style.display='flex';document.getElementById('overlay').style.display='block';
   try{
-    const doc=await db.collection('users').doc(uid).get();
-    const list=doc.exists?(doc.data()[type]||[]):[];
+    const doc=await db.collection('users').doc(uid).get();const list=doc.exists?(doc.data()[type]||[]):[];
     if(!list.length){document.getElementById('listModalContent').innerHTML='<p style="text-align:center;color:var(--muted);padding:20px">Κανένας ακόμα</p>';return}
     const usersData=await Promise.all(list.map(id=>db.collection('users').doc(id).get()));
     document.getElementById('listModalContent').innerHTML=usersData.map(d=>{
-      if(!d.exists)return'';
-      const u=d.data();
+      if(!d.exists)return'';const u=d.data();
       return `<div class="user-list-item" style="cursor:pointer" onclick="closeAll();openProfile('${d.id}')"><div class="avatar" style="width:42px;height:42px;${u.photo?`background-image:url('${u.photo}')`:''}"></div><div><div style="font-weight:700">${u.name||'User'}</div><div style="font-size:13px;color:var(--muted)">@${u.username||'user'}</div></div></div>`;
     }).join('')||'<p style="text-align:center;color:var(--muted)">Κανένας</p>';
   }catch(e){document.getElementById('listModalContent').innerHTML='<p style="color:#dc2626;text-align:center">Σφάλμα</p>'}
 }
-
 async function toggleFollow(targetUid){
   if(!user||targetUid===user.uid)return;
   if(myBlocked.includes(targetUid)){alert('Έχεις μπλοκάρει αυτόν τον χρήστη');return}
@@ -936,7 +778,6 @@ async function toggleFollow(targetUid){
     else{await myRef.update({following:firebase.firestore.FieldValue.arrayUnion(targetUid)});await targetRef.update({followers:firebase.firestore.FieldValue.arrayUnion(user.uid)});db.collection('notifications').add({userId:targetUid,text:`${myName} σε ακολούθησε`,type:'follow',fromUid:user.uid,read:false,createdAt:Date.now()})}
   }catch(e){alert('Σφάλμα')}
 }
-
 function shareProfile(uid,name){const url=location.origin+location.pathname+'?user='+uid;if(navigator.share)navigator.share({title:name+' | John Ross Social',text:'Δες το προφίλ στο John Ross Social',url}).catch(()=>navigator.clipboard.writeText(url).then(()=>alert('Link αντιγράφηκε')));else navigator.clipboard.writeText(url).then(()=>alert('Link αντιγράφηκε'))}
 
 function renderSettings(m){
@@ -949,16 +790,13 @@ function renderSettings(m){
     lucide.createIcons();
   });
 }
-
 async function saveProfile(){
   const n=document.getElementById('s-name').value.trim();
   const b=document.getElementById('s-bio').value.trim();
   let newUsername=document.getElementById('s-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
   if(newUsername.length<3)return alert('Το username πρέπει να έχει τουλάχιστον 3 χαρακτήρες');
   try{
-    const uDoc=await db.collection('users').doc(user.uid).get();
-    const uData=uDoc.data()||{};
-    const oldUsername=uData.username||'';
+    const uDoc=await db.collection('users').doc(user.uid).get();const uData=uDoc.data()||{};const oldUsername=uData.username||'';
     if(newUsername&&newUsername!==oldUsername){
       if((Date.now()-(uData.usernameChangedAt||0))<USERNAME_COOLDOWN)return alert('Μπορείς να αλλάξεις username μόνο κάθε 30 ημέρες');
       const unameDoc=await db.collection('usernames').doc(newUsername).get();
@@ -967,17 +805,10 @@ async function saveProfile(){
       batch.update(db.collection('users').doc(user.uid),{name:n,bio:b,username:newUsername,usernameChangedAt:Date.now()});
       if(oldUsername)batch.delete(db.collection('usernames').doc(oldUsername));
       batch.set(db.collection('usernames').doc(newUsername),{uid:user.uid});
-      await batch.commit();
-      updateAllPosts(n,null);
-      alert('Αποθηκεύτηκε!');
-    }else{
-      await db.collection('users').doc(user.uid).update({name:n,bio:b});
-      updateAllPosts(n,null);
-      alert('Αποθηκεύτηκε!');
-    }
+      await batch.commit();updateAllPosts(n,null);alert('Αποθηκεύτηκε!');
+    }else{await db.collection('users').doc(user.uid).update({name:n,bio:b});updateAllPosts(n,null);alert('Αποθηκεύτηκε!')}
   }catch(e){alert('Σφάλμα')}
 }
-
 async function updateAllPosts(newName,newPhoto){
   const posts=await db.collection('posts').where('uid','==',user.uid).get();
   const batch=db.batch();
@@ -988,55 +819,40 @@ async function updateAllPosts(newName,newPhoto){
 function openShare(id,text,img,uid){activePost={id,text,img,uid:uid||''};document.getElementById('shareModal').style.display='flex';document.getElementById('overlay').style.display='block'}
 function copyLink(){const url=location.origin+location.pathname+'?post='+activePost.id;navigator.clipboard.writeText(url).then(()=>{alert('Link αντιγράφηκε!');closeAll()})}
 function doNativeShare(){if(navigator.share&&activePost)navigator.share({title:'John Ross Social',text:activePost.text,url:location.origin+location.pathname+'?post='+activePost.id}).catch(()=>copyLink());else copyLink();closeAll()}
-
 async function repostNow(){
   try{
-    const uDoc=await db.collection('users').doc(user.uid).get();
-    const u=uDoc.exists?uDoc.data():{};
+    const uDoc=await db.collection('users').doc(user.uid).get();const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
     await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:'Repost: '+(activePost.text||''),images:activePost.img?[activePost.img]:[],likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
-    if(activePost.uid&&activePost.uid!==user.uid){
-      db.collection('notifications').add({userId:activePost.uid,text:`${myName} έκανε repost`,type:'repost',fromUid:user.uid,postId:activePost.id,read:false,createdAt:Date.now()});
-    }
+    if(activePost.uid&&activePost.uid!==user.uid) db.collection('notifications').add({userId:activePost.uid,text:`${myName} έκανε repost`,type:'repost',fromUid:user.uid,postId:activePost.id,read:false,createdAt:Date.now()});
     closeAll();alert('Reposted!');
   }catch(e){alert('Σφάλμα')}
 }
-
 function openQuoteModal(){
   closeAll();
   document.getElementById('quotePreview').innerHTML=`<div style="font-weight:700;font-size:14px">Παράθεση</div><div style="font-size:14px;color:var(--muted)">${format(activePost.text||'')}</div>${activePost.img?`<img src="${activePost.img}" style="width:100%;max-height:150px;object-fit:contain;border-radius:10px;margin-top:8px;background:#0a0a0a">`:''}`;
   document.getElementById('quoteText').value='';
-  document.getElementById('quoteModal').style.display='flex';
-  document.getElementById('overlay').style.display='block';
+  document.getElementById('quoteModal').style.display='flex';document.getElementById('overlay').style.display='block';
   setTimeout(()=>setupMentionAutocompleteFor('quoteText'),100);
 }
-
 async function submitQuote(){
   const comment=document.getElementById('quoteText').value.trim();
-  if(!comment)return alert('Γράψε κάτι!');
-  if(comment.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
+  if(!comment)return alert('Γράψε κάτι!');if(comment.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{
-    const uDoc=await db.collection('users').doc(user.uid).get();
-    const u=uDoc.exists?uDoc.data():{};
+    const uDoc=await db.collection('users').doc(user.uid).get();const u=uDoc.exists?uDoc.data():{};
     const myName=u.name||user.email.split('@')[0];
-    const original=await db.collection('posts').doc(activePost.id).get();
-    const orig=original.exists?original.data():{};
+    const original=await db.collection('posts').doc(activePost.id).get();const orig=original.exists?original.data():{};
     const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:comment,images:[],quote:{id:activePost.id,name:orig.name||'User',text:activePost.text||'',image:activePost.img||null},likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});
-    if(orig.uid&&orig.uid!==user.uid){
-      db.collection('notifications').add({userId:orig.uid,text:`${myName} παρέθεσε το post σου`,type:'quote',fromUid:user.uid,postId:ref.id,read:false,createdAt:Date.now()});
-    }
+    if(orig.uid&&orig.uid!==user.uid) db.collection('notifications').add({userId:orig.uid,text:`${myName} παρέθεσε το post σου`,type:'quote',fromUid:user.uid,postId:ref.id,read:false,createdAt:Date.now()});
     if(comment.includes('@')) notifyMentions(comment,ref.id,myName);
-    closeAll();alert('Η παράθεση δημοσιεύτηκε!');
-    if(currentTab!=='home')showTab('home');
+    closeAll();alert('Η παράθεση δημοσιεύτηκε!');if(currentTab!=='home')showTab('home');
   }catch(e){alert('Σφάλμα')}
 }
 
 function toggleThemeNow(){theme=theme==='dark'?'light':'dark';localStorage.setItem('jrs_theme',theme);location.reload()}
 function toggleLangNow(){lang=lang==='el'?'en':'el';localStorage.setItem('jrs_lang',lang);updateUITexts();location.reload()}
 function clearCache(){if(confirm('Καθαρισμός cache;')){const keepLang=localStorage.getItem('jrs_lang'),keepTheme=localStorage.getItem('jrs_theme');localStorage.clear();sessionStorage.clear();if(keepLang)localStorage.setItem('jrs_lang',keepLang);if(keepTheme)localStorage.setItem('jrs_theme',keepTheme);if('caches' in window)caches.keys().then(n=>n.forEach(c=>caches.delete(c)));alert('Καθαρίστηκε!');location.reload()}}
-
 function listenNotifs(){if(!user)return;db.collection('notifications').where('userId','==',user.uid).where('read','==',false).onSnapshot(s=>{const b=document.getElementById('notif-badge');if(b)b.style.display=(currentTab==='notif'||s.empty)?'none':'block'})}
-
 function renderNotifs(m){
   const badge=document.getElementById('notif-badge');if(badge)badge.style.display='none';
   m.innerHTML='<h2 style="padding:20px 20px 12px">Ειδοποιήσεις</h2><div id="nL"><p style="padding:20px;color:var(--muted)">Φόρτωση...</p></div>';
@@ -1053,55 +869,46 @@ function renderNotifs(m){
     }).join('');
   }).catch(()=>{document.getElementById('nL').innerHTML='<p style="padding:20px;color:#dc2626">Σφάλμα φόρτωσης</p>'});
 }
-
 function markAsRead(notifId){db.collection('notifications').doc(notifId).update({read:true}).catch(()=>{})}
 function openNotifPost(postId){renderSinglePost(postId)}
 function openProfile(uid){if(user){historyStack.push(currentTab);history.pushState({tab:'profile'},'');currentTab='profile';document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));document.getElementById('btn-profile')?.classList.add('active');document.getElementById('home-tabs').style.display='none'}renderProfile(document.getElementById('content'),uid)}
 function openLB(src){if(!src)return;document.getElementById('lb-img').src=src;document.getElementById('lightbox').style.display='flex'}
 
 function postOp(id,text,postUid,isPinned){
-  if(!user)return;
-  if(user.uid!==postUid&&user.email!==adminEmail)return;
+  if(!user)return;if(user.uid!==postUid&&user.email!==adminEmail)return;
   menuPost={id,text,postUid,isPinned:!!isPinned};
   const pinTitle=isPinned?'Unpin':'Pin';
   document.getElementById('postMenuBody').innerHTML=`
     <div class="menu-action" onclick="doMenuPin()"><div class="menu-ico"><i data-lucide="pin"></i></div><div class="menu-txt"><div class="menu-title">${pinTitle}</div><div class="menu-sub">${isPinned?'Unpin post · Ξεκαρφίτσωμα':'Pin post · Καρφίτσωμα'}</div></div></div>
     <div class="menu-action" onclick="doMenuEdit()"><div class="menu-ico"><i data-lucide="pencil"></i></div><div class="menu-txt"><div class="menu-title">Επεξεργασία · Edit</div><div class="menu-sub">Αλλαγή κειμένου · Edit text</div></div></div>
     <div class="menu-action danger" onclick="doMenuDelete()"><div class="menu-ico"><i data-lucide="trash-2"></i></div><div class="menu-txt"><div class="menu-title">Διαγραφή · Delete Post</div><div class="menu-sub">Μόνιμη διαγραφή · Permanent delete</div></div></div>`;
-  document.getElementById('postMenuModal').style.display='flex';
-  document.getElementById('overlay').style.display='block';
-  lucide.createIcons();
+  document.getElementById('postMenuModal').style.display='flex';document.getElementById('overlay').style.display='block';lucide.createIcons();
 }
 async function doMenuPin(){if(!menuPost)return;closeAll();await togglePin(menuPost.id,menuPost.postUid,menuPost.isPinned)}
 function doMenuEdit(){
   if(!menuPost)return;
   document.getElementById('editPostText').value=(menuPost.text||'').replace(/\\n/g,'\n').replace(/\\'/g,"'");
   document.getElementById('postMenuModal').style.display='none';
-  document.getElementById('editPostModal').style.display='flex';
-  document.getElementById('overlay').style.display='block';
+  document.getElementById('editPostModal').style.display='flex';document.getElementById('overlay').style.display='block';
   setTimeout(()=>setupMentionAutocompleteFor('editPostText'),100);
 }
 async function saveEditPost(){
-  if(!menuPost)return;
-  const text=document.getElementById('editPostText').value;
+  if(!menuPost)return;const text=document.getElementById('editPostText').value;
   if(text.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');
   try{await db.collection('posts').doc(menuPost.id).update({text});closeAll();alert('Αποθηκεύτηκε!')}catch(e){alert('Σφάλμα')}
 }
 async function doMenuDelete(){if(!menuPost)return;if(!confirm('Σίγουρα διαγραφή;'))return;try{await db.collection('posts').doc(menuPost.id).delete();closeAll()}catch(e){alert('Σφάλμα')}}
 async function togglePin(postId,postUid,currentlyPinned){
   try{
-    const userRef=db.collection('users').doc(postUid);
-    const userDoc=await userRef.get();
+    const userRef=db.collection('users').doc(postUid);const userDoc=await userRef.get();
     let pinned=(userDoc.data()||{}).pinnedPosts||[];
     if(currentlyPinned){pinned=pinned.filter(id=>id!==postId);await userRef.update({pinnedPosts:pinned});alert('Unpin ✓')}
     else{if(user.email!==adminEmail&&pinned.length>=2){alert('Μόνο 2 pinned posts');return}pinned.push(postId);await userRef.update({pinnedPosts:pinned});alert('Pin ✓')}
   }catch(e){alert('Σφάλμα')}
 }
-
 function setFeed(f){feedType=f;document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+f)?.classList.add('active');loadFeed('feed')}
 function renderSearch(m){m.innerHTML=`<div style="padding:16px"><input id="searchInp" class="input-box" placeholder="Αναζήτηση #hashtag ή κείμενο..." oninput="doSearch(this.value)"><div id="searchResults" style="margin-top:12px"></div></div>`}
 function doSearch(q){const results=document.getElementById('searchResults');if(!results)return;if(!q||q.trim().length<2){results.innerHTML='';return}const term=q.toLowerCase().trim().replace(/^#/,'').replace(/^@/,'');db.collection('posts').orderBy('createdAt','desc').limit(60).get().then(snap=>{let posts=snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!myBlocked.includes(p.uid)).filter(p=>(p.text||'').toLowerCase().includes(term)||(p.name||'').toLowerCase().includes(term)||(p.username||'').toLowerCase().includes(term));displayPosts(posts,results)})}
-
 async function renderAdmin(m){
   m.innerHTML='<div style="padding:20px"><h2>Admin Panel</h2><p style="color:var(--muted)">Φόρτωση...</p></div>';
   try{
@@ -1111,7 +918,6 @@ async function renderAdmin(m){
     m.innerHTML=`<div style="padding:20px"><h2 style="margin-bottom:6px">Admin Panel</h2><p style="color:var(--muted);font-size:14px;margin-bottom:20px">Γεια σου Admin 👋</p><div class="admin-stats"><div class="stat-card"><b>${posts.length}</b><span>Σύνολο Posts</span></div><div class="stat-card"><b>${usersSnap.size}</b><span>Χρήστες</span></div><div class="stat-card"><b>${totalLikes}</b><span>Σύνολο Likes</span></div><div class="stat-card"><b>${posts.filter(p=>p.images?.length).length}</b><span>Posts με φωτό</span></div></div></div>`;
   }catch(e){m.innerHTML='<div style="padding:20px"><h2>Admin Panel</h2><p style="color:#dc2626">Σφάλμα</p></div>'}
 }
-
 async function renderSinglePost(postId){
   const c=document.getElementById('content');
   c.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Φόρτωση...</div>';
@@ -1122,8 +928,7 @@ async function renderSinglePost(postId){
     if(user&&myBlocked.includes(p.uid)){c.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">Μπλοκαρισμένος χρήστης</div>';return}
     let html='';
     if(!user)html+=`<div class="guest-banner">Θέλεις να φτιάξεις προφίλ;<br><button onclick="location.href=location.pathname">Σύνδεση / Εγγραφή</button></div>`;
-    html+='<div id="singlePost"></div>';
-    c.innerHTML=html;
+    html+='<div id="singlePost"></div>';c.innerHTML=html;
     displayPosts([p],document.getElementById('singlePost'));
     if(!user)document.getElementById('bottomNav').style.display='none';
   }catch(e){c.innerHTML='<div style="padding:40px;text-align:center;color:#dc2626">Σφάλμα</div>'}
@@ -1135,13 +940,11 @@ document.addEventListener('click',function(e){
   const hash=e.target.closest('.hashtag');
   if(hash){e.preventDefault();e.stopPropagation();handleHash(hash.getAttribute('data-hash')||hash.textContent)}
 },true);
-
 document.addEventListener('gesturestart',function(e){e.preventDefault()},{passive:false});
 document.addEventListener('gesturechange',function(e){e.preventDefault()},{passive:false});
 document.addEventListener('gestureend',function(e){e.preventDefault()},{passive:false});
 document.addEventListener('touchstart',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
 document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
-
 lucide.createIcons();
 </script>
 </body>
