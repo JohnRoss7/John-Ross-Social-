@@ -118,53 +118,53 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 <div id="mentionBox"></div>
 
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <span style="font-weight:800;font-size:18px">John Ross Social</span>
-    <i data-lucide="x-circle" style="color:var(--accent);cursor:pointer" onclick="toggleSidebar(false)"></i>
-  </div>
-  <div class="side-scroll">
-    <div class="side-card">
-      <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
-      <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
-      <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
-      <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
-      <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
-      <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
-    </div>
-    <div class="side-cache">
-      <div class="side-item" onclick="clearCache()"><i data-lucide="trash-2"></i> <span>Cache</span></div>
-    </div>
-    <div class="side-danger">
-      <div class="side-danger-title">DANGER ZONE · Επικίνδυνη ζώνη</div>
-      <div class="side-item" onclick="doLogout()"><i data-lucide="log-out"></i><span>Log Out<span class="sub">Αποσύνδεση</span></span></div>
-      <div class="side-item" onclick="deleteAccount()"><i data-lucide="user-x"></i><span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span></div>
-    </div>
-  </div>
-  <div class="side-footer">John Ross Social · v3.9</div>
+ <div class="sidebar-header">
+ <span style="font-weight:800;font-size:18px">John Ross Social</span>
+ <i data-lucide="x-circle" style="color:var(--accent);cursor:pointer" onclick="toggleSidebar(false)"></i>
+ </div>
+ <div class="side-scroll">
+ <div class="side-card">
+ <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
+ <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
+ <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
+ <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
+ <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
+ <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
+ </div>
+ <div class="side-cache">
+ <div class="side-item" onclick="clearCache()"><i data-lucide="trash-2"></i> <span>Cache</span></div>
+ </div>
+ <div class="side-danger">
+ <div class="side-danger-title">DANGER ZONE · Επικίνδυνη ζώνη</div>
+ <div class="side-item" onclick="doLogout()"><i data-lucide="log-out"></i><span>Log Out<span class="sub">Αποσύνδεση</span></span></div>
+ <div class="side-item" onclick="deleteAccount()"><i data-lucide="user-x"></i><span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span></div>
+ </div>
+ </div>
+ <div class="side-footer">John Ross Social · v3.9</div>
 </aside>
 
 <div class="app-wrapper">
-  <header>
-    <div class="header-top">
-      <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
-      <div style="text-align:center;line-height:1.15">
-        <div style="font-weight:800;font-size:17px">John Ross Social</div>
-        <div style="font-size:11px;color:var(--accent);font-style:italic">Your space. Your voice.</div>
-      </div>
-      <i data-lucide="refresh-cw" class="refresh-btn" onclick="location.reload()"></i>
-    </div>
-    <div class="tabs" id="home-tabs" style="display:none">
-      <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</div>
-      <div class="tab" id="tab-following" onclick="setFeed('following')">Ακολουθείς</div>
-    </div>
-  </header>
-  <main id="main-scroll"><div id="content"></div></main>
-  <nav class="bottom-nav" id="bottomNav">
-    <div class="nav-item active" id="btn-home" onclick="showTab('home')"><i data-lucide="home"></i><span id="nav-home">Αρχική</span></div>
-    <div class="nav-item" id="btn-search" onclick="showTab('search')"><i data-lucide="search"></i><span id="nav-search">Αναζήτηση</span></div>
-    <div class="nav-item" id="btn-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><span id="nav-notif">Ειδοπ.</span><div class="red-dot" id="notif-badge"></div></div>
-    <div class="nav-item" id="btn-profile" onclick="showTab('profile')"><i data-lucide="user"></i><span id="nav-profile">Προφίλ</span></div>
-  </nav>
+ <header>
+ <div class="header-top">
+ <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
+ <div style="text-align:center;line-height:1.15">
+ <div style="font-weight:800;font-size:17px">John Ross Social</div>
+ <div style="font-size:11px;color:var(--accent);font-style:italic">Your space. Your voice.</div>
+ </div>
+ <i data-lucide="refresh-cw" class="refresh-btn" onclick="location.reload()"></i>
+ </div>
+ <div class="tabs" id="home-tabs" style="display:none">
+ <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</div>
+ <div class="tab" id="tab-following" onclick="setFeed('following')">Ακολουθείς</div>
+ </div>
+ </header>
+ <main id="main-scroll"><div id="content"></div></main>
+ <nav class="bottom-nav" id="bottomNav">
+ <div class="nav-item active" id="btn-home" onclick="showTab('home')"><i data-lucide="home"></i><span id="nav-home">Αρχική</span></div>
+ <div class="nav-item" id="btn-search" onclick="showTab('search')"><i data-lucide="search"></i><span id="nav-search">Αναζήτηση</span></div>
+ <div class="nav-item" id="btn-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><span id="nav-notif">Ειδοπ.</span><div class="red-dot" id="notif-badge"></div></div>
+ <div class="nav-item" id="btn-profile" onclick="showTab('profile')"><i data-lucide="user"></i><span id="nav-profile">Προφίλ</span></div>
+ </nav>
 </div>
 
 <div class="modal" id="shareModal"><div class="modal-content center"><h3>Κοινοποίηση</h3><br>
@@ -232,26 +232,26 @@ function checkUrlParams(){const p=new URLSearchParams(location.search);if(p.get(
 function loadMyBlocked(){if(!user){myBlocked=[];return Promise.resolve()}return db.collection('users').doc(user.uid).get().then(doc=>{myBlocked=(doc.exists&&doc.data().blocked)?doc.data().blocked:[]}).catch(()=>{myBlocked=[]})}
 
 auth.onAuthStateChanged(u=>{
-  user=u;
-  if(u){
-    document.getElementById('adminBtn').style.display=(u.email===adminEmail)?'block':'none';
-    document.getElementById('bottomNav').style.display='flex';
-    db.collection('users').doc(u.uid).get().then(doc=>{
-      if(!doc.exists){
-        const base=(u.email.split('@')[0]||'user').toLowerCase().replace(/[^a-z0-9]/g,'');
-        const username=base+Math.floor(Math.random()*900+100);
-        db.collection('users').doc(u.uid).set({name:u.email.split('@')[0],username,bio:'',photo:'',followers:[],following:[],blocked:[],pinnedPosts:[],usernameChangedAt:Date.now(),createdAt:Date.now()});
-        db.collection('usernames').doc(username).set({uid:u.uid});
-      }else{
-        const data=doc.data();myBlocked=data.blocked||[];
-        if(data.blocked===undefined)db.collection('users').doc(u.uid).update({blocked:[]}).catch(()=>{});
-        if(data.username)db.collection('usernames').doc(data.username).get().then(ud=>{if(!ud.exists)db.collection('usernames').doc(data.username).set({uid:u.uid})});
-      }
-    });
-    listenNotifs();
-  }else{document.getElementById('bottomNav').style.display='none';myBlocked=[]}
-  document.body.className=theme;updateUITexts();
-  if(!checkUrlParams())render();
+ user=u;
+ if(u){
+ document.getElementById('adminBtn').style.display=(u.email===adminEmail)?'block':'none';
+ document.getElementById('bottomNav').style.display='flex';
+ db.collection('users').doc(u.uid).get().then(doc=>{
+ if(!doc.exists){
+ const base=(u.email.split('@')[0]||'user').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const username=base+Math.floor(Math.random()*900+100);
+ db.collection('users').doc(u.uid).set({name:u.email.split('@')[0],username,bio:'',photo:'',followers:[],following:[],blocked:[],pinnedPosts:[],usernameChangedAt:Date.now(),createdAt:Date.now()});
+ db.collection('usernames').doc(username).set({uid:u.uid});
+ }else{
+ const data=doc.data();myBlocked=data.blocked||[];
+ if(data.blocked===undefined)db.collection('users').doc(u.uid).update({blocked:[]}).catch(()=>{});
+ if(data.username)db.collection('usernames').doc(data.username).get().then(ud=>{if(!ud.exists)db.collection('usernames').doc(data.username).set({uid:u.uid})});
+ }
+ });
+ listenNotifs();
+ }else{document.getElementById('bottomNav').style.display='none';myBlocked=[]}
+ document.body.className=theme;updateUITexts();
+ if(!checkUrlParams())render();
 });
 
 function doLogin(){const email=document.getElementById('loginEmail')?.value,pass=document.getElementById('loginPass')?.value;if(!email||!pass)return alert('Συμπλήρωσε email και κωδικό');auth.signInWithEmailAndPassword(email,pass).catch(err=>{if(err.code==='auth/user-not-found')auth.createUserWithEmailAndPassword(email,pass).catch(e=>alert(e.message));else alert('Λάθος στοιχεία')})}
@@ -260,18 +260,18 @@ function closeAll(){document.querySelectorAll('.modal').forEach(m=>m.style.displ
 function doLogout(){toggleSidebar(false);auth.signOut().then(()=>location.reload())}
 
 async function deleteAccount(){
-  if(!user)return;toggleSidebar(false);
-  if(!confirm('ΔΙΑΓΡΑΦΗ ΛΟΓΑΡΙΑΣΜΟΥ;\nDelete Account?\n\nΘα διαγραφούν οριστικά τα δεδομένα σου.\nThis cannot be undone.'))return;
-  if(!confirm('Σίγουρα; Τελευταία επιβεβαίωση.\nAre you sure? Final confirmation.'))return;
-  try{
-    const uid=user.uid;const uDoc=await db.collection('users').doc(uid).get();const uname=uDoc.exists?(uDoc.data().username||''):'';
-    const comments=await db.collection('comments').where('uid','==',uid).get();const b1=db.batch();comments.docs.forEach(d=>b1.delete(d.ref));if(comments.size)await b1.commit();
-    const posts=await db.collection('posts').where('uid','==',uid).get();const b2=db.batch();posts.docs.forEach(d=>b2.delete(d.ref));if(posts.size)await b2.commit();
-    const notifs=await db.collection('notifications').where('userId','==',uid).get();const b3=db.batch();notifs.docs.forEach(d=>b3.delete(d.ref));if(notifs.size)await b3.commit();
-    if(uname)await db.collection('usernames').doc(uname).delete().catch(()=>{});
-    await db.collection('users').doc(uid).delete().catch(()=>{});
-    await user.delete();alert('Ο λογαριασμός διαγράφηκε.\nAccount deleted.');location.reload();
-  }catch(e){if(e.code==='auth/requires-recent-login')alert('Για ασφάλεια, κάνε Logout και ξανά Login, μετά δοκίμασε Διαγραφή λογαριασμού.');else alert('Σφάλμα διαγραφής: '+(e.message||'unknown'))}
+ if(!user)return;toggleSidebar(false);
+ if(!confirm('ΔΙΑΓΡΑΦΗ ΛΟΓΑΡΙΑΣΜΟΥ;\nDelete Account?\n\nΘα διαγραφούν οριστικά τα δεδομένα σου.\nThis cannot be undone.'))return;
+ if(!confirm('Σίγουρα; Τελευταία επιβεβαίωση.\nAre you sure? Final confirmation.'))return;
+ try{
+ const uid=user.uid;const uDoc=await db.collection('users').doc(uid).get();const uname=uDoc.exists?(uDoc.data().username||''):'';
+ const comments=await db.collection('comments').where('uid','==',uid).get();const b1=db.batch();comments.docs.forEach(d=>b1.delete(d.ref));if(comments.size)await b1.commit();
+ const posts=await db.collection('posts').where('uid','==',uid).get();const b2=db.batch();posts.docs.forEach(d=>b2.delete(d.ref));if(posts.size)await b2.commit();
+ const notifs=await db.collection('notifications').where('userId','==',uid).get();const b3=db.batch();notifs.docs.forEach(d=>b3.delete(d.ref));if(notifs.size)await b3.commit();
+ if(uname)await db.collection('usernames').doc(uname).delete().catch(()=>{});
+ await db.collection('users').doc(uid).delete().catch(()=>{});
+ await user.delete();alert('Ο λογαριασμός διαγράφηκε.\nAccount deleted.');location.reload();
+ }catch(e){if(e.code==='auth/requires-recent-login')alert('Για ασφάλεια, κάνε Logout και ξανά Login, μετά δοκίμασε Διαγραφή λογαριασμού.');else alert('Σφάλμα διαγραφής: '+(e.message||'unknown'))}
 }
 
 function showTab(t,fromBack=false){if(!user)return;if(!fromBack&&currentTab!==t){historyStack.push(currentTab);history.pushState({tab:t},'')}currentTab=t;document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));const btn=document.getElementById('btn-'+t);if(btn)btn.classList.add('active');document.getElementById('home-tabs').style.display=t==='home'?'flex':'none';if(t==='notif'){const b=document.getElementById('notif-badge');if(b)b.style.display='none'}render()}
@@ -282,20 +282,20 @@ function handleHash(h){showTab('search');setTimeout(()=>{const i=document.getEle
 function handleMention(uname){const clean=(uname||'').toLowerCase().trim().replace(/[^a-z0-9_]/g,'');if(!clean)return;db.collection('users').where('username','==',clean).limit(1).get().then(snap=>{if(!snap.empty)openProfile(snap.docs[0].id);else return db.collection('users').limit(80).get().then(all=>{const found=all.docs.find(d=>(d.data().username||'').toLowerCase()===clean);if(found)openProfile(found.id);else alert('Ο χρήστης @'+uname+' δεν βρέθηκε')})}).catch(()=>alert('Ο χρήστης @'+uname+' δεν βρέθηκε'))}
 
 function setupMentionAutocompleteFor(textareaId){
-  const ta=document.getElementById(textareaId);if(!ta||ta._mentionBound)return;ta._mentionBound=true;
-  ta.addEventListener('input',function(){
-    mentionTarget=this;clearTimeout(mentionTimer);
-    if(this.id==='postText')updatePostCount();if(this.id==='commentText')updateCommentCount();
-    const val=this.value,cursor=this.selectionStart||0,textBefore=val.substring(0,cursor),match=textBefore.match(/@([a-zA-Z0-9_]*)$/),box=document.getElementById('mentionBox');
-    if(!match||match[1].length<1){box.style.display='none';return}
-    const query=match[1].toLowerCase();
-    mentionTimer=setTimeout(()=>{db.collection('users').limit(60).get().then(snap=>{
-      const filtered=snap.docs.filter(d=>{const u=(d.data().username||'').toLowerCase();return u.startsWith(query)&&!myBlocked.includes(d.id)}).slice(0,8);
-      if(!filtered.length){box.style.display='none';return}
-      box.innerHTML=filtered.map(d=>{const u=d.data();const safe=(u.username||'').replace(/'/g,"\\'");return `<div class="mention-item" onmousedown="event.preventDefault();insertMention('${safe}')"><div class="avatar" style="width:36px;height:36px;${u.photo?`background-image:url('${u.photo}')`:''}"></div><div><div style="font-weight:700;font-size:14px">${u.name||'User'}</div><div style="font-size:12px;color:var(--muted)">@${u.username}</div></div></div>`}).join('');
-      const rect=ta.getBoundingClientRect();box.style.left=Math.min(Math.max(8,rect.left),window.innerWidth-300)+'px';box.style.top=(rect.bottom+6)+'px';box.style.display='block';
-    }).catch(()=>box.style.display='none')},150);
-  });
+ const ta=document.getElementById(textareaId);if(!ta||ta._mentionBound)return;ta._mentionBound=true;
+ ta.addEventListener('input',function(){
+ mentionTarget=this;clearTimeout(mentionTimer);
+ if(this.id==='postText')updatePostCount();if(this.id==='commentText')updateCommentCount();
+ const val=this.value,cursor=this.selectionStart||0,textBefore=val.substring(0,cursor),match=textBefore.match(/@([a-zA-Z0-9_]*)$/),box=document.getElementById('mentionBox');
+ if(!match||match[1].length<1){box.style.display='none';return}
+ const query=match[1].toLowerCase();
+ mentionTimer=setTimeout(()=>{db.collection('users').limit(60).get().then(snap=>{
+ const filtered=snap.docs.filter(d=>{const u=(d.data().username||'').toLowerCase();return u.startsWith(query)&&!myBlocked.includes(d.id)}).slice(0,8);
+ if(!filtered.length){box.style.display='none';return}
+ box.innerHTML=filtered.map(d=>{const u=d.data();const safe=(u.username||'').replace(/'/g,"\\'");return `<div class="mention-item" onmousedown="event.preventDefault();insertMention('${safe}')"><div class="avatar" style="width:36px;height:36px;${u.photo?`background-image:url('${u.photo}')`:''}"></div><div><div style="font-weight:700;font-size:14px">${u.name||'User'}</div><div style="font-size:12px;color:var(--muted)">@${u.username}</div></div></div>`}).join('');
+ const rect=ta.getBoundingClientRect();box.style.left=Math.min(Math.max(8,rect.left),window.innerWidth-300)+'px';box.style.top=(rect.bottom+6)+'px';box.style.display='block';
+ }).catch(()=>box.style.display='none')},150);
+ });
 }
 function insertMention(username){const ta=mentionTarget||document.getElementById('postText');if(!ta)return;const val=ta.value,cursor=ta.selectionStart||val.length,textBefore=val.substring(0,cursor),textAfter=val.substring(cursor),newBefore=textBefore.replace(/@[a-zA-Z0-9_]*$/,'@'+username+' ');ta.value=newBefore+textAfter;ta.focus();ta.setSelectionRange(newBefore.length,newBefore.length);document.getElementById('mentionBox').style.display='none';if(ta.id==='commentText')updateCommentCount();if(ta.id==='postText')updatePostCount()}
 async function notifyMentions(text,postId,myName){const matches=[...String(text).matchAll(/@([a-zA-Z0-9_]+)/g)].map(m=>m[1].toLowerCase());const unique=[...new Set(matches)];for(const uname of unique){try{const snap=await db.collection('users').where('username','==',uname).limit(1).get();if(snap.empty)continue;const targetUid=snap.docs[0].id;if(targetUid===user.uid||myBlocked.includes(targetUid))continue;await db.collection('notifications').add({userId:targetUid,text:`${myName} σε ανέφερε`,type:'mention',fromUid:user.uid,postId:postId,read:false,createdAt:Date.now()})}catch(e){}}}
@@ -318,100 +318,78 @@ function loadFeed(id,uid=null){if(unsubscribeFeed){unsubscribeFeed();unsubscribe
 function displayPosts(posts,container){if(!container)return;if(!posts.length){container.innerHTML='<p style="padding:30px;text-align:center;color:var(--muted)">Δεν υπάρχουν αναρτήσεις</p>';return}container.innerHTML=posts.map(p=>{const isLiked=user&&(p.likedBy||[]).includes(user.uid);const canManage=user&&(user.uid===p.uid||user.email===adminEmail);const safeId=String(p.id).replace(/'/g,"\\'");const safeUid=String(p.uid).replace(/'/g,"\\'");const safeText=String(p.text||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n');const safeImg=(p.images&&p.images[0])?String(p.images[0]).replace(/'/g,"\\'"):'';const cCount=p.commentsCount||0;let quoteHtml='';if(p.quote)quoteHtml=`<div class="quote-box"><div style="font-weight:700;font-size:14px">${p.quote.name||'User'}</div><div style="font-size:14px;color:var(--muted)">${format(p.quote.text||'')}</div>${p.quote.image?`<img src="${p.quote.image}" style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-top:8px;background:#0a0a0a">`:''}</div>`;return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="event.stopPropagation();postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation()">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();${user?`openComments('${safeId}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="message-circle"></i> ${cCount}</span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`}).join('');lucide.createIcons()}
 
 async function handleFile(inp, target = 'post') {
-  if (!inp.files || !inp.files[0]) return;
-  const file = inp.files[0];
+ if (!inp.files || !inp.files[0]) return;
+ const file = inp.files[0];
 
-  const prv = document.getElementById('imgPrv');
-  if (prv && target === 'post') {
-    prv.innerHTML = '<p style="padding:12px;color:var(--muted);font-size:14px">Φόρτωση & συμπίεση...</p>';
-  }
+ const prv = document.getElementById('imgPrv');
+ if (prv && target === 'post') {
+ prv.innerHTML = '<p style="padding:12px;color:var(--muted);font-size:14px">Φόρτωση φωτογραφίας...</p>';
+ }
 
-  try {
-    let source = null;
-    let w = 0, h = 0;
+ let objectUrl = null;
 
-    // Μέθοδος 1: createImageBitmap (καλύτερη για κάμερα)
-    if (window.createImageBitmap) {
-      try {
-        source = await createImageBitmap(file, {
-          resizeWidth: 700,
-          resizeHeight: 700,
-          resizeQuality: 'medium'
-        });
-        w = source.width;
-        h = source.height;
-      } catch (err) {
-        source = null;
-      }
-    }
+ try {
+ // Χρησιμοποιούμε object URL – δουλεύει πολύ καλύτερα σε Android κάμερα
+ objectUrl = URL.createObjectURL(file);
 
-    // Μέθοδος 2: FileReader + Image (fallback)
-    if (!source) {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.onerror = () => reject(new Error('FileReader failed'));
-        reader.readAsDataURL(file);
-      });
+ const img = await new Promise((resolve, reject) => {
+ const i = new Image();
+ i.onload = () => resolve(i);
+ i.onerror = () => reject(new Error('Η εικόνα δεν φορτώθηκε'));
+ i.src = objectUrl;
+ });
 
-      source = await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error('Image load failed'));
-        img.src = dataUrl;
-      });
-      w = source.naturalWidth || source.width;
-      h = source.naturalHeight || source.height;
-    }
+ // Μικρό μέγεθος για να χωράει δωρεάν
+ const MAX = 560;
+ let w = img.naturalWidth || img.width;
+ let h = img.naturalHeight || img.height;
 
-    // Μικρό μέγεθος για δωρεάν Firestore
-    const MAX = 580;
-    if (w > h) {
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-    } else {
-      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
-    }
+ if (w > h) {
+ if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+ } else {
+ if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+ }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d', { alpha: false });
-    ctx.fillStyle = '#111';
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(source, 0, 0, w, h);
+ const canvas = document.createElement('canvas');
+ canvas.width = w;
+ canvas.height = h;
+ const ctx = canvas.getContext('2d', { alpha: false });
+ ctx.fillStyle = '#111';
+ ctx.fillRect(0, 0, w, h);
+ ctx.drawImage(img, 0, 0, w, h);
 
-    if (source.close) try { source.close(); } catch(e) {}
+ // Πολύ δυνατή συμπίεση
+ let quality = 0.48;
+ let compressed = canvas.toDataURL('image/jpeg', quality);
 
-    // Πολύ δυνατή συμπίεση
-    let quality = 0.5;
-    let compressed = canvas.toDataURL('image/jpeg', quality);
-    while (compressed.length > 550000 && quality > 0.08) {
-      quality -= 0.07;
-      compressed = canvas.toDataURL('image/jpeg', quality);
-    }
+ while (compressed.length > 520000 && quality > 0.08) {
+ quality -= 0.06;
+ compressed = canvas.toDataURL('image/jpeg', quality);
+ }
 
-    if (target === 'profile') {
-      await db.collection('users').doc(user.uid).update({ photo: compressed });
-      updateAllPosts(null, compressed);
-      alert('Η φωτογραφία προφίλ ενημερώθηκε!');
-    } else {
-      pendingImg = compressed;
-      if (prv) {
-        prv.innerHTML = `
-          <div style="position:relative;display:inline-block;margin-top:10px">
-            <img src="${compressed}" style="width:110px;height:110px;border-radius:14px;object-fit:cover;border:1px solid var(--border)">
-            <button onclick="pendingImg=null;document.getElementById('imgPrv').innerHTML=''"
-              style="position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-weight:bold;font-size:15px;cursor:pointer">×</button>
-          </div>`;
-      }
-    }
-  } catch (e) {
-    console.error(e);
-    if (prv && target === 'post') prv.innerHTML = '';
-    alert('Σφάλμα φόρτωσης: ' + (e.message || 'άγνωστο') + '\n\nΔοκίμασε από Gallery ή χαμηλή ανάλυση κάμερας.');
-  } finally {
-    inp.value = '';
-  }
+ if (target === 'profile') {
+ await db.collection('users').doc(user.uid).update({ photo: compressed });
+ updateAllPosts(null, compressed);
+ alert('Η φωτογραφία προφίλ ενημερώθηκε!');
+ } else {
+ pendingImg = compressed;
+ if (prv) {
+ prv.innerHTML = `
+ <div style="position:relative;display:inline-block;margin-top:10px">
+ <img src="${compressed}" style="width:110px;height:110px;border-radius:14px;object-fit:cover;border:1px solid var(--border)">
+ <button onclick="pendingImg=null;document.getElementById('imgPrv').innerHTML=''"
+ style="position:absolute;top:-8px;right:-8px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-weight:bold;font-size:15px;cursor:pointer">×</button>
+ </div>`;
+ }
+ }
+ } catch (e) {
+ console.error(e);
+ if (prv && target === 'post') prv.innerHTML = '';
+ alert('Σφάλμα: ' + (e.message || 'άγνωστο') + '\n\nΔοκίμασε:\n• Από Gallery\n• Χαμηλή ανάλυση κάμερας');
+ } finally {
+ if (objectUrl) URL.revokeObjectURL(objectUrl);
+ inp.value = '';
+ }
 }
 
 async function sendPost(){const txt=document.getElementById('postText').value;if(!txt.trim()&&!pendingImg)return;if(txt.length>MAX_CHARS)return alert('Μέγιστο '+MAX_CHARS+' χαρακτήρες');try{const uDoc=await db.collection('users').doc(user.uid).get();const u=uDoc.exists?uDoc.data():{};const myName=u.name||user.email.split('@')[0];const ref=await db.collection('posts').add({uid:user.uid,name:myName,username:u.username||'',photo:u.photo||'',text:txt,images:pendingImg?[pendingImg]:[],likes:0,likedBy:[],commentsCount:0,createdAt:Date.now()});document.getElementById('postText').value='';pendingImg=null;document.getElementById('imgPrv').innerHTML='';document.getElementById('mentionBox').style.display='none';updatePostCount();if(txt.includes('@'))notifyMentions(txt,ref.id,myName)}catch(e){alert('Σφάλμα δημοσίευσης')}}
