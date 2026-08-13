@@ -313,7 +313,7 @@ async function doChangePassword(){if(!user)return;const curr=document.getElement
 async function doChangeEmail(){if(!user)return;const curr=document.getElementById('sec-email-pass').value,neu=document.getElementById('sec-new-email').value.trim();if(!curr||!neu)return alert('Συμπλήρωσε όλα τα πεδία');if(!neu.includes('@')||!neu.includes('.'))return alert('Μη έγκυρο email');if(neu.toLowerCase()===user.email.toLowerCase())return alert('Είναι ήδη το τρέχον email');try{const cred=firebase.auth.EmailAuthProvider.credential(user.email,curr);await user.reauthenticateWithCredential(cred);await user.updateEmail(neu);document.getElementById('sec-email-pass').value='';document.getElementById('sec-new-email').value='';alert('Το email άλλαξε επιτυχώς!\nΝέο: '+neu);renderSecurity(document.getElementById('content'))}catch(e){if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential')alert('Λάθος τρέχων κωδικός');else if(e.code==='auth/email-already-in-use')alert('Το email χρησιμοποιείται ήδη');else if(e.code==='auth/invalid-email')alert('Μη έγκυρο email');else if(e.code==='auth/requires-recent-login')alert('Για ασφάλεια, κάνε logout και ξανά login');else alert('Σφάλμα: '+(e.message||''))}}
 
 function render(){const c=document.getElementById('content');document.getElementById('home-tabs').style.display=(user&&currentTab==='home')?'flex':'none';updateUITexts();if(!user){c.innerHTML=`<div class="login-screen"><div class="login-logo">John Ross Social</div><div class="login-tagline">Your space. Your voice.</div><div class="login-form"><input type="email" id="loginEmail" placeholder="Email"><input type="password" id="loginPass" placeholder="Password"><button onclick="doLogin()" class="btn-main">Login / Sign up</button></div></div>`;return}if(currentTab==='home')renderHome(c);else if(currentTab==='profile')renderProfile(c,user.uid);else if(currentTab==='settings')renderSettings(c);else if(currentTab==='security')renderSecurity(c);else if(currentTab==='notif')renderNotifs(c);else if(currentTab==='search')renderSearch(c);else if(currentTab==='admin')renderAdmin(c);else if(currentTab==='blocked')renderBlocked(c);lucide.createIcons()}
-function renderHome(m){m.innerHTML=`<div style="padding:16px;border-bottom:1px solid var(--border);position:relative"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${t('whatsHappening')}" maxlength="${MAX_CHARS}" style="flex:1;background:none;border:none;color:var(--text);font-size:17px;resize:none;min-height:55px" oninput="updatePostCount()"></textarea></div><div class="char-count" style="padding-left:52px"><span id="postCharCount">0</span>/${MAX_CHARS}</div><div id="imgPrv"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-left:52px"><button type="button" class="img-btn" onclick="document.getElementById('fInp').click()">${IMG_ICON}</button><input type="file" id="fInp" hidden accept="image/*" capture="environment" onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto;padding:9px 18px">${t('post')}</button></div></div><div id="feed"></div>`;db.collection('users').doc(user.uid).get().then(doc=>{if(doc.exists&&doc.data().photo){const av=document.getElementById('myAvH');if(av)av.style.backgroundImage=`url('${doc.data().photo}')`}});loadMyBlocked().then(()=>loadFeed('feed'));setTimeout(()=>setupMentionAutocompleteFor('postText'),120)}
+function renderHome(m){m.innerHTML=`<div style="padding:16px;border-bottom:1px solid var(--border);position:relative"><div style="display:flex;gap:12px"><div class="avatar" id="myAvH" style="width:40px;height:40px"></div><textarea id="postText" placeholder="${t('whatsHappening')}" maxlength="${MAX_CHARS}" style="flex:1;background:none;border:none;color:var(--text);font-size:17px;resize:none;min-height:55px" oninput="updatePostCount()"></textarea></div><div class="char-count" style="padding-left:52px"><span id="postCharCount">0</span>/${MAX_CHARS}</div><div id="imgPrv"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-left:52px"><button type="button" class="img-btn" onclick="document.getElementById('fInp').click()">${IMG_ICON}</button><input type="file" id="fInp" hidden accept="image/*" onchange="handleFile(this)"><button onclick="sendPost()" class="btn-main" style="width:auto;padding:9px 18px">${t('post')}</button></div></div><div id="feed"></div>`;db.collection('users').doc(user.uid).get().then(doc=>{if(doc.exists&&doc.data().photo){const av=document.getElementById('myAvH');if(av)av.style.backgroundImage=`url('${doc.data().photo}')`}});loadMyBlocked().then(()=>loadFeed('feed'));setTimeout(()=>setupMentionAutocompleteFor('postText'),120)}
 function loadFeed(id,uid=null){if(unsubscribeFeed){unsubscribeFeed();unsubscribeFeed=null}const feed=document.getElementById(id);if(!feed)return;unsubscribeFeed=db.collection('posts').orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{let posts=snap.docs.map(d=>({id:d.id,...d.data()}));if(myBlocked.length)posts=posts.filter(p=>!myBlocked.includes(p.uid));if(uid){db.collection('users').doc(uid).get().then(uDoc=>{const pinned=uDoc.exists?(uDoc.data().pinnedPosts||[]):[];let userPosts=posts.filter(p=>p.uid===uid);userPosts.forEach(p=>p._isPinned=pinned.includes(p.id));userPosts.sort((a,b)=>(b._isPinned?1:0)-(a._isPinned?1:0)||b.createdAt-a.createdAt);displayPosts(userPosts,feed)})}else if(feedType==='following'&&currentTab==='home'){db.collection('users').doc(user.uid).get().then(uDoc=>{const following=uDoc.exists?(uDoc.data().following||[]):[];displayPosts(posts.filter(p=>following.includes(p.uid)||p.uid===user.uid),feed)})}else displayPosts(posts,feed)},err=>feed.innerHTML='<p style="padding:20px;color:#dc2626">Σφάλμα</p>')}
 function displayPosts(posts,container){if(!container)return;if(!posts.length){container.innerHTML='<p style="padding:30px;text-align:center;color:var(--muted)">Δεν υπάρχουν αναρτήσεις</p>';return}container.innerHTML=posts.map(p=>{const isLiked=user&&(p.likedBy||[]).includes(user.uid);const canManage=user&&(user.uid===p.uid||user.email===adminEmail);const safeId=String(p.id).replace(/'/g,"\\'");const safeUid=String(p.uid).replace(/'/g,"\\'");const safeText=String(p.text||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,'\\n');const safeImg=(p.images&&p.images[0])?String(p.images[0]).replace(/'/g,"\\'"):'';const cCount=p.commentsCount||0;let quoteHtml='';if(p.quote)quoteHtml=`<div class="quote-box"><div style="font-weight:700;font-size:14px">${p.quote.name||'User'}</div><div style="font-size:14px;color:var(--muted)">${format(p.quote.text||'')}</div>${p.quote.image?`<img src="${p.quote.image}" style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-top:8px;background:#0a0a0a">`:''}</div>`;return `<div class="post">${canManage?`<i data-lucide="more-horizontal" class="post-menu-btn" onclick="event.stopPropagation();postOp('${safeId}','${safeText}','${safeUid}',${!!p._isPinned})"></i>`:''}<div class="post-header" onclick="openProfile('${safeUid}')"><div class="avatar" style="${p.photo?`background-image:url('${p.photo}')`:''}"></div><div style="flex:1"><div class="username">${p.name||'User'} ${p._isPinned?'<span class="pin-badge">PINNED</span>':''}${user&&user.email===adminEmail&&p.uid===user.uid?'<span class="admin-badge">ADMIN</span>':''}</div><div class="post-time">${formatTime(p.createdAt)}</div><div class="post-text" onclick="event.stopPropagation()">${format(p.text)}</div>${quoteHtml}${p.images&&p.images[0]?`<img src="${p.images[0]}" class="post-img" onclick="event.stopPropagation();openLB('${safeImg}')">`:''}<div class="post-actions"><span onclick="event.stopPropagation();${user?`like('${safeId}')`:'location.href=location.pathname'}"><i data-lucide="heart" style="${isLiked?'fill:var(--accent);color:var(--accent)':''}"></i> ${p.likes||0}</span><span onclick="event.stopPropagation();${user?`openComments('${safeId}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="message-circle"></i> ${cCount}</span><span onclick="event.stopPropagation();${user?`openShare('${safeId}','${safeText}','${safeImg}','${safeUid}')`:'location.href=location.pathname'}"><i data-lucide="share-2"></i></span></div></div></div></div>`}).join('');lucide.createIcons()}
 
@@ -321,65 +321,62 @@ async function handleFile(inp, target = 'post') {
   if (!inp.files || !inp.files[0]) return;
   const file = inp.files[0];
 
-  if (file.type && !file.type.startsWith('image/')) {
+  // Επιτρέπουμε σχεδόν όλα τα image formats
+  if (file.type && !file.type.startsWith('image/') && !file.name.match(/\.(jpe?g|png|gif|webp|heic|heif)$/i)) {
     alert('Επίλεξε μόνο εικόνα');
-    inp.value = '';
-    return;
-  }
-
-  if (file.size > 40 * 1024 * 1024) {
-    alert('Πολύ μεγάλη φωτογραφία.\nΧαμήλωσε την ανάλυση της κάμερας.');
     inp.value = '';
     return;
   }
 
   const prv = document.getElementById('imgPrv');
   if (prv && target === 'post') {
-    prv.innerHTML = '<p style="padding:10px;color:var(--muted);font-size:13px">Φόρτωση φωτογραφίας από κάμερα/gallery...</p>';
+    prv.innerHTML = '<p style="padding:12px;color:var(--muted);font-size:14px">Φόρτωση & συμπίεση φωτογραφίας...</p>';
   }
 
   try {
+    // 1. Διαβάζουμε το αρχείο
     const dataUrl = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = e => resolve(e.target.result);
-      reader.onerror = () => reject(new Error('FileReader failed'));
+      reader.onerror = () => reject(new Error('Δεν μπόρεσε να διαβαστεί το αρχείο'));
       reader.readAsDataURL(file);
     });
 
+    // 2. Φορτώνουμε σε Image
     const img = await new Promise((resolve, reject) => {
       const i = new Image();
       i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error('Image load failed'));
+      i.onerror = () => reject(new Error('Η εικόνα δεν φορτώθηκε'));
       i.src = dataUrl;
     });
 
-    const MAX = 720;
-    let w = img.width;
-    let h = img.height;
+    // 3. Μικρό μέγεθος για να χωράει δωρεάν στο Firestore
+    const MAX = 600;
+    let w = img.naturalWidth || img.width;
+    let h = img.naturalHeight || img.height;
 
     if (w > h) {
-      if (w > MAX) {
-        h = Math.round(h * MAX / w);
-        w = MAX;
-      }
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
     } else {
-      if (h > MAX) {
-        w = Math.round(w * MAX / h);
-        h = MAX;
-      }
+      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
     }
 
+    // 4. Canvas
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d', { alpha: false });
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
 
-    let quality = 0.72;
+    // 5. Ισχυρή συμπίεση (δωρεάν Firestore)
+    let quality = 0.55;
     let compressed = canvas.toDataURL('image/jpeg', quality);
 
-    while (compressed.length > 850000 && quality > 0.15) {
-      quality -= 0.07;
+    // Αν ακόμα μεγάλη, κατεβάζουμε περισσότερο
+    while (compressed.length > 650000 && quality > 0.12) {
+      quality -= 0.08;
       compressed = canvas.toDataURL('image/jpeg', quality);
     }
 
@@ -399,9 +396,9 @@ async function handleFile(inp, target = 'post') {
       }
     }
   } catch (e) {
-    console.error('handleFile error:', e);
+    console.error(e);
     if (prv && target === 'post') prv.innerHTML = '';
-    alert('Δεν μπόρεσε να φορτωθεί η φωτογραφία από την κάμερα.\n\nΔοκίμασε:\n1. Από Gallery\n2. Χαμηλή ανάλυση κάμερας\n3. Ξανά πάρε τη φωτό');
+    alert('Δεν μπόρεσε να φορτωθεί η φωτογραφία.\n\nΔοκίμασε:\n• Από Gallery\n• Χαμηλή ανάλυση κάμερας\n• Ξανά πάρε τη φωτό');
   } finally {
     inp.value = '';
   }
