@@ -4,28 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>John Ross Social</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS - Εμφάνιση */
+        :root {
+            --primary-color: #1877f2;
+            --bg-color: #f0f2f5;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: #1c1e21;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
+
+        .post-box {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            resize: none;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .btn-post {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn-post:hover {
+            background-color: #166fe5;
+        }
+
+        .post {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .post-header {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .post-time {
+            color: #65676b;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .post-content {
+            font-size: 15px;
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
+
     <header>
-        <h1>John Ross Social</h1>
-        <nav>
-            <button id="homeBtn">Αρχική</button>
-            <button id="profileBtn">Προφίλ</button>
-        </nav>
+        <div style="font-size: 24px; font-weight: bold;">John Ross Social</div>
+        <div>Προφίλ</div>
     </header>
 
-    <main id="app">
-        <section class="post-creator">
-            <textarea id="postInput" placeholder="Τι σκέφτεστε;"></textarea>
-            <button onclick="createPost()">Δημοσίευση</button>
-        </section>
+    <div class="container">
+        <!-- Περιοχή Δημιουργίας Post -->
+        <div class="post-box">
+            <textarea id="postInput" placeholder="Τι σκέφτεσαι, John;"></textarea>
+            <button class="btn-post" onclick="addPost()">Δημοσίευση</button>
+        </div>
 
-        <section id="feed">
-            <!-- Εδώ θα εμφανίζονται τα posts -->
-        </section>
-    </main>
+        <!-- Ροή Δημοσιεύσεων (Feed) -->
+        <div id="feed">
+            <!-- Παράδειγμα Post -->
+            <div class="post">
+                <div class="post-header">
+                    John Ross <span class="post-time">Μόλις τώρα</span>
+                </div>
+                <div class="post-content">
+                    Καλώς ήρθατε στη νέα μου εφαρμογή!
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script src="script.js"></script>
+    <script>
+        /* JavaScript - Λειτουργικότητα */
+        function addPost() {
+            const input = document.getElementById('postInput');
+            const feed = document.getElementById('feed');
+
+            if (input.value.trim() === "") {
+                alert("Παρακαλώ γράψτε κάτι!");
+                return;
+            }
+
+            // Δημιουργία τρέχουσας ώρας
+            const now = new Date();
+            const timeString = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+
+            // Δημιουργία του νέου post
+            const newPost = document.createElement('div');
+            newPost.className = 'post';
+            newPost.innerHTML = `
+                <div class="post-header">
+                    John Ross <span class="post-time">Σήμερα στις ${timeString}</span>
+                </div>
+                <div class="post-content">
+                    ${input.value.replace(/\n/g, '<br>')}
+                </div>
+            `;
+
+            // Προσθήκη στην αρχή της ροής
+            feed.insertBefore(newPost, feed.firstChild);
+
+            // Καθαρισμός του κουτιού κειμένου
+            input.value = "";
+        }
+    </script>
+
 </body>
 </html>
