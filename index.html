@@ -57,7 +57,6 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .red-dot{position:absolute;top:4px;right:12px;width:10px;height:10px;background:var(--accent);border-radius:50%;border:2px solid var(--bg);display:none}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500;display:none}
 .btn-main{background:var(--accent);color:#fff;border:none;padding:13px 22px;border-radius:30px;font-weight:700;cursor:pointer;width:100%;font-size:15px}
-.btn-secondary{background:transparent;color:var(--text);border:1.5px solid var(--border);padding:13px 22px;border-radius:30px;font-weight:700;cursor:pointer;width:100%;font-size:15px;margin-top:10px}
 .lightbox{position:fixed;inset:0;background:#000;z-index:6000;display:none;align-items:center;justify-content:center}
 .close-lb{position:absolute;top:40px;right:20px;background:var(--accent);color:#fff;border:none;border-radius:50%;width:42px;height:42px;font-weight:bold;cursor:pointer}
 .settings-row{padding:15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--card);border-radius:12px;margin-bottom:10px}
@@ -66,51 +65,4 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 .notif-item{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;cursor:pointer}
 .notif-item.unread{background:rgba(220,38,38,.13);border-left:3px solid var(--accent)}
 .notif-item.read{opacity:.7}
-.quote-box{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:10px;background:rgba(255,255,255,.03)}
-.admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center}
-.stat-card b{display:block;font-size:24px;color:var(--accent)}
-.user-list-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
-.handle{color:var(--muted);font-size:14px}
-.guest-banner{background:linear-gradient(90deg,#dc2626,#b91c1c);color:#fff;padding:14px;text-align:center;font-weight:600}
-.guest-banner button{background:#fff;color:#dc2626;border:none;padding:8px 16px;border-radius:20px;font-weight:700;margin-top:8px}
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:30px 25px;text-align:center}
-.login-logo{font-size:30px;font-weight:900;margin-bottom:6px}
-.login-tagline{color:var(--accent);font-size:15px;font-style:italic;margin-bottom:35px}
-.login-form input{width:100%;padding:15px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:14px;font-size:16px;margin-bottom:12px}
-#mentionBox{position:fixed;background:var(--card);border:1px solid var(--border);border-radius:14px;max-height:200px;overflow-y:auto;z-index:5500;display:none;width:280px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.mention-item{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--border)}
-.mention-item:active{background:rgba(220,38,38,.2)}
-.menu-action{display:flex;align-items:center;gap:14px;padding:16px 14px;border-radius:14px;margin-bottom:10px;background:var(--bg);border:1px solid var(--border);cursor:pointer}
-.menu-action:active{opacity:.75}
-.menu-action .menu-ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);flex-shrink:0}
-.menu-action .menu-txt{flex:1;min-width:0}
-.menu-action .menu-title{font-weight:700;font-size:15px}
-.menu-action .menu-sub{font-size:12px;color:var(--muted);margin-top:2px}
-.menu-action.danger{border-color:rgba(220,38,38,.35)}
-.menu-action.danger .menu-title{color:var(--accent)}
-.menu-action.danger .menu-ico{background:rgba(220,38,38,.12);color:var(--accent)}
-.unblock-btn{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto}
-.img-btn{width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d9bf0,#0d7ec7);border:none;cursor:pointer;box-shadow:0 4px 12px rgba(29,155,240,.35)}
-.img-btn:active{transform:scale(.95);opacity:.9}
-.img-btn svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sec-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px}
-.sec-card h3{font-size:16px;margin-bottom:4px}
-.sec-card p{font-size:13px;color:var(--muted);margin-bottom:14px}
-.sec-label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
-.comment-item{padding:12px 0;border-bottom:1px solid var(--border)}
-.comment-actions{display:flex;gap:12px;margin-top:8px;align-items:center;color:var(--muted);font-size:13px}
-.comment-actions span{cursor:pointer;display:flex;align-items:center;gap:4px}
-.c-like-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid transparent;background:rgba(255,255,255,.06);font-size:13px;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;color:var(--muted)}
-.c-like-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-.c-like-btn.liked{color:var(--accent);background:rgba(220,38,38,.12)}
-.c-like-btn.liked svg{fill:var(--accent);stroke:var(--accent)}
-#commentsList{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 4px}
-.comment-input-row{display:flex;gap:8px;align-items:flex-end;padding-top:10px;border-top:1px solid var(--border);flex-shrink:0}
-.char-count{font-size:12px;color:var(--muted);text-align:right;margin-top:2px}
-.char-count.warn{color:var(--accent)}
-.refresh-btn{color:var(--accent)!important;opacity:1!important;cursor:pointer;padding:4px}
-.refresh-btn:active{opacity:.7}
-</style>
-</head>
-<body class="dark">
+.quote-box{border:1px solid var(--border);border-radius:12px;padding:12px;ma
