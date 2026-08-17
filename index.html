@@ -114,3 +114,105 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </style>
 </head>
 <body class="dark">
+
+  <div class="overlay" id="overlay" onclick="closeAll()"></div>
+<div id="mentionBox"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span style="font-weight:800;font-size:18px">John Ross Social</span>
+    <i data-lucide="x-circle" style="color:var(--accent);cursor:pointer" onclick="toggleSidebar(false)"></i>
+  </div>
+  <div class="side-scroll">
+    <div class="side-card">
+      <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
+      <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
+      <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
+      <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
+      <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
+      <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
+    </div>
+    <div class="side-cache">
+      <div class="side-item" onclick="clearCache()"><i data-lucide="trash-2"></i> <span>Cache</span></div>
+    </div>
+    <div class="side-danger">
+      <div class="side-danger-title">DANGER ZONE · Επικίνδυνη ζώνη</div>
+      <div class="side-item" onclick="doLogout()"><i data-lucide="log-out"></i><span>Log Out<span class="sub">Αποσύνδεση</span></span></div>
+      <div class="side-item" onclick="deleteAccount()"><i data-lucide="user-x"></i><span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span></div>
+    </div>
+  </div>
+  <div class="side-footer">John Ross Social · v3.9</div>
+</aside>
+
+<div class="app-wrapper">
+  <header>
+    <div class="header-top">
+      <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
+      <div style="text-align:center;line-height:1.15">
+        <div style="font-weight:800;font-size:17px">John Ross Social</div>
+        <div style="font-size:11px;color:var(--accent);font-style:italic">Your space. Your voice.</div>
+      </div>
+      <i data-lucide="refresh-cw" class="refresh-btn" onclick="location.reload()"></i>
+    </div>
+    <div class="tabs" id="home-tabs" style="display:none">
+      <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</div>
+      <div class="tab" id="tab-following" onclick="setFeed('following')">Ακολουθείς</div>
+    </div>
+  </header>
+  <main id="main-scroll"><div id="content"></div></main>
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" id="btn-home" onclick="showTab('home')"><i data-lucide="home"></i><span id="nav-home">Αρχική</span></div>
+    <div class="nav-item" id="btn-search" onclick="showTab('search')"><i data-lucide="search"></i><span id="nav-search">Αναζήτηση</span></div>
+    <div class="nav-item" id="btn-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><span id="nav-notif">Ειδοπ.</span><div class="red-dot" id="notif-badge"></div></div>
+    <div class="nav-item" id="btn-profile" onclick="showTab('profile')"><i data-lucide="user"></i><span id="nav-profile">Προφίλ</span></div>
+  </nav>
+</div>
+
+<div class="modal" id="shareModal"><div class="modal-content center"><h3>Κοινοποίηση</h3><br>
+<div onclick="doNativeShare()" class="settings-row"><span>Σε εφαρμογές</span><i data-lucide="share"></i></div>
+<div onclick="copyLink()" class="settings-row"><span>Αντιγραφή Συνδέσμου</span><i data-lucide="link"></i></div>
+<div onclick="repostNow()" class="settings-row"><span>Repost</span><i data-lucide="repeat"></i></div>
+<div onclick="openQuoteModal()" class="settings-row"><span>Παράθεση</span><i data-lucide="quote"></i></div>
+<button onclick="closeAll()" class="btn-main" style="background:#333;margin-top:10px">Κλείσιμο</button></div></div>
+
+<div class="modal" id="quoteModal"><div class="modal-content center"><h3>Παράθεση</h3>
+<textarea id="quoteText" class="input-box" style="height:100px" placeholder="Πρόσθεσε σχόλιο..." maxlength="500"></textarea>
+<div id="quotePreview" class="quote-box"></div>
+<div style="display:flex;gap:10px;margin-top:14px">
+<button onclick="closeAll()" class="btn-main" style="background:#333;flex:1">Ακύρωση</button>
+<button onclick="submitQuote()" class="btn-main" style="flex:1">Δημοσίευση</button></div></div></div>
+
+<div class="modal" id="listModal"><div class="modal-content center">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 id="listModalTitle">Λίστα</h3>
+<i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i></div>
+<div id="listModalContent"></div></div></div>
+
+<div class="modal" id="postMenuModal"><div class="modal-content center" style="padding:18px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h3 style="font-size:18px">Επιλογές / Options</h3>
+<i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i></div>
+<div id="postMenuBody"></div>
+<button onclick="closeAll()" class="btn-main" style="background:#333;margin-top:6px">Κλείσιμο / Close</button></div></div>
+
+<div class="modal" id="editPostModal"><div class="modal-content center"><h3 style="margin-bottom:12px">Επεξεργασία / Edit</h3>
+<textarea id="editPostText" class="input-box" style="height:140px" placeholder="Κείμενο..." maxlength="500"></textarea>
+<div style="display:flex;gap:10px;margin-top:8px">
+<button onclick="closeAll()" class="btn-main" style="background:#333;flex:1">Ακύρωση</button>
+<button onclick="saveEditPost()" class="btn-main" style="flex:1">Αποθήκευση</button></div></div></div>
+
+<div class="modal" id="commentsModal"><div class="modal-content" style="padding-bottom:calc(16px + env(safe-area-inset-bottom))">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0"><h3 style="font-size:17px">Σχόλια</h3>
+<i data-lucide="x" onclick="closeAll()" style="cursor:pointer;color:var(--muted)"></i></div>
+<div id="commentsList"><p style="text-align:center;color:var(--muted);padding:30px">Φόρτωση...</p></div>
+<div class="comment-input-row"><div style="flex:1">
+<textarea id="commentText" class="input-box" style="margin:0;height:48px;resize:none;padding:12px" placeholder="Γράψε σχόλιο... (max 500)" maxlength="500" oninput="updateCommentCount()"></textarea>
+<div class="char-count"><span id="commentCharCount">0</span>/500</div></div>
+<button onclick="sendComment()" class="btn-main" style="width:auto;padding:12px 16px;margin-bottom:18px">Αποστολή</button></div></div></div>
+
+<div class="lightbox" id="lightbox" onclick="this.style.display='none'">
+<button class="close-lb" onclick="event.stopPropagation();this.parentElement.style.display='none'">X</button>
+<img id="lb-img" style="max-width:95%;max-height:90%;object-fit:contain"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
