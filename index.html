@@ -114,3 +114,62 @@ nav.bottom-nav{height:70px;border-top:1px solid var(--border);display:flex;justi
 </style>
 </head>
 <body class="dark">
+
+  <div class="overlay" id="overlay" onclick="closeAll()"></div>
+<div id="mentionBox"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span style="font-weight:800;font-size:18px">John Ross Social</span>
+    <i data-lucide="x-circle" style="color:var(--accent);cursor:pointer" onclick="toggleSidebar(false)"></i>
+  </div>
+  <div class="side-scroll">
+    <div class="side-card">
+      <div class="side-item" onclick="showTab('home');toggleSidebar(false)"><i data-lucide="home"></i> <span id="side-home">Αρχική</span></div>
+      <div class="side-item" onclick="showTab('profile');toggleSidebar(false)"><i data-lucide="user"></i> <span id="side-profile">Προφίλ</span></div>
+      <div class="side-item" onclick="showTab('settings');toggleSidebar(false)"><i data-lucide="settings"></i> <span id="side-settings">Ρυθμίσεις</span></div>
+      <div class="side-item" onclick="showTab('security');toggleSidebar(false)"><i data-lucide="lock"></i> <span>Security</span></div>
+      <div class="side-item" onclick="showTab('blocked');toggleSidebar(false)"><i data-lucide="ban"></i> <span>Blocked</span></div>
+      <div id="adminBtn" class="side-item" style="display:none" onclick="showTab('admin');toggleSidebar(false)"><i data-lucide="shield"></i> Admin Panel</div>
+    </div>
+    <div class="side-cache">
+      <div class="side-item" onclick="clearCache()"><i data-lucide="trash-2"></i> <span>Cache</span></div>
+    </div>
+    <div class="side-danger">
+      <div class="side-danger-title">DANGER ZONE · Επικίνδυνη ζώνη</div>
+      <div class="side-item" onclick="doLogout()"><i data-lucide="log-out"></i><span>Log Out<span class="sub">Αποσύνδεση</span></span></div>
+      <div class="side-item" onclick="deleteAccount()"><i data-lucide="user-x"></i><span>Delete Account<span class="sub">Διαγραφή λογαριασμού</span></span></div>
+    </div>
+  </div>
+  <div class="side-footer">John Ross Social · v3.9</div>
+</aside>
+
+<div class="app-wrapper">
+  <header>
+    <div class="header-top">
+      <i data-lucide="menu" onclick="toggleSidebar(true)" style="cursor:pointer"></i>
+      <div style="text-align:center;line-height:1.15">
+        <div style="font-weight:800;font-size:17px">John Ross Social</div>
+        <div style="font-size:11px;color:var(--accent);font-style:italic">Your space. Your voice.</div>
+      </div>
+      <i data-lucide="refresh-cw" class="refresh-btn" onclick="location.reload()"></i>
+    </div>
+    <div class="tabs" id="home-tabs" style="display:none">
+      <div class="tab active" id="tab-foryou" onclick="setFeed('foryou')">Για εσένα</div>
+      <div class="tab" id="tab-following" onclick="setFeed('following')">Ακολουθείς</div>
+    </div>
+  </header>
+  <main id="main-scroll"><div id="content"></div></main>
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" id="btn-home" onclick="showTab('home')"><i data-lucide="home"></i><span id="nav-home">Αρχική</span></div>
+    <div class="nav-item" id="btn-search" onclick="showTab('search')"><i data-lucide="search"></i><span id="nav-search">Αναζήτηση</span></div>
+    <div class="nav-item" id="btn-notif" onclick="showTab('notif')"><i data-lucide="bell"></i><span id="nav-notif">Ειδοπ.</span><div class="red-dot" id="notif-badge"></div></div>
+    <div class="nav-item" id="btn-profile" onclick="showTab('profile')"><i data-lucide="user"></i><span id="nav-profile">Προφίλ</span></div>
+  </nav>
+</div>
+
+<!-- Τα υπόλοιπα (modals + πλήρες JavaScript) είναι πολύ μεγάλα. 
+
+Για να ολοκληρώσουμε σωστά χωρίς να χαθεί ξανά:
+
+Γράψε «Συνέχεια με modals και JS» και θα σου στείλω το τελικό μέρος. -->
